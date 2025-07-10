@@ -1,9 +1,11 @@
 """
-Configuration management for the Financial Document RAG System.
-Centralized configuration with environment variable support and extensible settings.
+Configuration management for the Document RAG System.
+Centralized configuration with environment variable support for sensitive data only.
+All other settings are loaded from config.json.
 """
 
 import os
+import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 from pydantic_settings import BaseSettings
@@ -13,106 +15,43 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+def load_system_config() -> Dict[str, Any]:
+    """Load system configuration from config.json"""
+    config_path = Path(__file__).parent / "config.json"
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+    return config.get("system", {})
+
 class Settings(BaseSettings):
     """
-    Application settings with environment variable support.
-    Designed for extensibility across different document types and deployment environments.
+    Application settings with environment variable support for sensitive data only.
+    All other configuration is loaded from config.json.
     """
     
-    # API Keys
+    # Only sensitive data from environment variables
     google_api_key: Optional[str] = Field(default=None, env="GOOGLE_API_KEY")
-    
-    # Paths
-    documents_path: Path = Field(default=Path("./output"), env="DOCUMENTS_PATH")
-    chroma_db_path: Path = Field(default=Path("./chroma_db/data"), env="CHROMA_DB_PATH")
-    
-    # ChromaDB Configuration
-    chroma_collection_name: str = Field(default="financial_documents", env="CHROMA_COLLECTION_NAME")
-    chroma_distance_function: str = Field(default="cosine", env="CHROMA_DISTANCE_FUNCTION")
-    # ChromaDB always runs in embedded mode
-    
-    # Embedding Configuration - Default to Google
-    embedding_model: str = Field(default="text-embedding-004", env="EMBEDDING_MODEL")
-    embedding_provider: str = Field(default="google", env="EMBEDDING_PROVIDER")  # google, sentence-transformers
-    embedding_dimensions: int = Field(default=768, env="EMBEDDING_DIMENSIONS")
-    
-    # LLM Configuration - Default to Google
-    llm_model: str = Field(default="gemini-1.5-flash", env="LLM_MODEL")
-    llm_provider: str = Field(default="google", env="LLM_PROVIDER")  # google
-    llm_temperature: float = Field(default=0.1, env="LLM_TEMPERATURE")
-    llm_max_tokens: int = Field(default=1000, env="LLM_MAX_TOKENS")
-    
-    # Chunking Configuration
-    chunk_size: int = Field(default=1000, env="CHUNK_SIZE")
-    chunk_overlap: int = Field(default=200, env="CHUNK_OVERLAP")
-    
-    # Retrieval Configuration
-    default_k: int = Field(default=5, env="DEFAULT_K")
-    max_k: int = Field(default=20, env="MAX_K")
-    
-    # Processing Configuration
-    batch_size: int = Field(default=10, env="BATCH_SIZE")
-    max_workers: int = Field(default=4, env="MAX_WORKERS")
-    
-    # Document Processing
-    supported_file_types: list = Field(default=[".txt", ".pdf", ".json"], env="SUPPORTED_FILE_TYPES")
     
     class Config:
         env_file = ".env"
         case_sensitive = False
+        # Allow extra attributes
+        extra = "allow"
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        # Load system configuration from config.json
+        system_config = load_system_config()
+        
+        # Set all system settings from config as attributes
+        for key, value in system_config.items():
+            if key in ["documents_path", "chroma_db_path"]:
+                setattr(self, key, Path(value))
+            else:
+                setattr(self, key, value)
 
 # Global settings instance
 settings = Settings()
-
-# Document type configurations
-DOCUMENT_TYPE_CONFIGS = {
-    "financial": {
-        "chunk_size": 800,
-        "chunk_overlap": 150,
-        "preserve_tables": True,
-        "extract_financial_entities": True,
-        "system_prompt": """You are a financial analyst assistant specializing in government budget documents.
-        Always preserve exact numerical values and include fund codes when relevant."""
-    },
-    "legislative": {
-        "chunk_size": 1200,
-        "chunk_overlap": 200,
-        "preserve_sections": True,
-        "extract_legal_entities": True,
-        "system_prompt": """You are a legislative analyst assistant.
-        Focus on policy implications and legal language."""
-    },
-    "general": {
-        "chunk_size": 1000,
-        "chunk_overlap": 200,
-        "preserve_context": True,
-        "system_prompt": """You are a helpful assistant that answers questions based on the provided documents."""
-    }
-}
-
-# Model configurations for different providers
-MODEL_CONFIGS = {
-    "google": {
-        "gemini-1.5-flash": {
-            "max_tokens": 8192,
-            "supports_system_prompt": True,
-            "cost_per_1k_tokens": 0.00015
-        },
-        "gemini-1.5-pro": {
-            "max_tokens": 32768,
-            "supports_system_prompt": True,
-            "cost_per_1k_tokens": 0.00125
-        }
-    }
-}
-
-def get_document_config(doc_type: str = "general") -> Dict[str, Any]:
-    """Get configuration for specific document type."""
-    return DOCUMENT_TYPE_CONFIGS.get(doc_type, DOCUMENT_TYPE_CONFIGS["general"])
-
-def get_model_config(provider: str, model: str) -> Dict[str, Any]:
-    """Get configuration for specific model."""
-    return MODEL_CONFIGS.get(provider, {}).get(model, {})
 
 def ensure_directories():
     """Ensure all required directories exist."""

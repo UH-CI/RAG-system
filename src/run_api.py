@@ -14,26 +14,26 @@ def main():
     """Start the FastAPI server"""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='House Finance Document API Server',
+        description='Document RAG API Server - Generalized system for JSON document arrays',
         epilog='''
 Examples:
   python run_api.py                                    # Start server only
-  python run_api.py --ingest                          # Reset collections and ingest standard docs
-  python run_api.py --ingest --append                 # Add standard docs to existing collections
-  python run_api.py --ingest --ingest-type worksheets # Reset and ingest worksheets
-  python run_api.py --ingest --ingest-type worksheets --append  # Add worksheets to existing data
-  python run_api.py --ingest-only --append --ingest-file documents/my_file.json  # Append specific file
+  python run_api.py --ingest                          # Reset collections and ingest from configured files
+  python run_api.py --ingest --append                 # Add documents to existing collections from configured files
+  python run_api.py --ingest-only --append            # Only ingest from configured files, don't start server
+  python run_api.py --ingest-file documents/custom_data.json --no-reset  # Ingest custom JSON without reset
+
+The system automatically uses the source files specified in config.json for each collection.
+Each collection has specific fields that will be embedded as specified in config.json.
         ''',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--ingest', action='store_true', 
-                       help='Ingest processed documents before starting the server')
+                       help='Ingest documents from configured source files before starting the server')
     parser.add_argument('--ingest-only', action='store_true',
-                       help='Only ingest documents, do not start the server')
-    parser.add_argument('--ingest-file', default='documents/processed_all_documents_geminiV4_expanded.json',
-                       help='Path to the processed JSON file to ingest (relative to src directory)')
-    parser.add_argument('--ingest-type', choices=['standard', 'worksheets'], default='standard',
-                       help='Type of documents to ingest: standard or worksheets')
+                       help='Only ingest documents from configured source files, do not start the server')
+    parser.add_argument('--ingest-file', 
+                       help='Path to a specific JSON file to ingest (overrides config-based ingestion)')
     parser.add_argument('--no-reset', action='store_true',
                        help='Do not reset collections before ingestion (append to existing data)')
     parser.add_argument('--append', action='store_true',
@@ -68,8 +68,11 @@ Examples:
         print("=" * 60)
         
         # Handle document ingestion if requested
-        if args.ingest or args.ingest_only:
-            print(f"\n📥 Ingesting {args.ingest_type} documents from {args.ingest_file}...")
+        if args.ingest or args.ingest_only or args.ingest_file:
+            if args.ingest_file:
+                print(f"\n📥 Ingesting documents from {args.ingest_file}...")
+            else:
+                print(f"\n📥 Ingesting all collections from configured source files...")
             
             # Determine if we should reset collections
             reset_collections = not (args.no_reset or args.append)
@@ -80,51 +83,164 @@ Examples:
                 print("➕ Documents will be appended to existing collections")
             
             try:
-                # Import the appropriate ingestion function
-                if args.ingest_type == 'worksheets':
-                    from api import ingest_budget_worksheets, budget_manager, text_manager
-                    ingestion_func = ingest_budget_worksheets
-                else:
-                    from api import ingest_processed_documents, budget_manager, text_manager
-                    ingestion_func = ingest_processed_documents
-                
-                # Reset collections before ingestion to avoid duplicates (if requested)
-                if reset_collections:
-                    print("🔄 Resetting collections to avoid duplicates...")
-                    budget_manager.reset_collection()
-                    text_manager.reset_collection()
-                    print("✅ Collections reset successfully")
+                if args.ingest_file:
+                    # Use the specified file for ingestion
+                    from api import get_collection_manager, get_ingestion_config, config
+                    import json
+                    from tqdm import tqdm
+                    import time
                     
-                    # Reinitialize the managers to get fresh collection references
-                    print("🔄 Reinitializing collection managers...")
-                    from api import BudgetChromeManager, TextChromeManager
-                    import api
-                    api.budget_manager = BudgetChromeManager()
-                    api.text_manager = TextChromeManager()
-                    print("✅ Collection managers reinitialized")
-                else:
-                    print("📊 Using existing collections (no reset)")
-                
-                # Now ingest the documents
-                result = ingestion_func(args.ingest_file, reset_collections)
-                
-                if result.get('success', False):
-                    if args.ingest_type == 'worksheets':
-                        print(f"✅ Document ingestion completed:")
-                        print(f"   - Worksheet items: {result.get('worksheet_items_ingested', 0)}")
-                        print(f"   - Text items: {result.get('text_items_ingested', 0)}")
+                    # Reset collections before ingestion to avoid duplicates (if requested)
+                    if reset_collections:
+                        print("🔄 Resetting collections to avoid duplicates...")
+                        from api import collection_managers
+                        for manager in collection_managers.values():
+                            manager.reset_collection()
+                        print("✅ Collections reset successfully")
+                        
+                        # Reinitialize the managers to get fresh collection references
+                        print("🔄 Reinitializing collection managers...")
+                        from api import DynamicChromeManager, collection_names
+                        import api
+                        api.collection_managers = {}
+                        for collection_name in collection_names:
+                            api.collection_managers[collection_name] = DynamicChromeManager(collection_name)
+                        print("✅ Collection managers reinitialized")
                     else:
-                        print(f"✅ Document ingestion completed:")
-                        print(f"   - Budget items: {result.get('budget_items_ingested', 0)}")
-                        print(f"   - Text items: {result.get('text_items_ingested', 0)}")
+                        print("📊 Using existing collections (no reset)")
                     
-                    print(f"   - Processing time: {result.get('processing_time_seconds', 0):.2f} seconds")
-                    print(f"   - Rate: {result.get('items_per_second', 0):.1f} items/second")
+                    # Load and process the JSON file using simplified structure
+                    start_time = time.time()
                     
-                    if result.get('errors'):
-                        print(f"   - Errors: {len(result['errors'])} (check logs for details)")
+                    try:
+                        with open(args.ingest_file, 'r') as f:
+                            data = json.load(f)
+                    except FileNotFoundError:
+                        raise FileNotFoundError(f"File not found: {args.ingest_file}")
+                    except json.JSONDecodeError:
+                        raise Exception(f"Invalid JSON file: {args.ingest_file}")
+                    
+                    # Expect JSON to be an array of documents
+                    if not isinstance(data, list):
+                        raise Exception(f"JSON file must contain an array of documents, got {type(data)}")
+                    
+                    documents = data
+                    
+                    # Use default collection for ingestion
+                    target_collection = config.get("default_collection", config["collections"][0])
+                    manager = get_collection_manager(target_collection)
+                    ingestion_config = get_ingestion_config(target_collection)
+                    
+                    # Ingest documents
+                    ingested_count = 0
+                    errors = []
+                    
+                    print(f"📥 Ingesting {len(documents)} documents into '{target_collection}'...")
+                    print(f"🎯 Embedding fields: {ingestion_config.get('contents_to_embed', [])}")
+                    
+                    for i, doc in enumerate(tqdm(documents, desc=f"Processing documents")):
+                        try:
+                            # Add the document with its ingestion config
+                            if manager.add_document(doc, ingestion_config):
+                                ingested_count += 1
+                            else:
+                                errors.append(f"Document {i}: Failed to add to collection")
+                            
+                        except Exception as e:
+                            errors.append(f"Document {i}: {str(e)}")
+                            continue
+                    
+                    end_time = time.time()
+                    processing_time = end_time - start_time
+                    items_per_second = ingested_count / processing_time if processing_time > 0 else 0
+                    
+                    # Create result summary
+                    result = {
+                        "success": True,
+                        "ingested_count": ingested_count,
+                        "total_documents": len(documents),
+                        "target_collection": target_collection,
+                        "embedded_fields": ingestion_config.get('contents_to_embed', []),
+                        "processing_time_seconds": processing_time,
+                        "items_per_second": items_per_second,
+                        "errors": errors[:10]  # Limit error messages
+                    }
+                    
+                    # Print results using generalized format
+                    print(f"✅ Document ingestion completed:")
+                    print(f"   - Documents ingested: {ingested_count}")
+                    print(f"   - Target collection: {target_collection}")
+                    print(f"   - Embedded fields: {ingestion_config.get('contents_to_embed', [])}")
+                    print(f"   - Processing time: {processing_time:.2f} seconds")
+                    print(f"   - Rate: {items_per_second:.1f} items/second")
+                    
+                    if errors:
+                        print(f"   - Errors: {len(errors)} (showing first 10)")
+                        for error in errors[:10]:
+                            print(f"     • {error}")
+                    
+                    if not result["success"]:
+                        raise Exception("Ingestion failed")
+                        
                 else:
-                    raise Exception(result.get('error', 'Unknown ingestion error'))
+                    # Use the configured source files for each collection
+                    from api import ingest_from_source_file, config
+                    import time
+                    
+                    # Reset collections before ingestion to avoid duplicates (if requested)
+                    if reset_collections:
+                        print("🔄 Resetting collections to avoid duplicates...")
+                        from api import collection_managers
+                        for manager in collection_managers.values():
+                            manager.reset_collection()
+                        print("✅ Collections reset successfully")
+                        
+                        # Reinitialize the managers to get fresh collection references
+                        print("🔄 Reinitializing collection managers...")
+                        from api import DynamicChromeManager, collection_names
+                        import api
+                        api.collection_managers = {}
+                        for collection_name in collection_names:
+                            api.collection_managers[collection_name] = DynamicChromeManager(collection_name)
+                        print("✅ Collection managers reinitialized")
+                    else:
+                        print("📊 Using existing collections (no reset)")
+                    
+                    # Process each collection from config
+                    start_time = time.time()
+                    all_results = []
+                    total_ingested = 0
+                    
+                    for ing_config in config.get("ingestion_configs", []):
+                        collection_name = ing_config.get("collection_name")
+                        source_file = ing_config.get("source_file")
+                        
+                        if not collection_name or not source_file:
+                            print(f"❌ Skipping invalid config: {ing_config}")
+                            continue
+                        
+                        result = ingest_from_source_file(collection_name, source_file, ing_config)
+                        all_results.append(result)
+                        
+                        if result["success"]:
+                            total_ingested += result["ingested_count"]
+                            print(f"✅ {collection_name}: {result['ingested_count']} documents from {source_file}")
+                        else:
+                            print(f"❌ {collection_name}: Failed - {result.get('error', 'Unknown error')}")
+                    
+                    end_time = time.time()
+                    processing_time = end_time - start_time
+                    
+                    # Print summary
+                    print(f"\n✅ Bulk ingestion completed:")
+                    print(f"   - Total documents ingested: {total_ingested}")
+                    print(f"   - Collections processed: {len(all_results)}")
+                    successful = [r for r in all_results if r["success"]]
+                    print(f"   - Successful collections: {len(successful)}")
+                    print(f"   - Processing time: {processing_time:.2f} seconds")
+                    
+                    if total_ingested == 0:
+                        raise Exception("No documents were ingested")
                     
             except FileNotFoundError as e:
                 print(f"❌ File not found: {e}")

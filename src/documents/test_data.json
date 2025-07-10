@@ -1,0 +1,22 @@
+{
+  "documents": [
+    {
+      "text": "This is a test document about machine learning and AI.",
+      "title": "ML Basics",
+      "topic": "machine learning",
+      "difficulty": "beginner"
+    },
+    {
+      "text": "Advanced concepts in natural language processing and transformers.",
+      "title": "NLP Advanced",
+      "topic": "nlp",
+      "difficulty": "advanced"
+    },
+    {
+      "text": "Introduction to computer vision and image recognition.",
+      "title": "Computer Vision",
+      "topic": "computer vision",
+      "difficulty": "intermediate"
+    }
+  ]
+} 
