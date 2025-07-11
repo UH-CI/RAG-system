@@ -129,7 +129,7 @@ class DynamicChromeManager(ChromaDBManager):
                 ids=[doc_id]
             )
             return True
-            
+                        
         except Exception as e:
             print(f"Error adding document to {self.collection_name}: {e}")
             return False
@@ -153,7 +153,7 @@ class DynamicChromeManager(ChromaDBManager):
                     formatted_results.append(result)
             
             return formatted_results
-            
+                            
         except Exception as e:
             print(f"Error searching in {self.collection_name}: {e}")
             return []
@@ -353,7 +353,7 @@ async def search_documents(request: SearchRequest):
         except Exception as e:
             print(f"Error searching collection {collection_name}: {e}")
             continue
-    
+            
     # Sort by score if available and limit results
     if all_results and all_results[0].score is not None:
         all_results.sort(key=lambda x: x.score, reverse=True)
@@ -379,7 +379,7 @@ def search_relevant_documents(query: str, collections: Optional[List[str]] = Non
         except Exception as e:
             print(f"Error searching collection {collection_name}: {e}")
             continue
-    
+                            
     # Sort by score and return top results
     if all_results and "score" in all_results[0]:
         all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
@@ -400,7 +400,7 @@ async def query_documents(request: QueryRequest):
         result["threshold_used"] = request.threshold
         
         return result
-        
+                            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
@@ -439,7 +439,7 @@ async def ingest_json_file(file: UploadFile = File(...), target_collection: Opti
                     ingested_count += 1
                 else:
                     errors.append(f"Document {i}: Failed to add to collection")
-                            
+            
             except Exception as e:
                 errors.append(f"Document {i}: {str(e)}")
                 continue
@@ -477,7 +477,7 @@ async def reset_collections(collections: Optional[List[str]] = None):
         except Exception as e:
             reset_results[collection_name] = f"error: {str(e)}"
             print(f"❌ Error resetting {collection_name}: {e}")
-    
+        
     return {
         "message": f"Reset operation completed for collections: {list(target_collections)}",
         "results": reset_results
@@ -491,4 +491,4 @@ async def debug_managers():
         "config_collections": collection_names,
         "active_managers": list(collection_managers.keys()),
         "config": config
-    } 
+    }

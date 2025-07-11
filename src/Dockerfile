@@ -23,17 +23,17 @@ COPY . .
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Expose ports (8000 for API, 8080 for test interface)
-EXPOSE 8000 8080
+# Expose ports (8200 for API, 8280 for test interface)
+EXPOSE 8200 8280
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8200/ || exit 1
 
 # Default command runs API server
 CMD ["python", "run_api.py"]
 
 # Alternative commands:
-# docker run -p 8000:8000 your-image                    # API server
-# docker run -p 8080:8080 your-image python tests/test_server.py  # Test interface
-# docker run -p 8000:8000 -p 8080:8080 your-image bash # Interactive 
+# docker run -p 8200:8200 your-image                    # API server
+# docker run -p 8280:8280 your-image python tests/test_server.py  # Test interface
+# docker run -p 8200:8200 -p 8280:8280 your-image bash # Interactive 

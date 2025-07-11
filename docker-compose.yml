@@ -8,8 +8,6 @@ services:
       - "8200:8200"
     environment:
       - PYTHONPATH=/app
-    volumes:
-      - ./documents:/app/documents
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200/"]
       interval: 30s

@@ -18,9 +18,9 @@ build
 env/
 venv/
 
-# ChromaDB data (will be created fresh in container)
-chroma_db/data/
-*.sqlite3
+# ChromaDB data (commenting out to include in image)
+# chroma_db/data/
+# *.sqlite3
 
 # Documents and uploads
 uploads/
