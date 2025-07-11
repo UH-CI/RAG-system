@@ -10,8 +10,23 @@ import uvicorn
 import argparse
 from pathlib import Path
 
+def setup_python_path():
+    """Setup Python path for proper module imports"""
+    # Get the directory containing this script (src directory)
+    current_dir = Path(__file__).parent.absolute()
+    
+    # Add current directory and parent to Python path
+    sys.path.insert(0, str(current_dir))
+    sys.path.insert(0, str(current_dir.parent))
+    
+    # Change working directory to src
+    os.chdir(current_dir)
+
 def main():
     """Start the FastAPI server"""
+    # Setup paths first
+    setup_python_path()
+    
     # Parse command line arguments
     parser = argparse.ArgumentParser(
         description='Document RAG API Server - Generalized system for JSON document arrays',
@@ -48,13 +63,6 @@ Each collection has specific fields that will be embedded as specified in config
     try:
         print("🚀 Starting House Finance Document API...")
         print("📚 Loading ChromaDB and embedding models...")
-        
-        # Set the current directory as the project root (src directory is now root)
-        project_root = Path(__file__).parent
-        sys.path.insert(0, str(project_root))
-        
-        # Change working directory to project root
-        os.chdir(project_root)
         
         # Import here to catch any configuration errors early
         from settings import Settings
