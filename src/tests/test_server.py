@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple HTTP server for testing the House Finance API
-Serves HTML interface for testing budget items table and intelligent queries
+Simple HTTP server for testing the Course RAG System
+Serves HTML interface for testing intelligent query processing and collection management
 """
 
 import http.server
@@ -44,9 +44,9 @@ class TestServer:
             
             self.server = socketserver.TCPServer(("", self.port), CORSRequestHandler)
             
-            print(f"🌐 Test server starting on http://localhost:{self.port}")
+            print(f"🌐 Course RAG Test Server starting on http://localhost:{self.port}")
             print(f"📁 Serving files from: {tests_dir}")
-            print(f"🔗 Open: http://localhost:{self.port}/budget_test_interface.html")
+            print(f"🔗 Open: http://localhost:{self.port}/course_rag_interface.html")
             print("Press Ctrl+C to stop the server")
             
             # Start server in a separate thread
@@ -57,7 +57,7 @@ class TestServer:
             # Open browser after a short delay
             def open_browser():
                 time.sleep(1)
-                webbrowser.open(f"http://localhost:{self.port}/budget_test_interface.html")
+                webbrowser.open(f"http://localhost:{self.port}/course_rag_interface.html")
             
             browser_thread = threading.Thread(target=open_browser)
             browser_thread.daemon = True
@@ -81,7 +81,7 @@ class TestServer:
             self.server.server_close()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='House Finance Test Server')
+    parser = argparse.ArgumentParser(description='Course RAG System Test Server')
     parser.add_argument('--port', type=int, default=8080, help='Port to run the server on (default: 8080)')
     args = parser.parse_args()
     

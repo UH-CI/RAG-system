@@ -19,8 +19,8 @@ env/
 venv/
 
 # ChromaDB data (will be created fresh in container)
-# chroma_db/data/
-# *.sqlite3
+chroma_db/data/
+*.sqlite3
 
 # Documents and uploads
 uploads/

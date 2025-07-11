@@ -16,3 +16,9 @@ __pycache__/
 *.db
 chroma_db/
 src/chroma_db/
+
+/2025-Budget-Worksheets
+/documents
+
+/improve_rag
+

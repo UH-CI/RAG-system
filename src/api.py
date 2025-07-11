@@ -266,7 +266,7 @@ class SearchRequest(BaseModel):
 class QueryRequest(BaseModel):
     query: str = Field(..., description="User query")
     collections: Optional[List[str]] = Field(default=None, description="Collections to search in")
-    num_results: int = Field(default=None, description="Number of results to return")
+    threshold: float = Field(default=0.5, ge=0.0, le=1.0, description="Similarity threshold (0.0 to 1.0) - only return documents with similarity scores above this threshold")
 
 class DocumentResponse(BaseModel):
     content: str
@@ -390,15 +390,14 @@ def search_relevant_documents(query: str, collections: Optional[List[str]] = Non
 async def query_documents(request: QueryRequest):
     """Advanced query processing with multi-step reasoning, searching, and answering"""
     try:
-        num_results = get_search_params(request.num_results)
-        
-        # Use the multi-step query processor
-        result = query_processor.process_query(request.query, num_results)
+        # Use the multi-step query processor with threshold filtering
+        result = query_processor.process_query(request.query, threshold=request.threshold)
         
         # Add metadata about the request
         result["query"] = request.query
         result["collections_available"] = collection_names
         result["processing_method"] = "multi-step-reasoning"
+        result["threshold_used"] = request.threshold
         
         return result
         

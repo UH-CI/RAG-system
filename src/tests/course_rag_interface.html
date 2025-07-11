@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course RAG System - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .tab.active {
+            background: white;
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Query Tab Styles */
+        .query-section {
+            margin-bottom: 30px;
+        }
+
+        .preset-queries {
+            margin-bottom: 30px;
+        }
+
+        .preset-queries h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.2em;
+        }
+
+        .preset-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 8px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .preset-btn:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .query-input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .query-input-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .query-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .query-btn {
+            padding: 15px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .query-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .query-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .query-options {
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .query-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .query-options input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .query-options select {
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* Response Display Styles */
+        .response-container {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .response-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-header h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .response-meta {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .response-content {
+            padding: 25px;
+        }
+
+        .response-answer {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .response-answer h3 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .response-answer h4 {
+            color: #34495e;
+            font-size: 16px;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .response-answer ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .response-answer li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .response-answer p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+
+        .response-answer strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .reasoning-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .reasoning-section h4 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .reasoning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .reasoning-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+        }
+
+        .reasoning-item h5 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .reasoning-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            background: #2196f3;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .sources-section {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .sources-section h4 {
+            color: #f57c00;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .sources-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .source-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .source-item:last-child {
+            border-bottom: none;
+        }
+
+        .source-item:hover {
+            background: #f8f9fa;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .source-collection {
+            background: #ff9800;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .source-score {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .source-content {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .source-metadata {
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        /* Collections Search Results Styles */
+        .collections-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-collection {
+            background: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .result-score {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .result-content {
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .result-metadata {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .result-metadata strong {
+            color: #2c3e50;
+        }
+
+        /* Utility Classes */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #f0f9f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #27ae60;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .query-input-container {
+                flex-direction: column;
+            }
+
+            .query-input {
+                margin-bottom: 10px;
+            }
+
+            .query-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .reasoning-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .collections-results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Course RAG System</h1>
+            <p>Intelligent Query Processing & Collection Management</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('query')">Intelligent Query</div>
+            <div class="tab" onclick="switchTab('collections')">Collections</div>
+        </div>
+
+        <!-- Query Tab -->
+        <div id="query-tab" class="tab-content active">
+            <div class="query-section">
+                <div class="preset-queries">
+                    <h3>🚀 Quick Test Queries</h3>
+                    <div class="preset-btn" onclick="sendPresetQuery('What machine learning courses are available?')">Machine Learning Courses</div>
+                    <div class="preset-btn" onclick="sendPresetQuery('Tell me about computer science programs')">CS Programs</div>
+                    <div class="preset-btn" onclick="sendPresetQuery('What are the prerequisites for advanced mathematics courses?')">Math Prerequisites</div>
+                    <div class="preset-btn" onclick="sendPresetQuery('Find courses related to data science')">Data Science</div>
+                    <div class="preset-btn" onclick="sendPresetQuery('What programs are offered in engineering?')">Engineering Programs</div>
+                    <div class="preset-btn" onclick="sendPresetQuery('Show me courses with lab components')">Lab Courses</div>
+                </div>
+
+                <div class="query-input-section">
+                    <div class="query-input-container">
+                        <input type="text" id="query-input" class="query-input" placeholder="Ask about courses, programs, prerequisites, or anything else..." onkeydown="handleQueryEnterKey(event)">
+                        <button id="query-btn" class="query-btn" onclick="sendQuery()">Send Query</button>
+                    </div>
+                    
+                    <div class="query-options">
+                        <label>
+                            Similarity Threshold:
+                            <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5">
+                            <span id="threshold-value">0.50</span>
+                        </label>
+                        <label>
+                            Collections:
+                            <select id="collections-select" multiple>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="response-container" class="response-container hidden">
+                <div class="response-header">
+                    <h3>Query Response</h3>
+                    <div class="response-meta">
+                        <span id="response-time"></span> • 
+                        <span id="documents-found"></span> documents found •
+                        <span id="threshold-used"></span> threshold
+                    </div>
+                </div>
+                <div class="response-content">
+                    <div id="response-answer" class="response-answer"></div>
+                    
+                    <div id="reasoning-section" class="reasoning-section">
+                        <h4>🧠 Analysis Process</h4>
+                        <div class="reasoning-grid">
+                            <div class="reasoning-item">
+                                <h5>Intent</h5>
+                                <div id="reasoning-intent"></div>
+                            </div>
+                            <div class="reasoning-item">
+                                <h5>Collections Searched</h5>
+                                <div id="reasoning-collections" class="reasoning-tags"></div>
+                            </div>
+                            <div class="reasoning-item">
+                                <h5>Search Terms</h5>
+                                <div id="reasoning-terms" class="reasoning-tags"></div>
+                            </div>
+                            <div class="reasoning-item">
+                                <h5>Confidence</h5>
+                                <div id="reasoning-confidence"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sources-section" class="sources-section">
+                        <h4>📚 Source Documents</h4>
+                        <div id="sources-container" class="sources-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collections Tab -->
+        <div id="collections-tab" class="tab-content">
+            <div class="query-section">
+                <h2>🔍 Vector Search Across Collections</h2>
+                <p>Search for documents across all collections using semantic similarity. Enter your search terms below:</p>
+                
+                <div class="query-input-section">
+                    <div class="query-input-container">
+                        <input type="text" id="collections-search-input" class="query-input" placeholder="Enter search terms (e.g., 'machine learning', 'computer science', 'mathematics')..." onkeydown="handleCollectionsSearchEnterKey(event)">
+                        <button id="collections-search-btn" class="query-btn" onclick="searchCollections()">Search</button>
+                    </div>
+                    
+                    <div class="query-options">
+                        <label>
+                            Similarity Threshold:
+                            <input type="range" id="collections-threshold-slider" min="0" max="1" step="0.01" value="0.3">
+                            <span id="collections-threshold-value">0.30</span>
+                        </label>
+                        <label>
+                            Max Results:
+                            <input type="number" id="collections-max-results" value="20" min="1" max="100">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="collections-results-container" class="response-container hidden">
+                <div class="response-header">
+                    <h3>Search Results</h3>
+                    <div class="response-meta">
+                        <span id="collections-response-time"></span> • 
+                        <span id="collections-documents-found"></span> documents found •
+                        <span id="collections-threshold-used"></span> threshold
+                    </div>
+                </div>
+                <div class="response-content">
+                    <div id="collections-results-grid" class="collections-results-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically determine API base URL
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+        
+        console.log('Frontend URL:', window.location.href);
+        console.log('API Base URL:', API_BASE);
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Query Functions
+        function handleQueryEnterKey(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendQuery();
+            }
+        }
+
+        function sendPresetQuery(query) {
+            document.getElementById('query-input').value = query;
+            sendQuery();
+        }
+
+        async function sendQuery() {
+            const queryInput = document.getElementById('query-input');
+            const queryBtn = document.getElementById('query-btn');
+            const responseContainer = document.getElementById('response-container');
+            
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            // Get options
+            const threshold = parseFloat(document.getElementById('threshold-slider').value);
+            const selectedCollections = Array.from(document.getElementById('collections-select').selectedOptions).map(option => option.value);
+
+            // Disable button and show loading
+            queryBtn.disabled = true;
+            queryBtn.innerHTML = '<div class="loading"></div> Processing...';
+            
+            // Show response container
+            responseContainer.classList.remove('hidden');
+            
+            // Clear previous response
+            document.getElementById('response-answer').innerHTML = '<div class="loading"></div> Analyzing your query...';
+            
+            const startTime = Date.now();
+
+            try {
+                const requestBody = {
+                    query: query,
+                    threshold: threshold
+                };
+
+                if (selectedCollections.length > 0) {
+                    requestBody.collections = selectedCollections;
+                }
+
+                const response = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                // Display response
+                displayQueryResponse(data, endTime - startTime);
+                
+            } catch (error) {
+                console.error('Error sending query:', error);
+                document.getElementById('response-answer').innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}
+                        <br><br>
+                        Make sure the API server is running at ${API_BASE}
+                    </div>
+                `;
+            } finally {
+                queryBtn.disabled = false;
+                queryBtn.textContent = 'Send Query';
+            }
+        }
+
+        function displayQueryResponse(data, responseTime) {
+            // Update response metadata
+            document.getElementById('response-time').textContent = `${responseTime}ms`;
+            document.getElementById('documents-found').textContent = data.total_documents_found || 0;
+            document.getElementById('threshold-used').textContent = `${(data.threshold_used || 0.5).toFixed(2)}`;
+
+            // Display main response
+            document.getElementById('response-answer').innerHTML = formatResponseText(data.response || 'No response available');
+
+            // Display reasoning information
+            if (data.reasoning) {
+                document.getElementById('reasoning-intent').textContent = data.reasoning.intent || 'Unknown';
+                document.getElementById('reasoning-confidence').textContent = data.reasoning.confidence || 'Unknown';
+                
+                // Collections searched
+                const collectionsContainer = document.getElementById('reasoning-collections');
+                collectionsContainer.innerHTML = '';
+                if (data.reasoning.collections_searched) {
+                    data.reasoning.collections_searched.forEach(collection => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.textContent = collection;
+                        collectionsContainer.appendChild(tag);
+                    });
+                }
+
+                // Search terms
+                const termsContainer = document.getElementById('reasoning-terms');
+                termsContainer.innerHTML = '';
+                if (data.reasoning.search_terms) {
+                    data.reasoning.search_terms.forEach(term => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.textContent = term;
+                        termsContainer.appendChild(tag);
+                    });
+                }
+            }
+
+            // Display sources
+            const sourcesContainer = document.getElementById('sources-container');
+            sourcesContainer.innerHTML = '';
+            
+            if (data.sources && data.sources.length > 0) {
+                data.sources.forEach((source, index) => {
+                    const sourceDiv = document.createElement('div');
+                    sourceDiv.className = 'source-item';
+                    
+                    const metadata = source.metadata || {};
+                    let metadataHtml = '';
+                    
+                    // Format metadata based on collection type
+                    if (source.collection === 'courses') {
+                        metadataHtml = `
+                            <strong>Course:</strong> ${metadata.course_id || 'Unknown'} - ${metadata.title || 'Unknown'} |
+                            <strong>Credits:</strong> ${metadata.credits || 'Unknown'} |
+                            <strong>Department:</strong> ${metadata.department || 'Unknown'}
+                        `;
+                    } else if (source.collection === 'programs') {
+                        metadataHtml = `
+                            <strong>Program:</strong> ${metadata.name || metadata.program || 'Unknown'} |
+                            <strong>Department:</strong> ${metadata.department || 'Unknown'} |
+                            <strong>College:</strong> ${metadata.college || 'Unknown'}
+                        `;
+                    } else {
+                        // Generic metadata display
+                        const importantFields = ['name', 'title', 'department', 'college', 'course_id', 'program'];
+                        const displayFields = importantFields.filter(field => metadata[field]);
+                        metadataHtml = displayFields.map(field => `<strong>${field}:</strong> ${metadata[field]}`).join(' | ');
+                    }
+
+                    sourceDiv.innerHTML = `
+                        <div class="source-header">
+                            <span class="source-collection">${source.collection}</span>
+                            <span class="source-score">Score: ${source.score?.toFixed(3) || 'N/A'}</span>
+                        </div>
+                        <div class="source-content">${source.content}</div>
+                        <div class="source-metadata">${metadataHtml}</div>
+                    `;
+                    
+                    sourcesContainer.appendChild(sourceDiv);
+                });
+            } else {
+                sourcesContainer.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">No source documents found above the similarity threshold</p>';
+            }
+        }
+
+        function formatResponseText(text) {
+            // Convert markdown-style formatting to HTML
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+            
+            // Wrap in paragraphs
+            formattedText = '<p>' + formattedText + '</p>';
+            
+            return formattedText;
+        }
+
+        // Collections Search Functions
+        function handleCollectionsSearchEnterKey(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchCollections();
+            }
+        }
+
+        async function searchCollections() {
+            const searchInput = document.getElementById('collections-search-input');
+            const searchBtn = document.getElementById('collections-search-btn');
+            const resultsContainer = document.getElementById('collections-results-container');
+            
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Get options
+            const threshold = parseFloat(document.getElementById('collections-threshold-slider').value);
+            const maxResults = parseInt(document.getElementById('collections-max-results').value) || 20;
+
+            // Disable button and show loading
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<div class="loading"></div> Searching...';
+            
+            // Show results container
+            resultsContainer.classList.remove('hidden');
+            
+            // Clear previous results
+            document.getElementById('collections-results-grid').innerHTML = '<div class="loading"></div> Searching across collections...';
+            
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        num_results: maxResults
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                // Filter results by threshold
+                const filteredResults = data.filter(result => result.score >= threshold);
+                
+                // Display results
+                displayCollectionsResults(filteredResults, endTime - startTime, threshold);
+                
+            } catch (error) {
+                console.error('Error searching collections:', error);
+                document.getElementById('collections-results-grid').innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}
+                        <br><br>
+                        Make sure the API server is running at ${API_BASE}
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        function displayCollectionsResults(results, responseTime, threshold) {
+            // Update response metadata
+            document.getElementById('collections-response-time').textContent = `${responseTime}ms`;
+            document.getElementById('collections-documents-found').textContent = results.length;
+            document.getElementById('collections-threshold-used').textContent = threshold.toFixed(2);
+
+            const resultsGrid = document.getElementById('collections-results-grid');
+            resultsGrid.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>No results found</h3>
+                        <p>Try lowering the similarity threshold or using different search terms.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            results.forEach((result, index) => {
+                const resultCard = document.createElement('div');
+                resultCard.className = 'result-card';
+                
+                const metadata = result.metadata || {};
+                let metadataHtml = '';
+                
+                // Format metadata based on collection type
+                if (result.metadata.collection === 'courses') {
+                    metadataHtml = `
+                        <strong>Course:</strong> ${metadata.course_id || 'Unknown'}<br>
+                        <strong>Title:</strong> ${metadata.title || 'Unknown'}<br>
+                        <strong>Credits:</strong> ${metadata.credits || 'Unknown'}<br>
+                        <strong>Department:</strong> ${metadata.department || 'Unknown'}<br>
+                        <strong>Prerequisites:</strong> ${metadata.prerequisites || 'None'}
+                    `;
+                } else if (result.metadata.collection === 'programs') {
+                    metadataHtml = `
+                        <strong>Program:</strong> ${metadata.name || metadata.program || 'Unknown'}<br>
+                        <strong>Department:</strong> ${metadata.department || 'Unknown'}<br>
+                        <strong>College:</strong> ${metadata.college || 'Unknown'}<br>
+                        <strong>Course Count:</strong> ${metadata.course_count || 'Unknown'}
+                    `;
+                } else {
+                    // Generic metadata display
+                    const importantFields = ['name', 'title', 'department', 'college', 'course_id', 'program'];
+                    const displayFields = importantFields.filter(field => metadata[field]);
+                    metadataHtml = displayFields.map(field => `<strong>${field}:</strong> ${metadata[field]}`).join('<br>');
+                }
+
+                resultCard.innerHTML = `
+                    <div class="result-header">
+                        <span class="result-collection">${result.metadata.collection || 'Unknown'}</span>
+                        <span class="result-score">Score: ${result.score?.toFixed(3) || 'N/A'}</span>
+                    </div>
+                    <div class="result-content">${result.content}</div>
+                    <div class="result-metadata">${metadataHtml}</div>
+                `;
+                
+                resultsGrid.appendChild(resultCard);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Course RAG Interface loaded');
+            console.log('API Base URL:', API_BASE);
+            
+            // Set up threshold slider for query tab
+            const thresholdSlider = document.getElementById('threshold-slider');
+            const thresholdValue = document.getElementById('threshold-value');
+            
+            thresholdSlider.addEventListener('input', function() {
+                thresholdValue.textContent = parseFloat(this.value).toFixed(2);
+            });
+            
+            // Set up threshold slider for collections tab
+            const collectionsThresholdSlider = document.getElementById('collections-threshold-slider');
+            const collectionsThresholdValue = document.getElementById('collections-threshold-value');
+            
+            collectionsThresholdSlider.addEventListener('input', function() {
+                collectionsThresholdValue.textContent = parseFloat(this.value).toFixed(2);
+            });
+            
+            // Load collections data for the select dropdown
+            updateCollectionsSelect();
+        });
+
+        async function updateCollectionsSelect() {
+            try {
+                const response = await fetch(`${API_BASE}/collections`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const availableCollections = Object.keys(data.collections || {});
+                
+                // Update collections select in query tab
+                const select = document.getElementById('collections-select');
+                select.innerHTML = '';
+                
+                availableCollections.forEach(collection => {
+                    const option = document.createElement('option');
+                    option.value = collection;
+                    option.textContent = collection;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Error loading collections:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

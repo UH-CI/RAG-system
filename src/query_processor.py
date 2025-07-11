@@ -161,8 +161,8 @@ Respond in JSON format:
                 "confidence": "low"
             }
     
-    def searching_step(self, reasoning_result: Dict[str, Any], num_results: int = 5) -> List[Dict[str, Any]]:
-        """Step 2: Execute searches based on reasoning results"""
+    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float = 0.5) -> List[Dict[str, Any]]:
+        """Step 2: Execute searches based on reasoning results with similarity threshold filtering"""
         
         target_collections = reasoning_result.get("target_collections", self.collection_names)
         search_terms = reasoning_result.get("search_terms", [])
@@ -172,21 +172,32 @@ Respond in JSON format:
         print(f"🔍 Searching Step:")
         print(f"   Collections: {target_collections}")
         print(f"   Terms: {search_terms}")
+        print(f"   Threshold: {threshold}")
         
         # Search with each term across target collections
+        # Use a high num_results to get more candidates for threshold filtering
+        max_candidates = 50  # Get more results to filter by threshold
+        
         for search_term in search_terms:
             for collection_name in target_collections:
                 try:
                     if collection_name in self.collection_managers:
                         manager = self.collection_managers[collection_name]
-                        results = manager.search_similar_chunks(search_term, num_results)
+                        results = manager.search_similar_chunks(search_term, max_candidates)
                         
-                        # Add search context to each result
+                        # Filter results by threshold
+                        filtered_results = []
                         for result in results:
-                            result["metadata"]["collection"] = collection_name
-                            result["metadata"]["search_term"] = search_term
-                            result["metadata"]["reasoning_intent"] = reasoning_result.get("intent", "unknown")
-                            all_results.append(result)
+                            score = result.get("score", 0.0)
+                            if score >= threshold:
+                                # Add search context to each result
+                                result["metadata"]["collection"] = collection_name
+                                result["metadata"]["search_term"] = search_term
+                                result["metadata"]["reasoning_intent"] = reasoning_result.get("intent", "unknown")
+                                filtered_results.append(result)
+                        
+                        all_results.extend(filtered_results)
+                        print(f"   {collection_name} with '{search_term}': {len(results)} total, {len(filtered_results)} above threshold")
                             
                 except Exception as e:
                     print(f"Error searching {collection_name} with term '{search_term}': {e}")
@@ -206,12 +217,9 @@ Respond in JSON format:
         if unique_results and "score" in unique_results[0]:
             unique_results.sort(key=lambda x: x.get("score", 0), reverse=True)
         
-        # Limit results
-        final_results = unique_results[:num_results]
+        print(f"   Found {len(all_results)} total results, {len(unique_results)} unique above threshold")
         
-        print(f"   Found {len(all_results)} total results, {len(unique_results)} unique, returning top {len(final_results)}")
-        
-        return final_results
+        return unique_results
     
     def answering_step(self, user_query: str, reasoning_result: Dict[str, Any], 
                       search_results: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -290,22 +298,22 @@ Answer:"""
                 "total_documents_found": len(search_results)
             }
     
-    def process_query(self, user_query: str, num_results: int = 5) -> Dict[str, Any]:
-        """Main method: Execute the complete query processing pipeline"""
+    def process_query(self, user_query: str, threshold: float = 0.5) -> Dict[str, Any]:
+        """Main method: Execute the complete query processing pipeline with threshold filtering"""
         
-        print(f"🚀 Processing query: '{user_query}'")
+        print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
         
         try:
             # Step 1: Reasoning
             reasoning_result = self.reasoning_step(user_query)
             
-            # Step 2: Searching
-            search_results = self.searching_step(reasoning_result, num_results)
+            # Step 2: Searching with threshold
+            search_results = self.searching_step(reasoning_result, threshold)
             
             # Step 3: Answering
             final_result = self.answering_step(user_query, reasoning_result, search_results)
             
-            print(f"✅ Query processing complete")
+            print(f"✅ Query processing complete - {len(search_results)} documents above threshold")
             
             return final_result
             
