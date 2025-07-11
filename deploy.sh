@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# House Finance Deployment Script
+# Course RAG Deployment Script
 # Usage: ./deploy.sh [option] [run_api.py flags]
 
 set -e
 
-echo "🏛️  House Finance Deployment Script"
-echo "=================================="
+echo "📚 Course RAG Deployment Script"
+echo "==============================="
 
 # Colors for output
 RED='\033[0;31m'
@@ -36,18 +36,18 @@ case "$DEPLOY_MODE" in
         echo -e "${BLUE}🚀 Starting local development...${NC}"
         echo "Installing dependencies..."
         pip install -r src/requirements.txt
-        echo "Starting API server on port 8000..."
+        echo "Starting API server on port 8200..."
         cd src
         python run_api.py $API_FLAGS &
         API_PID=$!
         sleep 3
-        echo "Starting test interface on port 8081..."
-        cd tests && python test_server.py --port 8081 &
+        echo "Starting test interface on port 8280..."
+        cd tests && python test_server.py --port 8280 &
         TEST_PID=$!
         cd ../..
         echo -e "${GREEN}✅ Services started!${NC}"
-        echo "🔗 API: http://localhost:8000"
-        echo "🔗 Test Interface: http://localhost:8081/budget_test_interface.html"
+        echo "🔗 API: http://localhost:8200"
+        echo "🔗 Test Interface: http://localhost:8280"
         if [ -n "$API_FLAGS" ]; then
             echo "🚀 API started with flags: $API_FLAGS"
         fi
@@ -73,26 +73,26 @@ case "$DEPLOY_MODE" in
             echo "Trying alternative single-container deployment..."
             
             # Stop existing containers
-            docker stop house-finance-api house-finance-test 2>/dev/null || true
-            docker rm house-finance-api house-finance-test 2>/dev/null || true
+            docker stop course-rag-api course-rag-test course-rag-nginx 2>/dev/null || true
+            docker rm course-rag-api course-rag-test course-rag-nginx 2>/dev/null || true
             
             echo "Building image..."
-            docker build -t house-finance:latest ./src
+            docker build -t course-rag:latest ./src
             
             echo "Starting API server..."
-            docker run -d --name house-finance-api -p 8000:8000 \
+            docker run -d --name course-rag-api -p 8200:8200 \
                 -e GOOGLE_API_KEY="${GOOGLE_API_KEY:-}" \
-                -v "$(pwd)/src/chroma_db/data:/app/chroma_db/data" \
+                -v "$(pwd)/src/chroma_db:/app/chroma_db" \
                 -v "$(pwd)/src/.env:/app/.env:ro" \
-                house-finance:latest python run_api.py $API_FLAGS
+                course-rag:latest python run_api.py $API_FLAGS
             
             sleep 5
             
             echo "Starting test interface..."
-            docker run -d --name house-finance-test -p 8081:8080 \
+            docker run -d --name course-rag-test -p 8280:8280 \
                 -e GOOGLE_API_KEY="${GOOGLE_API_KEY:-}" \
-                -v "$(pwd)/src/chroma_db/data:/app/chroma_db/data" \
-                house-finance:latest python tests/test_server.py --port 8080
+                -v "$(pwd)/src/chroma_db:/app/chroma_db" \
+                course-rag:latest python tests/test_server.py --port 8280
             
             echo -e "${GREEN}✅ Docker containers started!${NC}"
         else
@@ -102,7 +102,7 @@ case "$DEPLOY_MODE" in
                 cat > docker-compose.override.yml << EOF
 version: '3.8'
 services:
-  api:
+  course-rag-api:
     command: python run_api.py $API_FLAGS
 EOF
             else
@@ -116,8 +116,9 @@ EOF
             # Clean up override file
             rm -f docker-compose.override.yml
         fi
-        echo "🔗 API: http://localhost:8000"
-        echo "🔗 Test Interface: http://localhost:8081/budget_test_interface.html"
+        echo "🔗 Main Interface (Nginx): http://localhost:8090"
+        echo "🔗 API (Direct): http://localhost:8200"
+        echo "🔗 Test Interface (Direct): http://localhost:8280"
         if [ -n "$API_FLAGS" ]; then
             echo "🚀 API started with flags: $API_FLAGS"
         fi
@@ -127,7 +128,7 @@ EOF
     
     "build")
         echo -e "${BLUE}🔨 Building Docker image...${NC}"
-        docker build -t house-finance:latest ./src
+        docker build -t course-rag:latest ./src
         echo -e "${GREEN}✅ Docker image built successfully!${NC}"
         echo "Run './deploy.sh docker' to start services"
         ;;
@@ -135,11 +136,11 @@ EOF
     "push")
         echo -e "${BLUE}📤 Pushing to Docker Hub...${NC}"
         read -p "Enter your Docker Hub username: " DOCKER_USER
-        docker tag house-finance:latest $DOCKER_USER/house-finance:latest
-        docker push $DOCKER_USER/house-finance:latest
+        docker tag course-rag:latest $DOCKER_USER/course-rag:latest
+        docker push $DOCKER_USER/course-rag:latest
         echo -e "${GREEN}✅ Image pushed to Docker Hub!${NC}"
         echo "On your server, run:"
-        echo "  docker run -d -p 8000:8000 -p 8081:8081 $DOCKER_USER/house-finance:latest python tests/test_server.py --port 8081"
+        echo "  docker run -d -p 8200:8200 -p 8280:8280 $DOCKER_USER/course-rag:latest python tests/test_server.py --port 8280"
         ;;
     
     "server")
@@ -149,14 +150,14 @@ EOF
         echo "  export GOOGLE_API_KEY='your_api_key_here'"
         echo ""
         echo "Option 1 - Direct GitHub clone with ingestion:"
-        echo "  git clone https://github.com/yourusername/house-finance.git"
-        echo "  cd house-finance"
+        echo "  git clone https://github.com/yourusername/course-RAG.git"
+        echo "  cd course-RAG"
         echo "  pip install -r src/requirements.txt"
         echo "  export GOOGLE_API_KEY='your_api_key_here'"
-        echo "  ./deploy.sh local --ingest --ingest-type worksheets"
+        echo "  ./deploy.sh local --ingest --ingest-type courses"
         echo ""
         echo "Option 2 - Docker with ingestion:"
-        echo "  ./deploy.sh docker --ingest --ingest-type worksheets"
+        echo "  ./deploy.sh docker --ingest --ingest-type courses"
         echo ""
         echo "Option 3 - Append mode (add to existing data):"
         echo "  ./deploy.sh docker --ingest --append"
@@ -164,7 +165,7 @@ EOF
         echo "Available --ingest flags:"
         echo "  --ingest                     # Ingest and start server"
         echo "  --ingest-only                # Only ingest, don't start server"
-        echo "  --ingest-type worksheets     # Use budget worksheets"
+        echo "  --ingest-type courses        # Use course materials"
         echo "  --ingest-type standard       # Use standard documents"
         echo "  --append or --no-reset       # Don't reset collections"
         echo ""
@@ -177,10 +178,13 @@ EOF
             $DOCKER_COMPOSE_CMD logs -f
         else
             echo "API Server logs:"
-            docker logs house-finance-api
+            docker logs course-rag-api
             echo ""
             echo "Test Interface logs:"
-            docker logs house-finance-test
+            docker logs course-rag-test
+            echo ""
+            echo "Nginx logs:"
+            docker logs course-rag-nginx
         fi
         ;;
     
@@ -192,7 +196,7 @@ EOF
             $DOCKER_COMPOSE_CMD ps 2>/dev/null || echo "Docker Compose not running"
         else
             echo "Docker containers:"
-            docker ps | grep house-finance || echo "No house-finance containers running"
+            docker ps | grep course-rag || echo "No course-rag containers running"
         fi
         echo ""
         echo "Local processes:"
@@ -200,8 +204,9 @@ EOF
         pgrep -f "python.*test_server.py" && echo "✅ Test server running" || echo "❌ Test server not running"
         echo ""
         echo "Port usage:"
-        lsof -i :8000 2>/dev/null && echo "Port 8000 in use" || echo "Port 8000 free"
-        lsof -i :8081 2>/dev/null && echo "Port 8081 in use" || echo "Port 8081 free"
+        lsof -i :8200 2>/dev/null && echo "Port 8200 in use" || echo "Port 8200 free"
+        lsof -i :8280 2>/dev/null && echo "Port 8280 in use" || echo "Port 8280 free"
+        lsof -i :8090 2>/dev/null && echo "Port 8090 in use" || echo "Port 8090 free"
         ;;
     
     "stop")
@@ -210,8 +215,8 @@ EOF
         if [ "$DOCKER_COMPOSE_CMD" != "none" ]; then
             $DOCKER_COMPOSE_CMD down 2>/dev/null || echo "Docker Compose not running"
         else
-            docker stop house-finance-api house-finance-test 2>/dev/null || echo "No containers to stop"
-            docker rm house-finance-api house-finance-test 2>/dev/null || echo "No containers to remove"
+            docker stop course-rag-api course-rag-test course-rag-nginx 2>/dev/null || echo "No containers to stop"
+            docker rm course-rag-api course-rag-test course-rag-nginx 2>/dev/null || echo "No containers to remove"
         fi
         pkill -f "python.*run_api.py" 2>/dev/null || echo "No API server to stop"
         pkill -f "python.*test_server.py" 2>/dev/null || echo "No test server to stop"
@@ -232,14 +237,19 @@ EOF
         echo -e "${YELLOW}API Flags (can be passed after command):${NC}"
         echo "  --ingest                     # Reset collections and ingest documents"
         echo "  --ingest-only                # Only ingest, don't start server"
-        echo "  --ingest-type worksheets     # Ingest budget worksheets"
+        echo "  --ingest-type courses        # Ingest course materials"
         echo "  --ingest-type standard       # Ingest standard documents (default)"
         echo "  --append or --no-reset       # Don't reset collections before ingestion"
         echo "  --ingest-file path/file.json # Custom file to ingest"
         echo ""
         echo -e "${YELLOW}Examples:${NC}"
-        echo "  ./deploy.sh docker --ingest --ingest-type worksheets"
+        echo "  ./deploy.sh docker --ingest --ingest-type courses"
         echo "  ./deploy.sh local --ingest --append"
         echo "  ./deploy.sh docker --ingest-only --ingest-type standard"
+        echo ""
+        echo -e "${YELLOW}Access Points:${NC}"
+        echo "  🌐 Main Interface (Nginx): http://localhost:8090"
+        echo "  🔗 API (Direct): http://localhost:8200"
+        echo "  🧪 Test Interface (Direct): http://localhost:8280"
         ;;
 esac 
