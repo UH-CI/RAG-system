@@ -5,8 +5,8 @@
 
 set -e
 
-echo "📚 Course RAG Deployment Script"
-echo "==============================="
+echo "📚  Course RAG Deployment Script"
+echo "================================"
 
 # Colors for output
 RED='\033[0;31m'
@@ -73,8 +73,8 @@ case "$DEPLOY_MODE" in
             echo "Trying alternative single-container deployment..."
             
             # Stop existing containers
-            docker stop course-rag-api course-rag-test course-rag-nginx 2>/dev/null || true
-            docker rm course-rag-api course-rag-test course-rag-nginx 2>/dev/null || true
+            docker stop course-rag-api course-rag-test 2>/dev/null || true
+            docker rm course-rag-api course-rag-test 2>/dev/null || true
             
             echo "Building image..."
             docker build -t course-rag:latest ./src
@@ -82,7 +82,6 @@ case "$DEPLOY_MODE" in
             echo "Starting API server..."
             docker run -d --name course-rag-api -p 8200:8200 \
                 -e GOOGLE_API_KEY="${GOOGLE_API_KEY:-}" \
-                -v "$(pwd)/src/chroma_db:/app/chroma_db" \
                 -v "$(pwd)/src/.env:/app/.env:ro" \
                 course-rag:latest python run_api.py $API_FLAGS
             
@@ -91,7 +90,6 @@ case "$DEPLOY_MODE" in
             echo "Starting test interface..."
             docker run -d --name course-rag-test -p 8280:8280 \
                 -e GOOGLE_API_KEY="${GOOGLE_API_KEY:-}" \
-                -v "$(pwd)/src/chroma_db:/app/chroma_db" \
                 course-rag:latest python tests/test_server.py --port 8280
             
             echo -e "${GREEN}✅ Docker containers started!${NC}"
@@ -102,7 +100,7 @@ case "$DEPLOY_MODE" in
                 cat > docker-compose.override.yml << EOF
 version: '3.8'
 services:
-  course-rag-api:
+  api:
     command: python run_api.py $API_FLAGS
 EOF
             else
@@ -116,9 +114,9 @@ EOF
             # Clean up override file
             rm -f docker-compose.override.yml
         fi
-        echo "🔗 Main Interface (Nginx): http://localhost:8090"
-        echo "🔗 API (Direct): http://localhost:8200"
-        echo "🔗 Test Interface (Direct): http://localhost:8280"
+        echo "🔗 API: http://localhost:8200"
+        echo "🔗 Test Interface: http://localhost:8280"
+        echo "🔗 Nginx Proxy: http://localhost:8090"
         if [ -n "$API_FLAGS" ]; then
             echo "🚀 API started with flags: $API_FLAGS"
         fi
@@ -150,14 +148,14 @@ EOF
         echo "  export GOOGLE_API_KEY='your_api_key_here'"
         echo ""
         echo "Option 1 - Direct GitHub clone with ingestion:"
-        echo "  git clone https://github.com/yourusername/course-RAG.git"
-        echo "  cd course-RAG"
+        echo "  git clone https://github.com/yourusername/course-rag.git"
+        echo "  cd course-rag"
         echo "  pip install -r src/requirements.txt"
         echo "  export GOOGLE_API_KEY='your_api_key_here'"
-        echo "  ./deploy.sh local --ingest --ingest-type courses"
+        echo "  ./deploy.sh local --ingest --ingest-type documents"
         echo ""
         echo "Option 2 - Docker with ingestion:"
-        echo "  ./deploy.sh docker --ingest --ingest-type courses"
+        echo "  ./deploy.sh docker --ingest --ingest-type documents"
         echo ""
         echo "Option 3 - Append mode (add to existing data):"
         echo "  ./deploy.sh docker --ingest --append"
@@ -165,8 +163,7 @@ EOF
         echo "Available --ingest flags:"
         echo "  --ingest                     # Ingest and start server"
         echo "  --ingest-only                # Only ingest, don't start server"
-        echo "  --ingest-type courses        # Use course materials"
-        echo "  --ingest-type standard       # Use standard documents"
+        echo "  --ingest-type documents      # Use course documents"
         echo "  --append or --no-reset       # Don't reset collections"
         echo ""
         ;;
@@ -182,9 +179,6 @@ EOF
             echo ""
             echo "Test Interface logs:"
             docker logs course-rag-test
-            echo ""
-            echo "Nginx logs:"
-            docker logs course-rag-nginx
         fi
         ;;
     
@@ -237,19 +231,18 @@ EOF
         echo -e "${YELLOW}API Flags (can be passed after command):${NC}"
         echo "  --ingest                     # Reset collections and ingest documents"
         echo "  --ingest-only                # Only ingest, don't start server"
-        echo "  --ingest-type courses        # Ingest course materials"
-        echo "  --ingest-type standard       # Ingest standard documents (default)"
+        echo "  --ingest-type documents      # Ingest course documents (default)"
         echo "  --append or --no-reset       # Don't reset collections before ingestion"
         echo "  --ingest-file path/file.json # Custom file to ingest"
         echo ""
         echo -e "${YELLOW}Examples:${NC}"
-        echo "  ./deploy.sh docker --ingest --ingest-type courses"
+        echo "  ./deploy.sh docker --ingest --ingest-type documents"
         echo "  ./deploy.sh local --ingest --append"
-        echo "  ./deploy.sh docker --ingest-only --ingest-type standard"
+        echo "  ./deploy.sh docker --ingest-only --ingest-type documents"
         echo ""
-        echo -e "${YELLOW}Access Points:${NC}"
-        echo "  🌐 Main Interface (Nginx): http://localhost:8090"
-        echo "  🔗 API (Direct): http://localhost:8200"
-        echo "  🧪 Test Interface (Direct): http://localhost:8280"
+        echo -e "${YELLOW}Ports:${NC}"
+        echo "  API Server: 8200"
+        echo "  Test Interface: 8280"
+        echo "  Nginx Proxy: 8090"
         ;;
 esac 

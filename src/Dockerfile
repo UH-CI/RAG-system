@@ -20,7 +20,7 @@ COPY . .
 # (chroma_db/ should be excluded via .dockerignore to avoid conflicts)
 
 # Set environment variables
-ENV PYTHONPATH=/app:/app/src
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Expose ports (8200 for API, 8280 for test interface)

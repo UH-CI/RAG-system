@@ -113,9 +113,9 @@ class DynamicChromeManager(ChromaDBManager):
                 if value is not None:
                     if isinstance(value, (str, int, float, bool)):
                         metadata[key] = value
-                    else:
+    else:
                         metadata[key] = str(value)
-                else:
+        else:
                     metadata[key] = ""
             
             # Add system metadata
@@ -154,7 +154,7 @@ class DynamicChromeManager(ChromaDBManager):
             
             return formatted_results
                             
-        except Exception as e:
+                except Exception as e:
             print(f"Error searching in {self.collection_name}: {e}")
             return []
 
@@ -204,8 +204,8 @@ def ingest_from_source_file(collection_name: str, source_file: str, ingestion_co
         
         # Construct full file path
         file_path = os.path.join(settings.documents_path, source_file)
-        
-        if not os.path.exists(file_path):
+    
+    if not os.path.exists(file_path):
             raise FileNotFoundError(f"Source file not found: {file_path}")
         
         # Load and parse JSON file
@@ -234,7 +234,7 @@ def ingest_from_source_file(collection_name: str, source_file: str, ingestion_co
                     errors.append(f"Document {i}: Failed to add to collection")
             except Exception as e:
                 errors.append(f"Document {i}: {str(e)}")
-                continue
+                                continue
         
         return {
             "success": True,
@@ -352,7 +352,7 @@ async def search_documents(request: SearchRequest):
                 ))
         except Exception as e:
             print(f"Error searching collection {collection_name}: {e}")
-            continue
+                continue
             
     # Sort by score if available and limit results
     if all_results and all_results[0].score is not None:
@@ -378,7 +378,7 @@ def search_relevant_documents(query: str, collections: Optional[List[str]] = Non
                 all_results.append(result)
         except Exception as e:
             print(f"Error searching collection {collection_name}: {e}")
-            continue
+                                continue
                             
     # Sort by score and return top results
     if all_results and "score" in all_results[0]:
@@ -401,7 +401,7 @@ async def query_documents(request: QueryRequest):
         
         return result
                             
-    except Exception as e:
+                        except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 @app.post("/ingest")
@@ -437,10 +437,10 @@ async def ingest_json_file(file: UploadFile = File(...), target_collection: Opti
                 # Add the document with its ingestion config
                 if manager.add_document(doc, ingestion_config):
                     ingested_count += 1
-                else:
+        else:
                     errors.append(f"Document {i}: Failed to add to collection")
             
-            except Exception as e:
+    except Exception as e:
                 errors.append(f"Document {i}: {str(e)}")
                 continue
         
@@ -472,13 +472,13 @@ async def reset_collections(collections: Optional[List[str]] = None):
                 manager.reset_collection()
                 reset_results[collection_name] = "success"
                 print(f"✅ Reset collection: {collection_name}")
-            else:
+        else:
                 reset_results[collection_name] = "collection not found"
-        except Exception as e:
+    except Exception as e:
             reset_results[collection_name] = f"error: {str(e)}"
             print(f"❌ Error resetting {collection_name}: {e}")
         
-    return {
+        return {
         "message": f"Reset operation completed for collections: {list(target_collections)}",
         "results": reset_results
     }
