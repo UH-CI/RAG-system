@@ -39,7 +39,7 @@ Each collection has specific fields that will be embedded as specified in config
     parser.add_argument('--append', action='store_true',
                        help='Append documents to existing collections without resetting (same as --no-reset)')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind server to')
-    parser.add_argument('--port', type=int, default=8000, help='Port to bind server to')
+    parser.add_argument('--port', type=int, default=8200, help='Port to bind server to')
     parser.add_argument('--reload', action='store_true', help='Enable auto-reload for development')
     parser.add_argument('--log-level', choices=['debug', 'info', 'warning', 'error'], default='info',
                        help='Log level')

@@ -76,30 +76,149 @@
         }
 
         /* Query Tab Styles */
-        .query-section {
-            margin-bottom: 30px;
+        .chat-container {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #3498db;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant {
+            background: #e9ecef;
+            color: #2c3e50;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.system {
+            background: #fff3cd;
+            color: #856404;
+            align-self: center;
+            border-radius: 15px;
+            font-size: 14px;
+            padding: 10px 15px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .message-meta {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        .message-sources {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .message-sources h5 {
+            font-size: 14px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .source-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .source-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .source-collection-tag {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .source-score-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .source-preview-content {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .preset-queries {
-            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
         }
 
         .preset-queries h3 {
             margin-bottom: 15px;
             color: #2c3e50;
-            font-size: 1.2em;
+            font-size: 1.1em;
+            text-align: center;
         }
 
         .preset-btn {
             display: inline-block;
-            padding: 12px 20px;
-            margin: 8px;
-            background: #f8f9fa;
+            padding: 10px 16px;
+            margin: 5px;
+            background: #fff;
             border: 2px solid #e9ecef;
-            border-radius: 25px;
+            border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
         }
 
@@ -107,39 +226,42 @@
             background: #3498db;
             color: white;
             border-color: #3498db;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .query-input-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
+        .chat-input-section {
+            background: #fff;
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            border-radius: 0 0 15px 15px;
         }
 
-        .query-input-container {
+        .chat-input-container {
             display: flex;
-            gap: 15px;
-            align-items: center;
+            gap: 10px;
+            align-items: flex-end;
         }
 
-        .query-input {
+        .chat-input {
             flex: 1;
-            padding: 15px 20px;
+            padding: 12px 18px;
             border: 2px solid #e9ecef;
             border-radius: 25px;
             font-size: 16px;
             outline: none;
             transition: border-color 0.3s ease;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
         }
 
-        .query-input:focus {
+        .chat-input:focus {
             border-color: #3498db;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
-        .query-btn {
-            padding: 15px 30px;
+        .chat-send-btn {
+            padding: 12px 20px;
             background: #3498db;
             color: white;
             border: none;
@@ -148,48 +270,91 @@
             font-size: 16px;
             font-weight: 500;
             transition: all 0.3s ease;
+            min-width: 80px;
         }
 
-        .query-btn:hover {
+        .chat-send-btn:hover {
             background: #2980b9;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .query-btn:disabled {
+        .chat-send-btn:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
             transform: none;
         }
 
-        .query-options {
-            margin-top: 15px;
+        .chat-options {
+            margin-top: 10px;
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
+            font-size: 14px;
         }
 
-        .query-options label {
+        .chat-options label {
             display: flex;
             align-items: center;
             gap: 8px;
             color: #495057;
-            font-size: 14px;
         }
 
-        .query-options input[type="number"] {
-            width: 80px;
-            padding: 8px;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            font-size: 14px;
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            text-align: center;
         }
 
-        .query-options select {
-            padding: 8px 12px;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            font-size: 14px;
-            background: white;
+        .empty-chat h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .empty-chat p {
+            margin-bottom: 20px;
+            max-width: 300px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #6c757d;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
         }
 
         /* Response Display Styles */
@@ -565,24 +730,25 @@
                     <div class="preset-btn" onclick="sendPresetQuery('Show me courses with lab components')">Lab Courses</div>
                 </div>
 
-                <div class="query-input-section">
-                    <div class="query-input-container">
-                        <input type="text" id="query-input" class="query-input" placeholder="Ask about courses, programs, prerequisites, or anything else..." onkeydown="handleQueryEnterKey(event)">
-                        <button id="query-btn" class="query-btn" onclick="sendQuery()">Send Query</button>
+                <div class="chat-container">
+                    <div class="chat-header">Chat Interface</div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message system">
+                            Hello! I'm your Course RAG System. How can I assist you today?
+                        </div>
                     </div>
-                    
-                    <div class="query-options">
-                        <label>
-                            Similarity Threshold:
-                            <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5">
-                            <span id="threshold-value">0.50</span>
-                        </label>
-                        <label>
-                            Collections:
-                            <select id="collections-select" multiple>
-                                <!-- Will be populated dynamically -->
-                            </select>
-                        </label>
+                    <div class="chat-input-section">
+                        <div class="chat-input-container">
+                            <textarea id="chat-input" class="chat-input" placeholder="Ask about courses, programs, prerequisites, or anything else..." onkeydown="handleChatEnterKey(event)"></textarea>
+                            <button id="chat-send-btn" class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+                        </div>
+                        <div class="chat-options">
+                            <label>
+                                Similarity Threshold:
+                                <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5">
+                                <span id="threshold-value">0.50</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -674,7 +840,7 @@
     <script>
         // Dynamically determine API base URL
         const currentHost = window.location.hostname;
-        const API_BASE = `http://${currentHost}:8000`;
+        const API_BASE = `http://${currentHost}:8200`;
         
         console.log('Frontend URL:', window.location.href);
         console.log('API Base URL:', API_BASE);
@@ -695,39 +861,41 @@
         }
 
         // Query Functions
-        function handleQueryEnterKey(event) {
-            if (event.key === 'Enter') {
+        function handleChatEnterKey(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                sendQuery();
+                sendChatMessage();
             }
         }
 
         function sendPresetQuery(query) {
-            document.getElementById('query-input').value = query;
-            sendQuery();
+            document.getElementById('chat-input').value = query;
+            sendChatMessage();
         }
 
-        async function sendQuery() {
-            const queryInput = document.getElementById('query-input');
-            const queryBtn = document.getElementById('query-btn');
-            const responseContainer = document.getElementById('response-container');
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chat-input');
+            const chatBtn = document.getElementById('chat-send-btn');
+            const chatMessages = document.getElementById('chat-messages');
             
-            const query = queryInput.value.trim();
+            const query = chatInput.value.trim();
             if (!query) return;
 
+            // Add user message to chat
+            addMessageToChat('user', query);
+            
+            // Clear input
+            chatInput.value = '';
+            
             // Get options
             const threshold = parseFloat(document.getElementById('threshold-slider').value);
-            const selectedCollections = Array.from(document.getElementById('collections-select').selectedOptions).map(option => option.value);
 
-            // Disable button and show loading
-            queryBtn.disabled = true;
-            queryBtn.innerHTML = '<div class="loading"></div> Processing...';
+            // Disable button and show typing
+            chatBtn.disabled = true;
+            chatBtn.textContent = 'Sending...';
             
-            // Show response container
-            responseContainer.classList.remove('hidden');
-            
-            // Clear previous response
-            document.getElementById('response-answer').innerHTML = '<div class="loading"></div> Analyzing your query...';
+            // Add typing indicator
+            const typingMessage = addMessageToChat('assistant', '', true);
             
             const startTime = Date.now();
 
@@ -736,10 +904,6 @@
                     query: query,
                     threshold: threshold
                 };
-
-                if (selectedCollections.length > 0) {
-                    requestBody.collections = selectedCollections;
-                }
 
                 const response = await fetch(`${API_BASE}/query`, {
                     method: 'POST',
@@ -756,122 +920,106 @@
                 const data = await response.json();
                 const endTime = Date.now();
                 
-                // Display response
-                displayQueryResponse(data, endTime - startTime);
+                // Remove typing indicator
+                typingMessage.remove();
+                
+                // Add assistant response to chat
+                addAssistantResponse(data, endTime - startTime);
                 
             } catch (error) {
                 console.error('Error sending query:', error);
-                document.getElementById('response-answer').innerHTML = `
-                    <div class="error">
-                        <strong>Error:</strong> ${error.message}
-                        <br><br>
-                        Make sure the API server is running at ${API_BASE}
+                // Remove typing indicator
+                typingMessage.remove();
+                
+                // Add error message
+                addMessageToChat('assistant', `Sorry, I encountered an error: ${error.message}. Please make sure the API server is running.`);
+            } finally {
+                chatBtn.disabled = false;
+                chatBtn.textContent = 'Send';
+            }
+        }
+
+        function addMessageToChat(sender, content, isTyping = false) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            if (isTyping) {
+                messageDiv.innerHTML = `
+                    <div class="typing-indicator">
+                        <div class="typing-dots">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                        <span>Assistant is typing...</span>
                     </div>
                 `;
-            } finally {
-                queryBtn.disabled = false;
-                queryBtn.textContent = 'Send Query';
-            }
-        }
-
-        function displayQueryResponse(data, responseTime) {
-            // Update response metadata
-            document.getElementById('response-time').textContent = `${responseTime}ms`;
-            document.getElementById('documents-found').textContent = data.total_documents_found || 0;
-            document.getElementById('threshold-used').textContent = `${(data.threshold_used || 0.5).toFixed(2)}`;
-
-            // Display main response
-            document.getElementById('response-answer').innerHTML = formatResponseText(data.response || 'No response available');
-
-            // Display reasoning information
-            if (data.reasoning) {
-                document.getElementById('reasoning-intent').textContent = data.reasoning.intent || 'Unknown';
-                document.getElementById('reasoning-confidence').textContent = data.reasoning.confidence || 'Unknown';
-                
-                // Collections searched
-                const collectionsContainer = document.getElementById('reasoning-collections');
-                collectionsContainer.innerHTML = '';
-                if (data.reasoning.collections_searched) {
-                    data.reasoning.collections_searched.forEach(collection => {
-                        const tag = document.createElement('span');
-                        tag.className = 'tag';
-                        tag.textContent = collection;
-                        collectionsContainer.appendChild(tag);
-                    });
-                }
-
-                // Search terms
-                const termsContainer = document.getElementById('reasoning-terms');
-                termsContainer.innerHTML = '';
-                if (data.reasoning.search_terms) {
-                    data.reasoning.search_terms.forEach(term => {
-                        const tag = document.createElement('span');
-                        tag.className = 'tag';
-                        tag.textContent = term;
-                        termsContainer.appendChild(tag);
-                    });
-                }
-            }
-
-            // Display sources
-            const sourcesContainer = document.getElementById('sources-container');
-            sourcesContainer.innerHTML = '';
-            
-            if (data.sources && data.sources.length > 0) {
-                data.sources.forEach((source, index) => {
-                    const sourceDiv = document.createElement('div');
-                    sourceDiv.className = 'source-item';
-                    
-                    const metadata = source.metadata || {};
-                    let metadataHtml = '';
-                    
-                    // Format metadata based on collection type
-                    if (source.collection === 'courses') {
-                        metadataHtml = `
-                            <strong>Course:</strong> ${metadata.course_id || 'Unknown'} - ${metadata.title || 'Unknown'} |
-                            <strong>Credits:</strong> ${metadata.credits || 'Unknown'} |
-                            <strong>Department:</strong> ${metadata.department || 'Unknown'}
-                        `;
-                    } else if (source.collection === 'programs') {
-                        metadataHtml = `
-                            <strong>Program:</strong> ${metadata.name || metadata.program || 'Unknown'} |
-                            <strong>Department:</strong> ${metadata.department || 'Unknown'} |
-                            <strong>College:</strong> ${metadata.college || 'Unknown'}
-                        `;
-                    } else {
-                        // Generic metadata display
-                        const importantFields = ['name', 'title', 'department', 'college', 'course_id', 'program'];
-                        const displayFields = importantFields.filter(field => metadata[field]);
-                        metadataHtml = displayFields.map(field => `<strong>${field}:</strong> ${metadata[field]}`).join(' | ');
-                    }
-
-                    sourceDiv.innerHTML = `
-                        <div class="source-header">
-                            <span class="source-collection">${source.collection}</span>
-                            <span class="source-score">Score: ${source.score?.toFixed(3) || 'N/A'}</span>
-                        </div>
-                        <div class="source-content">${source.content}</div>
-                        <div class="source-metadata">${metadataHtml}</div>
-                    `;
-                    
-                    sourcesContainer.appendChild(sourceDiv);
-                });
             } else {
-                sourcesContainer.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">No source documents found above the similarity threshold</p>';
+                messageDiv.innerHTML = formatMessageContent(content);
             }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageDiv;
         }
 
-        function formatResponseText(text) {
+        function addAssistantResponse(data, responseTime) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            // Format the response
+            let responseContent = formatMessageContent(data.response || 'No response available');
+            
+            // Add metadata
+            const metaInfo = `
+                <div class="message-meta">
+                    Response time: ${responseTime}ms • 
+                    ${data.total_documents_found || 0} documents found • 
+                    Threshold: ${(data.threshold_used || 0.5).toFixed(2)}
+                </div>
+            `;
+            
+            // Add sources if available
+            let sourcesContent = '';
+            if (data.sources && data.sources.length > 0) {
+                sourcesContent = `
+                    <div class="message-sources">
+                        <h5>📚 Sources (${data.sources.length})</h5>
+                        ${data.sources.slice(0, 3).map(source => `
+                            <div class="source-preview">
+                                <div class="source-preview-header">
+                                    <span class="source-collection-tag">${source.collection}</span>
+                                    <span class="source-score-tag">${source.score?.toFixed(3) || 'N/A'}</span>
+                                </div>
+                                <div class="source-preview-content">${source.content.substring(0, 100)}...</div>
+                            </div>
+                        `).join('')}
+                        ${data.sources.length > 3 ? `<small>...and ${data.sources.length - 3} more sources</small>` : ''}
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = responseContent + metaInfo + sourcesContent;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessageContent(content) {
             // Convert markdown-style formatting to HTML
-            let formattedText = text
+            let formattedContent = content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\n\n/g, '</p><p>')
                 .replace(/\n/g, '<br>');
             
-            // Wrap in paragraphs
-            formattedText = '<p>' + formattedText + '</p>';
+            // Wrap in paragraphs if not already wrapped
+            if (!formattedContent.includes('<p>')) {
+                formattedContent = '<p>' + formattedContent + '</p>';
+            }
             
-            return formattedText;
+            return formattedContent;
         }
 
         // Collections Search Functions
@@ -1013,7 +1161,7 @@
             console.log('Course RAG Interface loaded');
             console.log('API Base URL:', API_BASE);
             
-            // Set up threshold slider for query tab
+            // Set up threshold slider for chat
             const thresholdSlider = document.getElementById('threshold-slider');
             const thresholdValue = document.getElementById('threshold-value');
             
@@ -1028,37 +1176,7 @@
             collectionsThresholdSlider.addEventListener('input', function() {
                 collectionsThresholdValue.textContent = parseFloat(this.value).toFixed(2);
             });
-            
-            // Load collections data for the select dropdown
-            updateCollectionsSelect();
         });
-
-        async function updateCollectionsSelect() {
-            try {
-                const response = await fetch(`${API_BASE}/collections`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const availableCollections = Object.keys(data.collections || {});
-                
-                // Update collections select in query tab
-                const select = document.getElementById('collections-select');
-                select.innerHTML = '';
-                
-                availableCollections.forEach(collection => {
-                    const option = document.createElement('option');
-                    option.value = collection;
-                    option.textContent = collection;
-                    select.appendChild(option);
-                });
-                
-            } catch (error) {
-                console.error('Error loading collections:', error);
-            }
-        }
     </script>
 </body>
 </html> 

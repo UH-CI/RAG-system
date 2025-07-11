@@ -13,7 +13,7 @@ import argparse
 from pathlib import Path
 
 class TestServer:
-    def __init__(self, port=8080):
+    def __init__(self, port=8280):
         self.port = port
         self.server = None
         self.thread = None
@@ -82,7 +82,7 @@ class TestServer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Course RAG System Test Server')
-    parser.add_argument('--port', type=int, default=8080, help='Port to run the server on (default: 8080)')
+    parser.add_argument('--port', type=int, default=8280, help='Port to run the server on (default: 8280)')
     args = parser.parse_args()
     
     server = TestServer(port=args.port)
