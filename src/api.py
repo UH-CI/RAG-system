@@ -15,10 +15,12 @@ try:
     from .settings import Settings
     from .documents.embeddings import ChromaDBManager
     from .query_processor import QueryProcessor
+    from .langgraph_agent import LangGraphRAGAgent
 except ImportError:
     from settings import Settings
     from documents.embeddings import ChromaDBManager
     from query_processor import QueryProcessor
+    from langgraph_agent import LangGraphRAGAgent
 
 # Load configuration
 def load_config() -> Dict[str, Any]:
@@ -134,15 +136,23 @@ class DynamicChromeManager(ChromaDBManager):
             print(f"Error adding document to {self.collection_name}: {e}")
             return False
     
-    def search_similar_chunks(self, query: str, num_results: int = 5) -> List[Dict[str, Any]]:
+    def search_similar_chunks(self, query: str, num_results: int = 50) -> List[Dict[str, Any]]:
         """Search for similar chunks in the collection"""
         try:
+            # HACK: Increase results for budget collection to account for filtering
+            if self.collection_name == "budget":
+                # Request 4x for budget to ensure we get ~200 items after filtering
+                actual_num_results = min(num_results * 4, 800)  # Cap at 800 to avoid excessive queries
+            else:
+                actual_num_results = num_results
+            
             results = self.collection.query(
                 query_texts=[query],
-                n_results=num_results
+                n_results=actual_num_results
             )
             
             formatted_results = []
+            print("🔍 Number of results before filtering:", len(results["documents"][0]))
             if results["documents"] and results["documents"][0]:
                 for i, doc in enumerate(results["documents"][0]):
                     result = {
@@ -150,9 +160,44 @@ class DynamicChromeManager(ChromaDBManager):
                         "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
                         "score": 1.0 - results["distances"][0][i] if results["distances"] else 1.0
                     }
+                    
+                    # HACK: Filter out budget items with "unknown" values
+                    if self.collection_name == "budget":
+                        content_lower = doc.lower()
+                        metadata_str = str(result["metadata"]).lower()
+                        metadata = result["metadata"]
+                        
+                        # Check for "unknown" in specific metadata fields
+                        fiscal_2025_amount = str(metadata.get("fiscal_year_2025_2026_amount", "")).lower()
+                        fiscal_2026_amount = str(metadata.get("fiscal_year_2026_2027_amount", "")).lower()
+                        expending_agency = str(metadata.get("expending_agency", "")).lower()
+                        
+                        # Filter if "unknown" appears in key financial fields (original logic)
+                        should_filter_original = (
+                            "amount: unknown" in content_lower or
+                            "appropriation: unknown" in content_lower or
+                            "funding: unknown" in content_lower or
+                            "budget: unknown" in content_lower or
+                            "'amount': 'unknown'" in metadata_str or
+                            "'appropriation': 'unknown'" in metadata_str or
+                            "'funding': 'unknown'" in metadata_str or
+                            "'budget': 'unknown'" in metadata_str
+                        )
+                        
+                        # Filter if "unknown" appears in specific metadata fields (new logic)
+                        should_filter_metadata = (
+                            "unknown" in fiscal_2025_amount or
+                            "unknown" in fiscal_2026_amount or
+                            "unknown" in expending_agency
+                        )
+                        
+                        if should_filter_original or should_filter_metadata:
+                            continue  # Skip this item
+                    
                     formatted_results.append(result)
-            
-            return formatted_results
+            print("🔍 Number of results after filtering:", len(formatted_results))
+            # Limit to original requested number after filtering
+            return formatted_results[:num_results]
                             
         except Exception as e:
             print(f"Error searching in {self.collection_name}: {e}")
@@ -167,6 +212,17 @@ for collection_name in collection_names:
 
 # Initialize query processor with collection managers and config
 query_processor = QueryProcessor(collection_managers, config)
+
+# Initialize LangGraph RAG Agent
+try:
+    langgraph_agent = LangGraphRAGAgent(collection_managers, config)
+    print("✅ LangGraph RAG Agent initialized successfully")
+    USE_LANGGRAPH = True
+except Exception as e:
+    print(f"⚠️  LangGraph Agent initialization failed: {e}")
+    print("🔄 Falling back to traditional QueryProcessor")
+    langgraph_agent = None
+    USE_LANGGRAPH = False
 
 # Helper functions for collection management
 def get_collection_manager(collection_name: str) -> DynamicChromeManager:
@@ -281,17 +337,27 @@ def get_search_params(num_results: Optional[int] = None) -> int:
 
 @app.get("/")
 async def root():
+    processing_method = "LangGraph Agentic Workflow" if USE_LANGGRAPH else "Multi-step Reasoning"
+    
     return {
         "message": f"Welcome to {config['api']['title']}",
         "version": config['api']['version'],
         "available_collections": collection_names,
+        "processing_method": processing_method,
         "features": [
-            "Multi-step query processing with reasoning",
-            "Semantic search across collections", 
-            "Document ingestion and management",
-            "Collection statistics and management"
+            "🤖 Agentic query processing with LangGraph tools" if USE_LANGGRAPH else "Multi-step query processing with reasoning",
+            "🔍 Intelligent tool-based document search" if USE_LANGGRAPH else "Semantic search across collections",
+            "📊 Dynamic context building and analysis",
+            "📚 Document ingestion and management",
+            "📈 Collection statistics and management"
         ],
-        "endpoints": ["/search", "/query", "/ingest", "/reset", "/collections"]
+        "endpoints": ["/search", "/query", "/ingest", "/reset", "/collections"],
+        "agentic_features": [
+            "Query analysis and intent detection",
+            "Strategic tool-based search execution", 
+            "Context-aware answer generation",
+            "Multi-collection intelligent search"
+        ] if USE_LANGGRAPH else None
     }
 
 @app.get("/collections")
@@ -388,16 +454,29 @@ def search_relevant_documents(query: str, collections: Optional[List[str]] = Non
 
 @app.post("/query")
 async def query_documents(request: QueryRequest):
-    """Advanced query processing with multi-step reasoning, searching, and answering"""
+    """Advanced query processing with agentic LangGraph workflow or multi-step reasoning fallback"""
     try:
-        # Use the multi-step query processor with threshold filtering
-        result = query_processor.process_query(request.query, threshold=request.threshold)
-        
-        # Add metadata about the request
-        result["query"] = request.query
-        result["collections_available"] = collection_names
-        result["processing_method"] = "multi-step-reasoning"
-        result["threshold_used"] = request.threshold
+        if USE_LANGGRAPH and langgraph_agent is not None:
+            # Use LangGraph RAG Agent (agentic approach)
+            print(f"🤖 Using LangGraph Agent for query: '{request.query}'")
+            result = langgraph_agent.process_query(request.query, threshold=request.threshold)
+            
+            # Add metadata about the request
+            result["query"] = request.query
+            result["collections_available"] = collection_names
+            result["processing_method"] = "langgraph-agentic"
+            result["threshold_used"] = request.threshold
+            
+        else:
+            # Fallback to traditional multi-step query processor
+            print(f"🔄 Using traditional QueryProcessor for query: '{request.query}'")
+            result = query_processor.process_query(request.query, threshold=request.threshold)
+            
+            # Add metadata about the request
+            result["query"] = request.query
+            result["collections_available"] = collection_names
+            result["processing_method"] = "multi-step-reasoning"
+            result["threshold_used"] = request.threshold
         
         return result
                             
