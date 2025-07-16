@@ -43,6 +43,8 @@ class AgentState(TypedDict):
     refinement_strategy: Dict[str, Any]
     search_history: List[Dict[str, Any]]
     result_quality_scores: Dict[str, float]
+    # Web search results
+    web_results: List[Dict[str, Any]]
 
 
 class LangGraphRAGAgent:
@@ -208,7 +210,173 @@ class LangGraphRAGAgent:
                 "results": formatted_results
             })
         
-        return [search_collection, get_collection_info, search_across_collections]
+        @tool
+        def search_web(query: str, num_results: int = 5) -> str:
+            """
+            Search the web for current information related to the query.
+            
+            Args:
+                query: Search query for web search
+                num_results: Number of web results to return (default: 5, max: 10)
+            
+            Returns:
+                JSON string containing web search results with titles, snippets, and URLs
+            """
+            try:
+                import requests
+                from urllib.parse import quote
+                import time
+                
+                # Limit results to reasonable range
+                num_results = min(max(1, num_results), 10)
+                
+                print(f"🌐 Searching web for: '{query}' (requesting {num_results} results)")
+                
+                # Format query for search
+                encoded_query = quote(query)
+                results = []
+                
+                # Try multiple approaches for web search
+                
+                # Approach 1: Try DuckDuckGo API
+                try:
+                    ddg_url = f"https://api.duckduckgo.com/?q={encoded_query}&format=json&no_html=1&skip_disambig=1"
+                    response = requests.get(ddg_url, timeout=10, headers={'User-Agent': 'RAG-System/1.0'})
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Get instant answer if available
+                        if data.get("AbstractText"):
+                            results.append({
+                                "title": data.get("Heading", "DuckDuckGo Instant Answer"),
+                                "snippet": data.get("AbstractText", "")[:500],  # Limit snippet length
+                                "url": data.get("AbstractURL", "https://duckduckgo.com"),
+                                "source": "DuckDuckGo Instant Answer"
+                            })
+                        
+                        # Get related topics
+                        for topic in data.get("RelatedTopics", [])[:num_results-len(results)]:
+                            if isinstance(topic, dict) and topic.get("Text"):
+                                results.append({
+                                    "title": topic.get("Text", "")[:100] + "..." if len(topic.get("Text", "")) > 100 else topic.get("Text", ""),
+                                    "snippet": topic.get("Text", "")[:500],
+                                    "url": topic.get("FirstURL", ""),
+                                    "source": "DuckDuckGo Related Topic"
+                                })
+                        
+                        if results:
+                            print(f"   ✅ DuckDuckGo search found {len(results)} results")
+                    else:
+                        print(f"   ⚠️ DuckDuckGo returned status {response.status_code}")
+                    
+                except Exception as e:
+                    print(f"   ⚠️ DuckDuckGo search failed: {e}")
+                
+                # Approach 2: Try Wikipedia search (more general topics)
+                if len(results) < num_results:
+                    try:
+                        # Search Wikipedia for general topics
+                        search_terms = query.split()[:3]  # Use first 3 words for search
+                        for term in search_terms:
+                            if len(results) >= num_results:
+                                break
+                                
+                            wiki_search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(term)}"
+                            wiki_response = requests.get(wiki_search_url, timeout=10, headers={'User-Agent': 'RAG-System/1.0'})
+                            
+                            if wiki_response.status_code == 200:
+                                wiki_data = wiki_response.json()
+                                
+                                if wiki_data.get("extract") and len(wiki_data.get("extract", "")) > 50:
+                                    results.append({
+                                        "title": f"Wikipedia: {wiki_data.get('title', term)}",
+                                        "snippet": wiki_data.get("extract", "")[:500],
+                                        "url": wiki_data.get("content_urls", {}).get("desktop", {}).get("page", f"https://en.wikipedia.org/wiki/{quote(term)}"),
+                                        "source": "Wikipedia"
+                                    })
+                                    print(f"   ✅ Wikipedia found result for '{term}'")
+                                    break  # Found one good result, that's enough for context
+                    
+                    except Exception as e:
+                        print(f"   ⚠️ Wikipedia search failed: {e}")
+                
+                # If we have results, return them
+                if results:
+                    final_results = results[:num_results]
+                    return json.dumps({
+                        "query": query,
+                        "source": "Web Search (Multiple Sources)",
+                        "results_count": len(final_results),
+                        "results": final_results,
+                        "search_timestamp": time.time()
+                    })
+                
+                # Approach 3: Provide intelligent suggestions and search guidance
+                print(f"   ℹ️ External search APIs unavailable, providing search guidance")
+                
+                # Generate intelligent suggestions based on query content
+                search_suggestions = []
+                query_lower = query.lower()
+                
+                if any(word in query_lower for word in ["hawaii", "hawaiian", "honolulu"]):
+                    search_suggestions.extend([
+                        "hawaii.gov - Official State of Hawaii website",
+                        "hawaiistatelegislature.gov - Hawaii State Legislature",
+                        "hawaiipublicschools.org - Hawaii Department of Education"
+                    ])
+                
+                if any(word in query_lower for word in ["budget", "funding", "fiscal", "appropriation"]):
+                    search_suggestions.extend([
+                        "budget.hawaii.gov - Hawaii State Budget",
+                        "dbedt.hawaii.gov - Hawaii Department of Business Development",
+                        "capitol.hawaii.gov - Hawaii State Capitol"
+                    ])
+                
+                if any(word in query_lower for word in ["education", "school", "university", "student"]):
+                    search_suggestions.extend([
+                        "hawaiipublicschools.org - Hawaii DOE",
+                        "hawaii.edu - University of Hawaii System",
+                        "hawaiiteachercorps.org - Hawaii Teacher Corps"
+                    ])
+                
+                # Remove duplicates and limit
+                search_suggestions = list(dict.fromkeys(search_suggestions))[:5]
+                
+                fallback_result = {
+                    "query": query,
+                    "source": "Web Search Guidance",
+                    "results_count": 1,
+                    "results": [{
+                        "title": "Web Search Guidance",
+                        "snippet": f"For current information about '{query}', consider searching these authoritative sources: {', '.join(search_suggestions[:3])}. You can also search Google, Bing, or other search engines with specific terms related to Hawaii government, education policy, or budget information.",
+                        "url": "https://www.google.com/search?q=" + encoded_query,
+                        "source": "Search Guidance",
+                        "suggested_sites": search_suggestions
+                    }],
+                    "search_timestamp": time.time(),
+                    "note": "External APIs temporarily unavailable - search guidance provided"
+                }
+                
+                print(f"   💡 Provided search guidance with {len(search_suggestions)} suggested sources")
+                return json.dumps(fallback_result)
+                
+            except ImportError:
+                return json.dumps({
+                    "error": "Web search requires 'requests' library. Install with: pip install requests",
+                    "query": query,
+                    "installation_note": "Run 'pip install requests' to enable web search functionality"
+                })
+            except Exception as e:
+                print(f"   ❌ Web search error: {e}")
+                return json.dumps({
+                    "error": f"Web search encountered an error: {str(e)}",
+                    "query": query,
+                    "fallback_suggestion": f"For current information about '{query}', try searching government websites or recent news sources manually.",
+                    "suggested_search_url": f"https://www.google.com/search?q={quote(query)}"
+                })
+        
+        return [search_collection, get_collection_info, search_across_collections, search_web]
     
     def _create_graph(self) -> StateGraph:
         """Create the LangGraph workflow with iterative capabilities"""
@@ -448,17 +616,35 @@ SEARCH STRATEGY - Use tools strategically and COMPREHENSIVELY:
 1. **FIRST**: Use search_across_collections with num_results=200 to get a broad overview across all relevant collections
 2. **THEN**: For each target collection, use search_collection with num_results=150-200 for focused searches
 3. **OPTIONAL**: Use get_collection_info if you need to understand collection structure
+4. **WEB SEARCH**: Use search_web when you need:
+   - Current/recent information not in documents
+   - Verification of facts or figures
+   - Background context on current events
+   - Information about recent policy changes or implementations
+   - Comparative data from other jurisdictions
 
 CRITICAL INSTRUCTIONS:
-- Always use HIGH num_results values (150-200) to gather comprehensive context
-- Search thoroughly - the user needs detailed information
-- Use multiple search terms if helpful
-- Don't limit yourself to small result sets - more data = better analysis
+- Always use HIGH num_results values (150-200) for local document searches to gather comprehensive context
+- Search thoroughly in local documents first - the user needs detailed information from available data
+- Use multiple search terms if helpful for local searches
+- Use web search strategically for current information, verification, or additional context
+- Don't limit yourself to small result sets for local searches - more data = better analysis
 
 EXAMPLE TOOL CALLS:
 - search_across_collections(query="{state['query']}", num_results=200)
 - search_collection(collection_name="budget", query="specific term", num_results=200)
 - search_collection(collection_name="fiscal", query="another term", num_results=150)
+- search_web(query="current Hawaii education policy 2024", num_results=3)
+
+WEB SEARCH GUIDELINES:
+- Use for current events, recent policy changes, or verification
+- Keep web queries focused and specific
+- Limit to 3-5 web results to avoid information overload
+- Use web search to supplement, not replace, local document searches
+- Examples of good web search queries:
+  * "Hawaii education budget 2024 recent changes"
+  * "current Hawaii fiscal policy updates"
+  * "Hawaii state budget implementation 2024"
 
 Focus on finding ALL relevant documents that will help answer the user's question.
 Be thorough and comprehensive in your searching."""
@@ -476,6 +662,7 @@ Be thorough and comprehensive in your searching."""
             search_results = []
             collections_searched = []
             search_terms_used = []
+            web_results = []
             
             if response.tool_calls:
                 for tool_call in response.tool_calls:
@@ -491,19 +678,28 @@ Be thorough and comprehensive in your searching."""
                                 result = tool.invoke(tool_args)
                                 tool_data = json.loads(result)
                                 
-                                if "results" in tool_data:
-                                    search_results.extend(tool_data["results"])
-                                
-                                if "collection" in tool_data:
-                                    collections_searched.append(tool_data["collection"])
-                                
-                                if "collections_searched" in tool_data:
-                                    collections_searched.extend(tool_data["collections_searched"])
-                                
-                                if "query" in tool_data:
-                                    search_terms_used.append(tool_data["query"])
-                                
-                                print(f"   ✅ Tool {tool_name} found {len(tool_data.get('results', []))} results")
+                                if tool_name == "search_web":
+                                    # Handle web search results separately
+                                    if "results" in tool_data and tool_data["results"]:
+                                        web_results.extend(tool_data["results"])
+                                        print(f"   ✅ Web search found {len(tool_data.get('results', []))} results")
+                                    elif "error" in tool_data:
+                                        print(f"   ⚠️ Web search error: {tool_data['error']}")
+                                else:
+                                    # Handle collection search results
+                                    if "results" in tool_data:
+                                        search_results.extend(tool_data["results"])
+                                    
+                                    if "collection" in tool_data:
+                                        collections_searched.append(tool_data["collection"])
+                                    
+                                    if "collections_searched" in tool_data:
+                                        collections_searched.extend(tool_data["collections_searched"])
+                                    
+                                    if "query" in tool_data:
+                                        search_terms_used.append(tool_data["query"])
+                                    
+                                    print(f"   ✅ Tool {tool_name} found {len(tool_data.get('results', []))} results")
                                 
                             except Exception as e:
                                 print(f"   ❌ Error executing tool {tool_name}: {e}")
@@ -573,6 +769,7 @@ Be thorough and comprehensive in your searching."""
             state["search_results"] = unique_results
             state["collections_searched"] = list(set(collections_searched))
             state["search_terms_used"] = list(set(search_terms_used))
+            state["web_results"] = web_results # Add web results to state
             
             print(f"📊 Search completed: {len(unique_results)} unique results from {len(set(collections_searched))} collections")
             
@@ -583,6 +780,7 @@ Be thorough and comprehensive in your searching."""
             state["search_results"] = []
             state["collections_searched"] = []
             state["search_terms_used"] = []
+            state["web_results"] = [] # Ensure web_results is empty on error
             state["messages"].append(AIMessage(content=f"Search failed: {str(e)}"))
         
         return state
@@ -592,6 +790,7 @@ Be thorough and comprehensive in your searching."""
         
         reasoning = state["reasoning"]
         search_results = state["search_results"]
+        web_results = state.get("web_results", [])
         query_type = reasoning.get("query_type", "informational")
         output_format = reasoning.get("output_format", "informational")
         
@@ -603,6 +802,8 @@ Be thorough and comprehensive in your searching."""
         budget_items = []
         fiscal_guidance = []
         text_documents = []
+        
+        print(f"📝 Building context from {len(search_results)} collection results and {len(web_results)} web results")
         
         for i, result in enumerate(search_results[:50]):  # Increased from 20 to 50 results
             collection = result.get("collection", "unknown")
@@ -694,6 +895,19 @@ Be thorough and comprehensive in your searching."""
                 "collection": collection
             })
         
+        # Add web search results to context
+        for i, result in enumerate(web_results[:10]): # Limit web results to 10 for context
+            source_label = f"[WEB: {result.get('title', 'Unknown Source')}]"
+            item_context = f"{source_label}\nCONTENT: {result.get('snippet', result.get('content', ''))}\n"
+            item_context += f"URL: {result.get('url', 'N/A')}\n"
+            context_parts.append(item_context)
+            sources.append({
+                "content": result.get('snippet', result.get('content', '')),
+                "metadata": {"source": "Web", "url": result.get('url', 'N/A')},
+                "score": 1.0, # Web results are typically high relevance
+                "collection": "web"
+            })
+        
         context = "\n\n".join(context_parts)
         
         # Choose appropriate prompt based on query type
@@ -704,16 +918,18 @@ USER QUERY: "{state['query']}"
 QUERY TYPE: {query_type}
 COLLECTIONS SEARCHED: {state['collections_searched']}
 SEARCH TERMS USED: {state['search_terms_used']}
+WEB RESULTS FOUND: {len(web_results)} current information sources
 
 DOCUMENT ANALYSIS:
 - Budget Items: {len(budget_items)} documents
 - Fiscal Guidance: {len(fiscal_guidance)} documents  
 - Text Documents: {len(text_documents)} documents
+- Web Sources: {len(web_results)} current information sources
 
 RETRIEVED CONTEXT WITH DETAILED BUDGET INFORMATION:
 {context}
 
-IMPORTANT: The budget items above include complete metadata with specific dollar amounts, program details, agencies, and appropriation types. Use this detailed financial information to create a comprehensive fiscal note.
+IMPORTANT: The budget items above include complete metadata with specific dollar amounts, program details, agencies, and appropriation types. Use this detailed financial information to create a comprehensive fiscal note. Web sources provide current context and verification information.
 
 Create a comprehensive fiscal note using the available budget data. Focus on providing valuable insights and actionable information:
 
@@ -722,6 +938,7 @@ Create a comprehensive fiscal note using the available budget data. Focus on pro
 3. **DETAILED ANALYSIS** - Use the actual fiscal year amounts, appropriation types, and funding sources
 4. **METHODOLOGY** - Explain how you derived estimates from the specific budget data provided
 5. **IMPLEMENTATION INSIGHTS** - Provide practical guidance based on the financial details and program information
+6. **CURRENT CONTEXT** - Incorporate any relevant current information from web sources to provide contemporary perspective
 
 APPROACH: Use the complete budget item details provided, including:
 - Exact dollar amounts for FY 2025-2026 and FY 2026-2027
@@ -729,8 +946,9 @@ APPROACH: Use the complete budget item details provided, including:
 - Agency information and organizational structure
 - Appropriation types and funding sources
 - Document references for verification
+- Current information from web sources for context and verification
 
-When citing sources, use descriptive references like "Budget Document [filename]" or "Appropriations Table" rather than collection labels. Make your citations clear and professional.
+When citing sources, use descriptive references like "Budget Document [filename]" or "Appropriations Table" for internal documents, and "Current Web Source: [Title]" for web information. Make your citations clear and professional.
 
 Format as a professional fiscal note with clear sections and substantive analysis using the specific financial data provided."""
 
@@ -740,11 +958,12 @@ Format as a professional fiscal note with clear sections and substantive analysi
 USER QUERY: "{state['query']}"
 ANALYSIS CONTEXT: {json.dumps(reasoning, indent=2)}
 SEARCH SUMMARY: Found {len(search_results)} documents across {len(state['collections_searched'])} collections
+WEB INFORMATION: {len(web_results)} current web sources found
 
 RETRIEVED DOCUMENTS WITH COMPLETE BUDGET DETAILS:
 {context}
 
-IMPORTANT: The budget items above include complete metadata with specific dollar amounts, program details, agencies, and appropriation types. Use this detailed information in your analysis.
+IMPORTANT: The budget items above include complete metadata with specific dollar amounts, program details, agencies, and appropriation types. Use this detailed information in your analysis. Web sources provide current context and verification.
 
 Provide a comprehensive budget analysis focusing on actionable insights:
 
@@ -752,7 +971,8 @@ Provide a comprehensive budget analysis focusing on actionable insights:
 2. **PROGRAM ANALYSIS** - Detail relevant programs with their IDs, funding amounts, and agency information
 3. **FINANCIAL OVERVIEW** - Present the actual fiscal year amounts, funding sources, and appropriation types
 4. **STRATEGIC INSIGHTS** - Analyze funding patterns, compare amounts across programs, and identify opportunities
-5. **RECOMMENDATIONS** - Suggest actions based on the specific financial data and program information
+5. **CURRENT CONTEXT** - Integrate web-sourced information about recent developments or policy changes
+6. **RECOMMENDATIONS** - Suggest actions based on the specific financial data and current information
 
 ANALYTICAL APPROACH: Use the complete budget item details provided, including:
 - Specific dollar amounts for FY 2025-2026 and FY 2026-2027
@@ -760,6 +980,7 @@ ANALYTICAL APPROACH: Use the complete budget item details provided, including:
 - Agency information (expending agencies)
 - Appropriation types (general funds, special funds, federal funds, etc.)
 - Document sources and page references
+- Current information from web sources for contemporary context
 
 Present findings with specific dollar figures, program names, and agency details. Focus on what the financial data reveals about budget priorities, funding levels, and resource allocation patterns."""
 
@@ -770,6 +991,7 @@ Present findings with specific dollar figures, program names, and agency details
 USER QUERY: "{state['query']}"
 INTENT: {reasoning.get('intent', 'Unknown')}
 DOCUMENTS FOUND: {len(search_results)} across collections: {', '.join(state['collections_searched'])}
+WEB SOURCES: {len(web_results)} current information sources
 
 CONTEXT FROM RETRIEVED DOCUMENTS:
 {context}
@@ -779,12 +1001,13 @@ Provide a thorough and helpful response that maximizes the value of available in
 1. **DIRECT RESPONSE** - Address the user's question with available facts and details
 2. **DETAILED INFORMATION** - Elaborate on relevant topics using specific data from sources
 3. **CONTEXTUAL INSIGHTS** - Provide background and explanatory information that adds value
-4. **PRACTICAL APPLICATIONS** - Explain how this information can be used or applied
-5. **COMPREHENSIVE COVERAGE** - Draw connections between different pieces of information
+4. **CURRENT PERSPECTIVE** - Incorporate any relevant current information from web sources
+5. **PRACTICAL APPLICATIONS** - Explain how this information can be used or applied
+6. **COMPREHENSIVE COVERAGE** - Draw connections between different pieces of information
 
 APPROACH: Work with all available information to provide the most complete and useful response possible. Use specific details, figures, program names, and other concrete information when available. Build understanding by connecting related concepts and providing context. Focus on delivering maximum value and actionable insights.
 
-When referencing sources, be descriptive and user-friendly. Refer to "budget documents", "fiscal guidance", or "policy documents" as appropriate, avoiding technical collection labels.
+When referencing sources, be descriptive and user-friendly. Refer to "budget documents", "fiscal guidance", or "policy documents" for internal sources, and "current web information" or "recent sources" for web-based information. Avoid technical collection labels.
 
 Be thorough, informative, and focus on providing practical value from the available information."""
 
@@ -1403,7 +1626,8 @@ GENERAL REFINEMENT STRATEGY:
             needs_refinement=False,
             refinement_strategy={},
             search_history=[],
-            result_quality_scores={}
+            result_quality_scores={},
+            web_results=[] # Initialize web_results
         )
         
         try:
@@ -1488,7 +1712,8 @@ GENERAL REFINEMENT STRATEGY:
                     needs_refinement=False,
                     refinement_strategy={},
                     search_history=[],
-                    result_quality_scores={}
+                    result_quality_scores={},
+                    web_results=[] # Ensure web_results is empty on error
                 )
                 debug_file = self._save_query_debug(query, error_state, error_response)
                 if debug_file:

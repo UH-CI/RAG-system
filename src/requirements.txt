@@ -19,6 +19,9 @@ sentence-transformers
 numpy
 scikit-learn
 
+# Web Access
+requests
+
 # Configuration and Environment
 python-dotenv==1.0.0
 pydantic==2.5.0
