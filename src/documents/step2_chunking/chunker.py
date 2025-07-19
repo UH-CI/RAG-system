@@ -192,7 +192,7 @@ def chunk_document(
         for i, chunk in enumerate(text_chunks):
             final_results.append({
                 "chunk_id": i,
-                "chunk_text": chunk,
+                "text": chunk,
                 "source_identifier": source_identifier,
                 "chunking_method": "simple_sliding_window",
                 "source_extraction_methods": chosen_methods
@@ -236,7 +236,7 @@ def chunk_document(
         
         # Calculate text statistics for simple chunking
         if final_results:
-            chunk_lengths = [len(chunk["chunk_text"]) for chunk in final_results]
+            chunk_lengths = [len(chunk["text"]) for chunk in final_results]
             metadata["results"]["text_statistics"] = {
                 "min_chunk_length": min(chunk_lengths),
                 "max_chunk_length": max(chunk_lengths),

@@ -60,3 +60,8 @@ typing-extensions>=4.9.0
 selenium 
 webdriver-manager 
 beautifulsoup4
+
+google-api-python-client
+google_auth
+google-auth-oauthlib
+google-auth-httplib2

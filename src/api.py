@@ -11,6 +11,8 @@ import google.generativeai as genai
 from tqdm import tqdm
 
 from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
+from documents.step0_document_upload.google_upload import download_pdfs_from_drive
+from documents.step2_chunking.chunker import chunk_document
 
 # Handle both relative and absolute imports
 try:
@@ -58,12 +60,6 @@ class DynamicChromeManager(ChromaDBManager):
         self.client = None
         self.collection = None
         self.embedding_function = None
-        
-        # Import settings locally to avoid circular imports
-        try:
-            from .settings import settings
-        except ImportError:
-            from settings import settings
         
         # Initialize client and embedding function
         self._initialize_client()
@@ -337,6 +333,68 @@ def get_search_params(num_results: Optional[int] = None) -> int:
         return config["search"]["default_results"]
     return min(num_results, config["search"]["max_results"])
 
+def process_pdf_file( file_location: str,
+    output_json_path: str,
+    chunked_json_path: str,
+    contains_tables: bool = Query(False, description="Set to True if the PDF contains tables."),
+    contains_images_of_text: bool = Query(False, description="Set to True if the PDF has images containing text."),
+    contains_images_of_nontext: bool = Query(False, description="Set to True for non-text images (uses OCR as a placeholder)."),
+    # New parameters for chunking
+    use_ai: bool = Query(False, description="If True, uses AI-powered chunking; otherwise, simple chunking."),
+    chosen_methods: Optional[List[str]] = Query(None, description="For AI chunking: list of text fields to combine (e.g., ['pymupdf_extraction_text'])."),
+    prompt_description: Optional[str] = Query(None, description="For AI chunking: prompt for LLM on how to extract items."),
+    previous_pages_to_include: int = Query(1, description="For AI chunking: number of previous pages for context."),
+    context_items_to_show: int = Query(2, description="For AI chunking: number of previously extracted items for few-shot examples."),
+    rewrite_query: bool = Query(False, description="For AI chunking: If True, refine prompt_description with LLM."),
+    chosen_method: Optional[str] = Query(None, description="For simple chunking: single text field to chunk (e.g., 'pymupdf_extraction_text')."),
+    chunk_size: int = Query(1000, description="For simple chunking: character count per chunk."),
+    overlap: int = Query(100, description="For simple chunking: character overlap between chunks.")):
+    # Call the PDF text extraction function
+    # Based on your instruction, we assume 'extract_pdf_text' will be modified
+    # to *not* take an 'output_path' and instead return the extracted data directly.
+    # The API endpoint will then be responsible for saving this data.
+    try:
+        print(f"Starting text extraction for {file.filename}...")
+        extracted_data = extract_pdf_text(
+            pdf_file_path=file_location,
+            output_path=output_json_path,
+            contains_tables=contains_tables,
+            contains_images_of_text=contains_images_of_text,
+            contains_images_of_nontext=contains_images_of_nontext
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error extracting text: {str(e)}")
+    
+    try:    
+        # Save the extracted data to a JSON file
+        with open(output_json_path, 'w', encoding='utf-8') as f:
+            json.dump(extracted_data, f, indent=2, ensure_ascii=False)
+        print(f"Extracted text saved to: {output_json_path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving extracted text: {str(e)}")
+
+    try:
+        # Call the chunking function
+        print(f"Starting chunking for {file.filename}...")
+        from documents.step2_chunking.chunker import chunk_document # Import locally to avoid circular dependency issues if any
+        chunk_document(
+            input_json_path=output_json_path, # Input for chunking is the output from extraction
+        output_json_path=chunked_json_path,
+        use_ai=use_ai,
+        chosen_methods=chosen_methods,
+        prompt_description=prompt_description,
+        previous_pages_to_include=previous_pages_to_include,
+        context_items_to_show=context_items_to_show,
+        rewrite_query=rewrite_query,
+        chosen_method=chosen_method,
+        chunk_size=chunk_size,
+        overlap=overlap
+    )
+        print(f"Chunked data saved to: {chunked_json_path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error chunking document: {str(e)}")
+    return {"message": "PDF processed successfully"}
+
 @app.get("/")
 async def root():
     processing_method = "LangGraph Agentic Workflow" if USE_LANGGRAPH else "Multi-step Reasoning"
@@ -360,6 +418,36 @@ async def root():
             "Context-aware answer generation",
             "Multi-collection intelligent search"
         ] if USE_LANGGRAPH else None
+    }
+
+@app.get("/chunked_text")
+async def get_chunked_text():
+    """Get chunked text stored in documents/chunked_text folder"""
+    chunked_text = []
+    for filename in os.listdir("documents/chunked_text"):
+        chunked_text.append({
+            "filename": filename,
+            "path": os.path.join("documents/chunked_text", filename)
+        })
+    
+    return {
+        "chunked_text": chunked_text,
+        "total_chunked_text": len(chunked_text)
+    }
+
+@app.get("/documents")
+async def get_documents():
+    """Get documents stored in documents/storage_documents folder"""
+    documents = []
+    for filename in os.listdir("documents/storage_documents"):
+        documents.append({
+            "filename": filename,
+            "path": os.path.join("documents/storage_documents", filename)
+        })
+    
+    return {
+        "documents": documents,
+        "total_documents": len(documents)
     }
 
 @app.get("/collections")
@@ -484,6 +572,85 @@ async def query_documents(request: QueryRequest):
                             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+
+@app.post("/step2-chunking")
+async def step2_chunking(filenames: List[str], chosen_methods: List[str], identifier: str, chunk_size: int = 1000, chunk_overlap: int = 200, use_ai: bool = False, prompt_description: Optional[str] = None, previous_pages_to_include: int = 1, context_items_to_show: int = 2, rewrite_query: bool = False ):
+    try:
+        print(f"Starting chunking for {filenames}...")
+        for filename in filenames:
+            file_path = os.path.join("documents", "extracted_text", filename.replace(".pdf", ".json"))
+            output_json_path = os.path.join("documents", "chunked_text", filename.replace(".pdf", ".json"))
+            chunked_data = chunk_document(
+                input_json_path=file_path,
+                output_json_path=output_json_path,
+                chosen_methods=chosen_methods,
+                identifier=identifier,
+                use_ai=use_ai,
+                prompt_description=prompt_description,
+                previous_pages_to_include=previous_pages_to_include,
+                context_items_to_show=context_items_to_show,
+                rewrite_query=rewrite_query,
+                chunk_size=chunk_size,
+                overlap=chunk_overlap
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error chunking: {str(e)}")
+    
+    try:    
+        # Save the chunked data to a JSON file
+        with open(output_json_path, 'w', encoding='utf-8') as f:
+            json.dump(chunked_data, f, indent=2, ensure_ascii=False)
+        print(f"Chunked text saved to: {output_json_path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving chunked text: {str(e)}")
+    
+    return {"message": "Chunking completed successfully"}
+
+@app.post("/step1-text-extraction") 
+async def step1_text_extraction(filenames: List[str], contains_tables: bool = False, contains_images_of_text: bool = False, contains_images_of_nontext: bool = False):
+    try:
+        print(f"Starting text extraction for {filenames}...")
+        for filename in filenames:
+            file_path = os.path.join("documents", "storage_documents", filename)
+            output_json_path = os.path.join("documents", "extracted_text", filename.replace(".pdf", ".json"))
+            extracted_data = extract_pdf_text(
+                pdf_file_path=file_path,
+                output_path=output_json_path,
+                contains_tables=contains_tables,
+                contains_images_of_text=contains_images_of_text,
+                contains_images_of_nontext=contains_images_of_nontext
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error extracting text: {str(e)}")
+    
+    try:    
+        # Save the extracted data to a JSON file
+        with open(output_json_path, 'w', encoding='utf-8') as f:
+            json.dump(extracted_data, f, indent=2, ensure_ascii=False)
+        print(f"Extracted text saved to: {output_json_path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving extracted text: {str(e)}")
+    
+    return {"message": "Text extraction completed successfully"}
+
+
+@app.post("/upload-through-google-drive")
+async def upload_through_google_drive(
+    drive_url: str,
+    recursive: bool = True
+):
+    try:
+        # Save to src/documents/storage_documents
+        download_path = os.path.join("documents", "storage_documents")
+        stats = download_pdfs_from_drive(
+            drive_url=drive_url,
+            download_path=download_path,
+            recursive=recursive
+        )
+        return {"downloaded": stats["downloaded"], "failed": stats["failed"], "folders_processed": stats["folders_processed"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
+
     
 @app.post("/upload-pdf")
 async def upload_pdf(
@@ -551,45 +718,10 @@ async def upload_pdf(
                 buffer.write(contents)
         
         print(f"Successfully uploaded {file.filename} to {file_location}")
-
-        # Call the PDF text extraction function
-        # Based on your instruction, we assume 'extract_pdf_text' will be modified
-        # to *not* take an 'output_path' and instead return the extracted data directly.
-        # The API endpoint will then be responsible for saving this data.
-        print(f"Starting text extraction for {file.filename}...")
-        extracted_data = extract_pdf_text(
-            pdf_file_path=file_location,
-            output_path=output_json_path,
-            contains_tables=contains_tables,
-            contains_images_of_text=contains_images_of_text,
-            contains_images_of_nontext=contains_images_of_nontext
-        )
-        
-        # Save the extracted data to a JSON file
-        with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(extracted_data, f, indent=2, ensure_ascii=False)
-        print(f"Extracted text saved to: {output_json_path}")
-
-        # Call the chunking function
-        print(f"Starting chunking for {file.filename}...")
-        from documents.step2_chunking.chunker import chunk_document # Import locally to avoid circular dependency issues if any
-        chunk_document(
-            input_json_path=output_json_path, # Input for chunking is the output from extraction
-            output_json_path=chunked_json_path,
-            use_ai=use_ai,
-            chosen_methods=chosen_methods,
-            prompt_description=prompt_description,
-            previous_pages_to_include=previous_pages_to_include,
-            context_items_to_show=context_items_to_show,
-            rewrite_query=rewrite_query,
-            chosen_method=chosen_method,
-            chunk_size=chunk_size,
-            overlap=overlap
-        )
-        print(f"Chunked data saved to: {chunked_json_path}")
+        result = process_pdf_file(file_location, output_json_path, chunked_json_path, contains_tables, contains_images_of_text, contains_images_of_nontext, use_ai, chosen_methods, prompt_description, previous_pages_to_include, context_items_to_show, rewrite_query, chosen_method, chunk_size, overlap)
 
         return {
-            "message": f"Successfully uploaded, extracted, and chunked text from {file.filename}",
+            "message": result,
             "pdf_path": file_location,
             "extracted_json_path": output_json_path,
             "chunked_json_path": chunked_json_path, # Add chunked path to response
@@ -603,60 +735,6 @@ async def upload_pdf(
         if os.path.exists(output_json_path):
             os.remove(output_json_path)
         raise HTTPException(status_code=500, detail=f"Could not upload, extract, or chunk text from file: {e}")
-
-
-@app.post("/ingest")
-async def ingest_json_file(file: UploadFile = File(...), target_collection: Optional[str] = None):
-    """Ingest documents from a JSON file into specified collection"""
-    try:
-        # Determine target collection
-        if target_collection is None:
-            target_collection = config.get("default_collection", collection_names[0])
-        
-        manager = get_collection_manager(target_collection)
-        ingestion_config = get_ingestion_config(target_collection)
-        
-        # Read and parse JSON file
-        content = await file.read()
-        data = json.loads(content)
-        
-        # Expect JSON to be an array of documents
-        if not isinstance(data, list):
-            raise HTTPException(status_code=400, detail="JSON file must contain an array of documents")
-        
-        documents = data
-        
-        # Ingest documents
-        ingested_count = 0
-        errors = []
-        
-        print(f"📥 Ingesting {len(documents)} documents into '{target_collection}'...")
-        print(f"🎯 Embedding fields: {ingestion_config.get('contents_to_embed', [])}")
-        
-        for i, doc in enumerate(tqdm(documents, desc=f"Ingesting into {target_collection}")):
-            try:
-                # Add the document with its ingestion config
-                if manager.add_document(doc, ingestion_config):
-                    ingested_count += 1
-                else:
-                    errors.append(f"Document {i}: Failed to add to collection")
-            except Exception as e:
-                errors.append(f"Document {i}: {str(e)}")
-                continue
-        
-        return {
-            "message": f"Successfully ingested {ingested_count} documents into '{target_collection}'",
-            "ingested_count": ingested_count,
-            "total_documents": len(documents),
-            "errors": errors[:10],  # Limit error messages
-            "collection": target_collection,
-            "embedded_fields": ingestion_config.get('contents_to_embed', [])
-        }
-        
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON file")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error ingesting documents: {str(e)}")
 
 @app.post("/reset")
 async def reset_collections(collections: Optional[List[str]] = None):

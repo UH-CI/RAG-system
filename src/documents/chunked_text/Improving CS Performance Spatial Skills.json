@@ -1,0 +1,470 @@
+[
+  {
+    "chunk_id": 0,
+    "text": "Why CS Professionals and \nEducators Should Care about \nSpatial Skills Development\nIn the mid-2000s, the concept of brain \ntraining gained popularity, especially \namong high-achieving individuals. \nBrain training is often gamified, such \nas in Sudoku or Wordle, to encour­\nage people to practice domain-inde­\npendent cognitive skills. Advocates \nclaimed that by practicing fundamen­\ntal reasoning, memory, and problem-\nsolving skills, a person can globally \nimprove cognitive function.33 The sci­\nentific evidence, however, suggests \nthat these claims are true only locally, \nmeaning that performance improves \non only the practiced tasks.28 For ex­\nample, if people practice memoriz­\ning long lists of numbers, then they \nget better at memorizing long lists \nof numbers but at no other memory \ntasks.39 An exception to these findings \nis training in spatial reasoning skills.\nSpatial skills are those that people \nuse to reason about physical objects \nand the spatial relationships among \nthem. There",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 1,
+    "text": "39 An exception to these findings \nis training in spatial reasoning skills.\nSpatial skills are those that people \nuse to reason about physical objects \nand the spatial relationships among \nthem. There are several aspects of \nspatial skills, including: visualiza­\ntion, involving mentally manipulat­\ning objects, such as rotating a chair \nor folding origami; spatial relations \nand orientation, involving navigating \nrelationships between objects, such \nas determining how to get from point \nA to point B on a map; and percep­\ntion, involving identifying patterns or \nconstructs from environments.8 Spa­\ntial skills are primitive. Practically all \nanimals are capable of spatial skills so \nthat they can, at the very least, remem­\nFOR DECADES, SPATIAL skills have been associated \nwith success in science, technology, engineering, and \nmath (STEM). More recently, these skills have been \nlinked to success in computer science (CS) specifically. \nTwo features of spatial skills make them relevant to \nl",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 2,
+    "text": "nce, technology, engineering, and \nmath (STEM). More recently, these skills have been \nlinked to success in computer science (CS) specifically. \nTwo features of spatial skills make them relevant to \nlearners and practitioners of CS. First, spatial skills \nare malleable, meaning that anyone can improve them \nwith training. Second, spatial skills are transferable, \nmeaning that training in spatial skills also improves \ngeneral STEM performance. In this article, we \nhighlight how spatial skills are cognitively connected \nto STEM success, summarize the work associating \nthem with performance in computing, and provide \nguidance on how learners and practitioners can \ndevelop these skills.\nImproving CS \nPerformance \nby Developing \nSpatial Skills\nDOI:10.1145/3680409\nA dive into the research linking development \nof spatial skills with improved outcomes at all \nlevels of CS education.\nBY JACK PARKINSON AND LAUREN MARGULIEUX\n68    COMMUNICATIONS OF THE ACM  |  JANUARY 2025  |  VOL. 68  |  NO. 1\nI",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 3,
+    "text": "g development \nof spatial skills with improved outcomes at all \nlevels of CS education.\nBY JACK PARKINSON AND LAUREN MARGULIEUX\n68    COMMUNICATIONS OF THE ACM  |  JANUARY 2025  |  VOL. 68  |  NO. 1\nIMAGE BY SERGEY CHERVIAKOV\nresearch and advances\n key insights\n\t\n˽ There is an association between spatial \nskills and success in computing study, \nfrom introductory courses to advanced \nmodules.\n\t\n˽ Spatial skills are malleable and can be \ntrained through various methods, with \nsome evidence that training spatial skills \nleads to improvements in CS outcomes.\n\t\n˽ Incorporating spatial training in CS \neducation could lead to improved \noutcomes for learners at all levels.\n\nJANUARY 2025  |  VOL. 68  |  NO. 1  |  COMMUNICATIONS OF THE ACM    69\n\nber where to find food or water. These \nskills are so important that all animal \nbrains—including those of humans—\nhave physical structures for process­\ning spatial information, unlike those \nfor more advanced cognitive skills \nsuch as impulse control.2",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 4,
+    "text": " important that all animal \nbrains—including those of humans—\nhave physical structures for process­\ning spatial information, unlike those \nfor more advanced cognitive skills \nsuch as impulse control.2 Interesting­\nly for the computer science field, the \nlatest research suggests that we can \nleverage these primitive structures to \nsupport advanced cognitive reasoning \nsuch as CS problem solving.\nHigher spatial reasoning skills uni­\nversally correlate with better STEM \nperformance \nand \nachievement.36 \nThis correlation means that people \nwith high scores on spatial skills \ntests also tend to have better grades \nin STEM classes and are more likely \nto attain jobs in STEM fields.25 This \nrelationship is found consistently in \nCS, chemistry, physics, engineering, \ngeology, geometry, medicine, radiol­\nogy, and practically every other STEM \nfield.40 Within CS, this correlation is \nfound across learners’ nationalities, \nbased on different types of CS tasks, \nand based on different types of spa",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 5,
+    "text": "adiol­\nogy, and practically every other STEM \nfield.40 Within CS, this correlation is \nfound across learners’ nationalities, \nbased on different types of CS tasks, \nand based on different types of spatial \ntasks.14,29 Skeptics have questioned \nwhether this effect is a result, rather \nthan a cause, of higher intelligence. \nResearch from Mike Stieff, however, \nhas differentiated the effects of gen­\neral intelligence from those of spatial \nskills.36 Both uniquely predict perfor­\nmance in STEM, suggesting that the \nbenefits of high spatial skills are sepa­\nrate from general intelligence.\nThis correlation is particularly in­\nteresting because spatial skills can \nbe trained, and spatial skills training \nglobally improves STEM performance \nand achievement. Unlike other forms \nof brain training, spatial skills train­\ning improves performance on a range \nof tasks in STEM, such as navigating \na code base and code comprehen­\nsion.40 Recent work in CS education \nhas examined this unusual phenom­\ne",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 6,
+    "text": "patial skills train­\ning improves performance on a range \nof tasks in STEM, such as navigating \na code base and code comprehen­\nsion.40 Recent work in CS education \nhas examined this unusual phenom­\nenon to better understand why spatial \ntraining is globally useful and how we \ncan leverage it to improve CS problem \nsolving.\nHow Spatial Skills Training \nWorks to Develop a \nGeneralizable Cognitive Skill\nPerhaps more mysterious than why \nspatial training works as brain train­\ning, though, is why it works in STEM \nfields that primarily do not manipu­\nlate physical space, such as CS. Unlike \nengineers or chemists, computer sci­\nentists do not often work with physi­\ncal objects. At the lowest level, bits are \na physical phenomenon, but that fact \nhardly matters in the problem-solving \nprocess of a modern computer scien­\ntist. Yet it is exceedingly common for \ncomputer scientists to think of com­\nputing concepts as spatial in nature, \nsuch as linked lists presented as se­\nquences of boxes wit",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 7,
+    "text": " a modern computer scien­\ntist. Yet it is exceedingly common for \ncomputer scientists to think of com­\nputing concepts as spatial in nature, \nsuch as linked lists presented as se­\nquences of boxes with arrows between \nthem. Understanding how we transfer \nspatial skills to non-spatial concepts is \ncritical to understanding why spatial \nskills transfer to STEM achievement.\nHuman \ninformation \nprocessing \nand storage. To understand how spa­\ntial skills apply to non-spatial rea­\nsoning and memory, we must under­\nstand how humans reason with and \nremember information. We have two \nmain systems: working memory and \nlong-term memory.3 Working memory \nis where humans process new infor­\nmation and reason with information \nstored in long-term memory. It has an \nextremely limited capacity.4 Long-term \nmemory, by contrast, is where we can \nstore practically endless information, \nas long as we can figure out how to re­\ncall it.\nBecause working memory has a \nlimited capacity, it has been studied \nex",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 8,
+    "text": " \nmemory, by contrast, is where we can \nstore practically endless information, \nas long as we can figure out how to re­\ncall it.\nBecause working memory has a \nlimited capacity, it has been studied \nextensively to better understand how \nto maximize its use. In this research, \ncognitive scientists found that there \nare separate systems in working mem­\nory for visual and auditory reasoning.3 \nThe visual system includes spatial rea­\nsoning and is called the visuospatial \nsketchpad because it is like a mental \nsketchpad that requires no verbal \nrepresentations. Verbal information \nis processed in the auditory system, \ncalled the phonological loop. It there­\nfore makes sense to think of these two \nsystems primarily as verbal and non­\nverbal. CS and most other STEM fields \nrely more on nonverbal information \nand reasoning than non-STEM fields.\nWhile working memory is fun­\ndamentally limited, we can develop \nstrategies to use it more effectively. \nFor example, the distinction between \nnovices ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 9,
+    "text": "information \nand reasoning than non-STEM fields.\nWhile working memory is fun­\ndamentally limited, we can develop \nstrategies to use it more effectively. \nFor example, the distinction between \nnovices and experts depends on how \nmuch information they can process \nat once, which is due to the working \nmemory strategies used.4 Strategies \nHigher spatial \nreasoning skills \nuniversally \ncorrelate with \nbetter STEM \nperformance and \nachievement.\n70    COMMUNICATIONS OF THE ACM  |  JANUARY 2025  |  VOL. 68  |  NO. 1\nresearch and advances\n\nmental map created by grid cells. In a \ncomplementary role, place cells men­\ntally represent where you or another \nobject is in relation to features of the \nenvironment. If you are at home, you \ncan probably walk to the bathroom in \nthe middle of the night without turn­\ning on the lights due to place cells.10\nA recent theory from CS education, \nspatial encoding strategy theory, posits \nthat spatial training improves STEM \nperformance by developing strategies",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 10,
+    "text": "ut turn­\ning on the lights due to place cells.10\nA recent theory from CS education, \nspatial encoding strategy theory, posits \nthat spatial training improves STEM \nperformance by developing strategies \nto leverage these grid and place cells \nfor pseudo-spatial information and \nreasoning.25 Pseudo-spatial reasoning \nincludes creating physical representa­\ntions of non-physical concepts such \nas personality traits (for example, in­\ntroverted/extroverted, \nflexible/rigid, \nselfish/selfless). Imagining these non-\nspatial concepts as if they occupied a \n“place” on a dimension or grid, espe­\ncially to represent someone’s person­\nality, shows our proclivity for creating \npseudo-spatial concepts. We do the \nsame for CS concepts, such as ordering \nan if-else statement from the most to \nleast restrictive condition.\nParkinson and Cutts theorized that \nspatial skills are valuable in CS be­\ncause CS practitioners are frequently \nrequired to construct robust, abstract \nmental representations of struc",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 11,
+    "text": "tive condition.\nParkinson and Cutts theorized that \nspatial skills are valuable in CS be­\ncause CS practitioners are frequently \nrequired to construct robust, abstract \nmental representations of structures \nand processes. They associate spatial \nvisualization skill with the “construc­\ntion, manipulation, and development \nof a persistent mental model” and link \nit and other spatial skills to elements \nof program comprehension and pro­\ngram generation in CS. These ideas \nfit closely with the idea that humans \nrecruit spatial structures in the brain \nfor pseudo-spatial representations of \ncomplex, abstract ideas.29\nThe benefit of spatial training, \nthen, is to maximize processing capac­\nity in limited working memory by de­\nveloping strategies that can be applied \nto encoding and orienting any pseudo-\nspatial conceptual representations, \nsuch as those used in many STEM \nfields. In CS, for example, navigating \na code base can be equated to navigat­\ning a city, and research has found that \nC",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 12,
+    "text": " pseudo-\nspatial conceptual representations, \nsuch as those used in many STEM \nfields. In CS, for example, navigating \na code base can be equated to navigat­\ning a city, and research has found that \nCS students who are better at navigat­\ning a city are also better at navigating \na code base15 and perform better in CS \ncourses.14 Spatial encoding strategy \ntheory posits that this connection is \ndue to better strategies for processing \nallow us to rapidly encode new infor­\nmation into long-term memory while \nallowing us to recall it. The more in­\nformation we have stored in long-term \nmemory and the better we can recall it, \nthe better we will perform on demand­\ning reasoning tasks. Though these \nstrategies are typically task-specific,28 \nthose learned while training spatial \nskills have a global effect on nonverbal \ninformation and reasoning.40\nTransferring spatial skills to cogni­\ntive skills. Given the robust correlation \nbetween spatial skills and STEM per­\nformance, spatial training",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 13,
+    "text": "lobal effect on nonverbal \ninformation and reasoning.40\nTransferring spatial skills to cogni­\ntive skills. Given the robust correlation \nbetween spatial skills and STEM per­\nformance, spatial training is a com­\nmon area of research in education. In \na review of more than 200 research \nstudies about spatial training, Ut­\ntal and colleagues found that spatial \ntraining is equally effective for learn­\ners of different genders, ages, and \nlevels of initial spatial skill.40 Further, \nthe type of training they practiced had \nno effect on their outcomes. Learners \ncould practice spatial skills by playing \na game, taking a course, or practicing \nspatial tests, and their outcomes were \nsimilar. Examining types of training \nfurther, a recent study of 17,648 school­\nchildren found that practicing spatial \nencoding (that is, creating mental rep­\nresentations) was more beneficial for \nmathematics performance than prac­\nticing spatial manipulation (that is, vi­\nsualizing changes to mental represen­\n",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 14,
+    "text": "tial \nencoding (that is, creating mental rep­\nresentations) was more beneficial for \nmathematics performance than prac­\nticing spatial manipulation (that is, vi­\nsualizing changes to mental represen­\ntations22). Though focused on training \na single dimension of spatial skills—\nspatial encoding—this study reified \nthe global benefit of spatial training in \nany dimension.\nToward explaining this phenom­\nenon, a group of neuroscientists found \nthe physical basis for the application \nof spatial skills training to advanced \nnonverbal cognitive skills. This group \nwon a Nobel Prize in 2014 for their dis­\ncovery that grid and place cells, primi­\ntive structures in the brain that allow \nus to navigate our physical space, are \nalso activated by navigating informa­\ntion that is non-spatial but also non­\nverbal, resulting in a sort of pseudo-\nspatial processing.5,10 Grid and place \ncells’ functions align with spatial \nencoding and orientation skills. Grid \ncells encode and recall mental repre­\nsen",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 15,
+    "text": "on­\nverbal, resulting in a sort of pseudo-\nspatial processing.5,10 Grid and place \ncells’ functions align with spatial \nencoding and orientation skills. Grid \ncells encode and recall mental repre­\nsentations of the world around us. If \nyou are in a familiar room, you could \nclose your eyes and still know where \nthe furniture around you is due to the \nspatial and pseudo-spatial informa­\ntion. Our grid cells provide mental rep­\nresentations at multiple levels, such as \nthe immediate area in fine detail and \nthe entire area in less detail. Our place \ncells then provide cues that signal how \nthese two representations relate to \neach other and where we currently are \nin those representations. This is just \none example of how CS performance \nis related to spatial performance; the \nnext section will explore this research \nin detail.\nHow Spatial Skills Training Can \nImprove CS Performance\nTo better understand how to leverage \nthe relationship between spatial skills \nand CS achievement, we will",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 16,
+    "text": "ill explore this research \nin detail.\nHow Spatial Skills Training Can \nImprove CS Performance\nTo better understand how to leverage \nthe relationship between spatial skills \nand CS achievement, we will look \nspecifically at research conducted in \nthe context of CS skills. Studies from \naround the globe have explored spatial \nskills in relation to various CS tasks, \nsuch as tests in CS courses, source \ncode navigation, and code comprehen­\nsion. In this section, we highlight a few \nstudies from the past several decades \nthat can help us understand how we \nmight use spatial training to improve \nCS skills.\nSpatial skills outside computing. \nEven before computing was generally \nconsidered an independent discipline, \nthere were studies associating spatial \nskills with achievement in comput­\ning. In the 1950s, Super and Bachrach \nreviewed studies in vocational and ca­\nreer research in STEM domains and \nfound spatial visualization and spa­\ntial orientation to be recurring pre­\ndictors of succes",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 17,
+    "text": "In the 1950s, Super and Bachrach \nreviewed studies in vocational and ca­\nreer research in STEM domains and \nfound spatial visualization and spa­\ntial orientation to be recurring pre­\ndictors of success.38 Although they do \nnot mention computing explicitly—\nexpected given that computing only \ncame to the fore as an independent \ndiscipline in the 1960s—Super and \nBachrach repeatedly associate spatial \nskills with other “special aptitudes,” \nsuch as “mechanical comprehension” \nand “manipulative comprehension,” \ngenerally considered to be related to \nCS skills.\nRecognizing the connection be­\ntween spatial skills and STEM per­\nformance, researchers began explor­\ning spatial training to improve STEM \nperformance. Beginning in the 1990s, \nSheryl Sorby pioneered explicit spatial \nskills training for engineering stu­\ndents by developing a one-hour weekly \ncourse for a 10-week semester.34,35 The \nJANUARY 2025  |  VOL. 68  |  NO. 1  |  COMMUNICATIONS OF THE ACM    71\nresearch and advances\n\nstuden",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 18,
+    "text": "or engineering stu­\ndents by developing a one-hour weekly \ncourse for a 10-week semester.34,35 The \nJANUARY 2025  |  VOL. 68  |  NO. 1  |  COMMUNICATIONS OF THE ACM    71\nresearch and advances\n\nstudents’ spatial skills scores were \npositively correlated with scores on \nthe expression-evaluation test, and the \ncorrelation was stronger for students \nwith less previous CS experience.\nThe effect of spatial skills train­\ning in CS. Given that spatial skills are \ncorrelated with success on so many \ntasks in CS, the question becomes \nwhether training spatial skills leads \nto improved outcomes. The evidence \nsuggests that training does improve \noutcomes in CS undergraduate class­\nes. Two parallel spatial skills training \nprograms at four different institutions \nboth demonstrated potential training \nbenefits.7,30 Students taking spatial \nskills training courses alongside their \nintroductory computing coursework \nperformed better than those who did \nnot participate. Even across a short, \ntwo-wee",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 19,
+    "text": " \nbenefits.7,30 Students taking spatial \nskills training courses alongside their \nintroductory computing coursework \nperformed better than those who did \nnot participate. Even across a short, \ntwo-week computing summer school, \nin which some students were allocat­\ned to daily spatial training sessions \nand others to additional computing \nsessions, the students undertaking \nspatial skills training showed higher \nimprovements between the beginning \nand end of the course.11\nDespite reliable improvements, the \nempirical research on spatial training \nfor CS undergraduates is still limited \nand does not always demonstrate the \nsame magnitude of effect, probably \ndue to uncontrolled factors. Almost all \nspatial skills studies in CS have been \nconducted naturalistically with exist­\ning cohorts, which falls short of the re­\nsearch ideal of randomized controlled \ntrials. The strongest correlations be­\ntween spatial skills and CS have been \nobserved in students in introductory \ncomputing at a uni",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 20,
+    "text": "ich falls short of the re­\nsearch ideal of randomized controlled \ntrials. The strongest correlations be­\ntween spatial skills and CS have been \nobserved in students in introductory \ncomputing at a university level, partic­\nularly those with less experience. This \naligns with the spatial encoding strat­\negy theory discussed earlier, because it \nis expected that students gradually de­\nvelop their own domain-specific strat­\negies and rely less on the general strat­\negies measured by spatial skills tests.\nThere is some research, however, \nthat appears to indicate a diversion \nfrom this specific facet of spatial en­\ncoding strategy theory. Parkinson and \nCutts found that correlations between \nspatial skills in students’ first year of \nstudy and CS achievement continue \nall the way up to the final year of stu­\ndents’ graduating degree, and in fact \ngrow stronger as students progress. \nalization) scores and performance in \nintroductory computing courses in \nmultiple institutions across severa",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 21,
+    "text": "al year of stu­\ndents’ graduating degree, and in fact \ngrow stronger as students progress. \nalization) scores and performance in \nintroductory computing courses in \nmultiple institutions across several \nyears.6,21,23 This correlation means that \nstudents with higher mental-rotation \nscores also perform better on exams \nand practical assessments in their in­\ntroductory CS courses. This correla­\ntion holds for students who have little \nor no programming experience when \nstarting their CS program and those \nwith STEM degrees in other fields who \nare learning CS for the first time. Spa­\ntial skills have also been associated \nwith \nmore-standardized \nmeasures \nthan course grades. One study of pre-\nuniversity CS students found a correla­\ntion between mental-rotation scores \nand scores in a subset of the Advanced \nPlacement Computer Science (AP CS A) \ntest, which can be exchanged for col­\nlege credit in the U.S.11 Researchers \nhave also found a correlation between \nspatial skills test scores ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 22,
+    "text": "t of the Advanced \nPlacement Computer Science (AP CS A) \ntest, which can be exchanged for col­\nlege credit in the U.S.11 Researchers \nhave also found a correlation between \nspatial skills test scores and the SCS1, \na validated introductory CS assess­\nment that tests skills with which any \nstudent who completes an intro course \nshould be familiar.7\nHigher spatial skills also correlate \nwith task-specific measures of com­\nputing. Students issued a code-naviga­\ntion task20 were asked a series of ques­\ntions about a program that required \nnavigation between 1,000 lines of code \nspread across six files. Students were \ninstructed to click each line of code \nas they read it, and the screen was re­\ncorded to capture the students’ pro­\ncess. The researchers determined that \nmoving the cursor by more than 10 \nlines of code qualified as an intra-class \njump, while clicking between files was \nconsidered an inter-class jump. The \ncount of both kinds of jumps showed \na significant positive correlati",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 23,
+    "text": "e than 10 \nlines of code qualified as an intra-class \njump, while clicking between files was \nconsidered an inter-class jump. The \ncount of both kinds of jumps showed \na significant positive correlation with \nspatial skills, indicating that students \nwith higher spatial skills jumped \nbetween areas of the code more fre­\nquently. Students with higher spatial \nskills also took less time to complete \nthe exercise. Further, in a study in­\nvolving introductory CS students,32 an \nexpression-evaluation test was devel­\noped consisting of 30 multiple-choice \nitems of increasing difficulty. The test \nused only simple Python expressions \nand data structures, which all the stu­\ndents were tested to be familiar with \nin isolation, and combined them in \nincreasingly complex sequences. The \ncourse consisted of visualization soft­\nware and a workbook, both of which \ndevelop spatial skills through sketch­\ning and multiple-choice exercises \nacross a range of spatial topics. Sorby’s \nearly offerings were",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 24,
+    "text": "ted of visualization soft­\nware and a workbook, both of which \ndevelop spatial skills through sketch­\ning and multiple-choice exercises \nacross a range of spatial topics. Sorby’s \nearly offerings were voluntary, but the \ncourse improved student outcomes \nsubstantially and reliably enough that \nthe course is now mandatory for any \nMichigan Tech students declaring an \nengineering major who score below \n60% on a spatial skills test. In the past \ntwo decades, the course has been ap­\nplied in several different contexts, \nand it produces consistently better \nengineering grades and retention for \nundergraduate students—particularly \nwomen, who historically tend to have \nlower spatial skills than men in the \ngeneral population.\nIt might be expected that spatial \nskills training would be valuable for a \nsubject that conceptualizes and ma­\nnipulates physical 3D objects, such as \nengineering. After all, some of the ex­\nercises in the training are very similar \nto drafting or technical drawing, an",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 25,
+    "text": "or a \nsubject that conceptualizes and ma­\nnipulates physical 3D objects, such as \nengineering. After all, some of the ex­\nercises in the training are very similar \nto drafting or technical drawing, an \nessential foundation in engineering \ngraphics. However, Veurink and Sorby \nalso examined the effects of the spa­\ntial training course on students’ per­\nformance in courses from other STEM \ndomains.41 They compared students \nin the training course with those who \nscored marginally above the required \nthreshold (60 to 70% on the spatial test) \nor were not required to because they \nwere not engineering majors. They \nfound that students completing the \ntraining course earned significantly \nhigher grades than those who did not \nin calculus, chemistry, and computer \nscience classes. Therefore, while the \ntraining was designed to improve en­\ngineering outcomes specifically, it has \nadditional benefits across STEM tasks \nthat are less obviously about manipu­\nlating 3D objects and space.\nSpatial ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 26,
+    "text": "le the \ntraining was designed to improve en­\ngineering outcomes specifically, it has \nadditional benefits across STEM tasks \nthat are less obviously about manipu­\nlating 3D objects and space.\nSpatial skills’ correlation with CS \noutcomes. Since Sorby started work­\ning in engineering, several studies \nhave directly associated spatial skills \nwith CS success or aptitude. The typi­\ncal approach to examining these re­\nlationships is to correlate a spatial \nskills test with CS performance or \nachievement, typically on program­\nming tasks. Significant, positive corre­\nlations have been discovered between \nmental-rotation (that is, spatial visu­\n72    COMMUNICATIONS OF THE ACM  |  JANUARY 2025  |  VOL. 68  |  NO. 1\nresearch and advances\n\nconsider that there is evidence of stu­\ndents with higher spatial skills scores \nperforming better in later-stage mod­\nules, it is also easy to see why students \nwith less-developed spatial skills may \ndecide to drop out of programs or not \npursue more advanc",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 27,
+    "text": "patial skills scores \nperforming better in later-stage mod­\nules, it is also easy to see why students \nwith less-developed spatial skills may \ndecide to drop out of programs or not \npursue more advanced degrees.\nAlternatively, it’s possible that do­\nmain-specific strategies that students \ndevelop may have limitations in pro­\ngressive CS learning. The strategies \nlearned for introductory program­\nming in a student’s first year may be \nof limited use in a machine learning \nor artificial intelligence module in \nthe student’s final year. In this case, \nstudents must revert back to their gen­\neral strategies again, thus depending \non the same skills exposed by spatial \nskills tests. Indeed, perhaps students \nrely on these general strategies for any \nnew learning, whether it is a new, com­\nplex computational model—for exam­\nple, a completely new programming \nlanguage paradigm or a new approach \nto addressing computing problems, \nsuch as machine learning—or simply \na codebase they have never ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 28,
+    "text": "computational model—for exam­\nple, a completely new programming \nlanguage paradigm or a new approach \nto addressing computing problems, \nsuch as machine learning—or simply \na codebase they have never seen be­\nfore. The empirical research has little \nwork on understanding how students \nadjust from using generic skills to \ndomain-specific ones in this context. \nTherefore, we have little understand­\ning of how far spatial encoding strat­\negy theory goes toward explaining the \npervasive spatial skills connection.\nClearly, there is more work to be \ndone in truly understanding how spa­\ntial skills and training can be used \nto improve achievement in comput­\ning, but in all the specific studies of \nspatial skills in CS to date—and even \nin broader STEM—we observe that \nspatial skills correlate with success \nin various measures of computing. \nBeyond initial learning, we have also \nseen that spatial skills have long-term \nbenefits for CS students and practi­\ntioners, affecting lifelong abilities",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 29,
+    "text": "h success \nin various measures of computing. \nBeyond initial learning, we have also \nseen that spatial skills have long-term \nbenefits for CS students and practi­\ntioners, affecting lifelong abilities \nand skills. This correlation should be \ninteresting to CS students and practi­\ntioners because spatial skills can be \neasily trained, resulting in better skill \ndevelopment. While our next steps in \nthe research may be to unpack this \nrelationship further and identify its \nconstituent parts, it is still clear that \nfocusing on the spatial skills of those \nlearning new CS concepts is a valu­\nable practice.\nIn one study,31 final-year module re­\nsults in which students encountered \ncompletely new conceptual compu­\ntational theories and models, such \nas machine learning and functional \nprogramming, correlated with spa­\ntial skills. In contrast, grades in non-\ncomputationally complex modules \nlike human-computer interaction and \nprofessional skills and issues did not \nshow significant correla",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 30,
+    "text": "ng, correlated with spa­\ntial skills. In contrast, grades in non-\ncomputationally complex modules \nlike human-computer interaction and \nprofessional skills and issues did not \nshow significant correlations with \nspatial skills. In studies of computer \ngraphics modules, where the subject \nmatter of the module is much more \nclosely tied to spatial skills, multiple \naspects of spatial skills (particularly \nvisualization and encoding) corre­\nlated with module grades. Clearly, the \nconnection between spatial skills and \ncomputing achievement is not only \nan introductory issue but also con­\ntinues into future study. This finding \nmatches those across STEM educa­\ntion too. Wai, Lubinski, and Benbow’s \nProject Talent review observed that \nparticipants who achieved STEM de­\ngrees (up to Ph.D.) were likely to have \nscored highly on a spatial skills test \nback in high school: 45% of partici­\npants achieving a STEM Ph.D. were in \nthe top 4% of scorers in spatial skills \nin high school.42\nThis long",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 31,
+    "text": " likely to have \nscored highly on a spatial skills test \nback in high school: 45% of partici­\npants achieving a STEM Ph.D. were in \nthe top 4% of scorers in spatial skills \nin high school.42\nThis long-term correlation between \nspatial skills and CS performance may \nbe due to a knock-on effect of early \nlearning: Students who do not have \nthe generalizable skills to create con­\nceptual representations may in turn \nstruggle to develop domain-specific \nstrategies, affecting their progress \nfurther into their degree program. If a \nstudent never truly develops an effec­\ntive, transferable strategy for, to give \nan extreme example, program com­\nprehension, then any task involving \nprogram comprehension throughout \ntheir studies will be challenging and \ntime-intensive. This struggle will be \nfurther compounded by the assump­\ntions of their peers and instructors, \nwho have developed effective strate­\ngies for dealing with program com­\nprehension and will progress through \ncontent at speeds and",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 32,
+    "text": "her compounded by the assump­\ntions of their peers and instructors, \nwho have developed effective strate­\ngies for dealing with program com­\nprehension and will progress through \ncontent at speeds and complexities \nthat students with strategy deficits \nwill struggle to match. If this is the \ncase, then it is easy to see how STEM \ndomains, particularly further along in \nacademia, are populated by those with \nstronger spatial skills. When we also \nHumans recruit \nspatial structures \nin the brain for \npseudo-spatial \nrepresentations of \ncomplex, abstract \nideas.\nJANUARY 2025  |  VOL. 68  |  NO. 1  |  COMMUNICATIONS OF THE ACM    73\nresearch and advances\n\nbe ways to train spatial skills using \ncomputing exercises. For example, \ninstead of requiring students to vi­\nsualize 3D structures, perhaps we \nshould consider courses that require \nstudents to visualize the pseudo-spa­\ntial constructs we see frequently in \ncomputing, such as data structures. \nExercises like these are difficult to \nconc",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 33,
+    "text": "s we \nshould consider courses that require \nstudents to visualize the pseudo-spa­\ntial constructs we see frequently in \ncomputing, such as data structures. \nExercises like these are difficult to \nconceptualize, and creating a set of \nactivities that develops spatial skills \nas effectively as Sorby’s program with \ncomputing exercises is a non-trivial \ntask. Therefore, while we envision a \nfuture with more CS-based spatial­\nized learning, programs like Sorby’s \nappear to be valuable until such ac­\ntivities can be implemented.\nThere are many other, more en­\ngaging ways to develop these skills, \nthough. Video games have also been \ndeveloped explicitly to develop spatial \nskills in lab-based settings, but there \nis evidence that commercial 3D video \ngames—even ones without overtly \nspatial elements—can also develop \nspatial skills.37 Some particularly cu­\nrious evidence has been found link­\ning first-person shooter and action \ngames with spatial skills, including \nthe Medal of Honor series1",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 34,
+    "text": "ents—can also develop \nspatial skills.37 Some particularly cu­\nrious evidence has been found link­\ning first-person shooter and action \ngames with spatial skills, including \nthe Medal of Honor series13 and Unreal \nTournament.1\nSome games can develop spatial \nskills while others do not, with Feng et \nal. observing gains in spatial attention \nand mental-rotation tasks for partici­\npants playing 10 hours of Medal of Hon­\nor, but not with Tetris.13 Wauck et al. \nattribute this relationship to navigat­\ning digital space, which was informed \nby their experiment with a purpose-\nbuilt game involving navigation-only \nstages, in which they also observed a \nrelationship between children’s suc­\ncess in navigation and mental-rotation \nscores.43 This leads us to wonder what \nother types of games may result in im­\nproved spatial skills, and whether any \ngame with navigation mechanics may \nlead to improvements.\nWhile people of all ages benefit \nfrom spatial training, advantages \ncompound from the deve",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 35,
+    "text": "ult in im­\nproved spatial skills, and whether any \ngame with navigation mechanics may \nlead to improvements.\nWhile people of all ages benefit \nfrom spatial training, advantages \ncompound from the development of \nskills in very early spatial play expe­\nriences, such as block play and con­\nstruction toys. Jirout and Newcombe \nobserved that 4-to-7-year-old children \nwhose parents reported that they \nplayed with blocks “often” were likely \nto score higher on a spatial test than \nRecommendations for CS \nProfessionals and Educators\nBecause spatial training improves \nCS performance, for both novice and \nadvanced learners, we can apply the \nempirical evidence and theory to ben­\nefit CS learners and practitioners. Re­\nsearch indicates that training is useful \nto everyone, regardless of age, gender, \nsocioeconomic status, or initial spa­\ntial skill.40 By training spatial skills, \nlearners should expect to perform \nbetter on broad outcomes such as \ndegree attainment and learning new \ntools,21,23 ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 36,
+    "text": " \nsocioeconomic status, or initial spa­\ntial skill.40 By training spatial skills, \nlearners should expect to perform \nbetter on broad outcomes such as \ndegree attainment and learning new \ntools,21,23 and on practical tasks such \nas code navigation and expression \nevaluation.14,15 As mentioned earlier, \nrecent research points toward spatial \nencoding being a more valuable skill \nthan spatial manipulation,22 but the \nbroader literature suggests any form \nof spatial training is beneficial.\nTraining comes in many forms. \nMost of the studies involving deliber­\nate spatial skills development here \nhave used a dedicated spatial training \ncourse developed by Sorby for engi­\nneering education.a Courses like this, \nand practice on existing spatial tests, \ncould be reasonably easy to transfer \nto classroom contexts, from kinder­\ngarten up to university-level students. \nThe most common spatial tests are \nthe Purdue Spatial Visualization Test: \nRevised (PSVT:R) for those age 13 and \nolder, and the ",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 37,
+    "text": "ssroom contexts, from kinder­\ngarten up to university-level students. \nThe most common spatial tests are \nthe Purdue Spatial Visualization Test: \nRevised (PSVT:R) for those age 13 and \nolder, and the spatial portion of Thur­\nstone’s Primary Mental Ability (PMA) \ntest for younger learners, which could \nbe used to determine who would ben­\nefit the most from training. Physical \nmap-reading and navigation tasks, \nsuch as orienteering, would also de­\nvelop these skills.17\nAs previously discussed, several \ninstitutions have attempted to use \nSorby’s training materials as they are \nin a computing context, with varying \ndegrees of success, tending toward \nthe training being valuable for CS \noutcomes. We support this form of \ntraining for CS students, but also be­\nlieve there are ways to streamline the \nprocess. Sorby’s exercises are engi­\nneering based; while they have a low \nknowledge barrier and thus are easy \nto use in many contexts, there may \na\t Sorby’s course is available to buy for indi",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 38,
+    "text": " the \nprocess. Sorby’s exercises are engi­\nneering based; while they have a low \nknowledge barrier and thus are easy \nto use in many contexts, there may \na\t Sorby’s course is available to buy for individu­\nals or organizations: https://www.higheredser­\nvices.org/\nThe research \nsuggests that, \nwith a little bit of \nattention to the \ntype of games and \npuzzles we play, \nwe can improve \nperformance in CS \ndegree programs \nand beyond.\n74    COMMUNICATIONS OF THE ACM  |  JANUARY 2025  |  VOL. 68  |  NO. 1\nresearch and advances\n\nCS1. In Proceedings of the 21st Koli Calling Intern. \nConf. on Computing Education Research. ACM, (2021).\n24.\t Lövdén, M. et al. Structural brain plasticity in \nadult learning and development. Neuroscience & \nBiobehavioral Rev. 37, 9, Part B, (2013), 2296–2310.\n25.\t Margulieux, L.E. Spatial encoding strategy theory: \nThe relationship between spatial skill and STEM \nachievement. In Proceedings of the 2019 ACM Conf. \non Intern. Computing Education Research. ACM, \n(2019",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 39,
+    "text": "ulieux, L.E. Spatial encoding strategy theory: \nThe relationship between spatial skill and STEM \nachievement. In Proceedings of the 2019 ACM Conf. \non Intern. Computing Education Research. ACM, \n(2019), 81–90.\n26.\t Margulieux, L.E. et al. Leverage biology to learn \nrapidly from mistakes without feeling like a failure. \nComputing in Science & Engineering 25, 2 (2023), \n44–49.\n27.\t Newman, S.D., Hansen, M. T., and Gutierrez, A. An \nfMRI study of the impact of block building and board \ngames on spatial ability. Frontiers in Psychology \n7 (Aug. 2016).\n28.\t Owen, A.M. et al. Putting brain training to the test. \nNature 465, 7299 (2010), 775–778.\n29.\t Parkinson, J. and Cutts, Q. Investigating the \nrelationship between spatial skills and computer \nscience. In Proceedings of the 2018 ACM Conf. on \nIntern. Computing Education. ACM, (2018), 106–114.\n30.\tParkinson, J. and Cutts, Q. The effect of a spatial \nskills training course in introductory computing. In \nProceedings of the 2020 ACM Conf. on I",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 40,
+    "text": "Intern. Computing Education. ACM, (2018), 106–114.\n30.\tParkinson, J. and Cutts, Q. The effect of a spatial \nskills training course in introductory computing. In \nProceedings of the 2020 ACM Conf. on Innovation \nand Technology in Computer Science Education. ACM, \n(2020), 439–445.\n31.\t Parkinson, J. and Cutts, Q. Relationships between \nan early-stage spatial skills test and final CS degree \noutcomes. In Proceedings of the 53rd ACM Technical \nSymp. on Computer Science Education. ACM, (2022), \n293–299.\n32.\t Parkinson, J., Cutts, Q., and Draper, S. Relating spatial \nskills and expression evaluation. In United Kingdom \n& Ireland Computing Education Research Conf. ACM, \n(2020), 17–23.\n33.\t Simons, D.J. et al. Do “brain-training” programs work? \nPsychological Science in the Public Interest 17, 3 \n(2016), 103–186.\n34.\tSorby, S.A. and Baartmans, B.J. The development and \nassessment of a course for enhancing the 3-D spatial \nvisualization skills of first year engineering students. J. \nof Engineer",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 41,
+    "text": "(2016), 103–186.\n34.\tSorby, S.A. and Baartmans, B.J. The development and \nassessment of a course for enhancing the 3-D spatial \nvisualization skills of first year engineering students. J. \nof Engineering Education 89, 3 (2000), 301–307.\n35.\t Sorby, S.A., Wysocki, A.F., and Baartmans, B.G. \nIntroduction to 3D Spatial Visualization: An Active \nApproach. Thomson/Delmar Learning, (2003).\n36.\t Stieff, M. Mental rotation and diagrammatic reasoning \nin science. Learning and Instruction 17, 2 (2007), \n219–234.\n37.\t Subrahmanyam, K. and Greenfield, P.M. Effect of video \ngame practice on spatial skills in girls and boys. J. \nof Applied Developmental Psychology 15, 1 (1994), \n13–32.\n38.\t Super, D.E. and Bachrach, P.B. Scientific careers and \nvocational development theory: A review, a critique \nand some recommendations. Columbia Univ., (1957).\n39.\tThompson, C.P., Cowan, T.M., and Frieman, J. Memory \nSearch by a Memorist. L. Erlbaum Associates, \nHillsday, NJ, (1993).\n40.\tUttal, D.H. et al. The mall",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 42,
+    "text": "me recommendations. Columbia Univ., (1957).\n39.\tThompson, C.P., Cowan, T.M., and Frieman, J. Memory \nSearch by a Memorist. L. Erlbaum Associates, \nHillsday, NJ, (1993).\n40.\tUttal, D.H. et al. The malleability of spatial skills: \nA meta-analysis of training studies. Psychological \nBulletin 139, 2 (2013), 352.\n41.\t Veurink, N. and Sorby, S. Raising the bar? Longitudinal \nstudy to determine which students would benefit \nmost from spatial training. In 2011 ASEE Annual Conf. \n& Exposition Proceedings. ASEE Conferences, (2011), \n22.1210.1–22.1210.13.\n42.\t Wai, J., Lubinski, D., and Benbow, C.P. Spatial ability for \nSTEM domains: Aligning over 50 years of cumulative \npsychological knowledge solidifies its importance. J. \nof Educational Psychology 101, 4 (2009), 817–835.\n43.\tWauck, H., Xiao, Z., Chiu, P.-T., and Fu, W.-T. Untangling \nthe relationship between spatial skills, game features, \nand gender in a video game. In Proceedings of the 22nd \nIntern. Conf. on Intelligent User Interfaces. ACM",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 43,
+    "text": "hiu, P.-T., and Fu, W.-T. Untangling \nthe relationship between spatial skills, game features, \nand gender in a video game. In Proceedings of the 22nd \nIntern. Conf. on Intelligent User Interfaces. ACM, \n(2017), 125–136.\nJack Parkinson is a research associate in the Centre \nfor Computing Science Education at the University of \nGlasgow, Scotland, U.K.\nLauren Margulieux is an associate professor at Georgia \nState University, Atlanta, GA, USA.\nbeyond. This benefit might even com­\npound as we learn more. Of course, \nlearning new concepts, tools, and par­\nadigms will always require dedicated \neffort and focus, but perhaps the best \nway to complement that work is with \ndedicated play. \nReferences\n1.\t Adams, D.M. and Mayer, R.E. Examining the connection \nbetween dynamic and static spatial skills and video \ngame performance. In Proceedings of the Annual \nMeeting of the Cognitive Science Society 34, 1 (2012).\n2.\t Anderson, J.R. Cognitive Psychology and Its \nImplementations. Worth Publishers, (20",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 44,
+    "text": "nd video \ngame performance. In Proceedings of the Annual \nMeeting of the Cognitive Science Society 34, 1 (2012).\n2.\t Anderson, J.R. Cognitive Psychology and Its \nImplementations. Worth Publishers, (2015).\n3.\t Baddeley, A. Working memory. Science 255, 5044 \n(1992), 556–559.\n4.\t Baddeley, A. Working memory: Theories, models, \nand controversies. Annual Rev. of Psychology 63 \n(2012), 1–29.\n5.\t Bellmund, J.L., Gärdenfors, P., Moser, E.I., and Doeller, \nC.F. Navigating cognition: Spatial codes for human \nthinking. Science 362, 6415 (2018), eaat6766.\n6.\t Bockmon, R. et al. Can students’ spatial skills predict \ntheir programming abilities? In Proceedings of the \n2020 ACM Conf. on Innovation and Technology in \nComputer Science Education. ACM, (2020), 446–451.\n7.\t\nBockmon, R. et al. CS1 spatial skills intervention and \nthe impact on introductory programming abilities. \nIn Proceedings of the 51st ACM Technical Symp. on \nComputer Science Education. ACM, (2020), 766–772.\n8.\t Carroll, J.B. Human Cog",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 45,
+    "text": "ls intervention and \nthe impact on introductory programming abilities. \nIn Proceedings of the 51st ACM Technical Symp. on \nComputer Science Education. ACM, (2020), 766–772.\n8.\t Carroll, J.B. Human Cognitive Abilities: A Survey of \nFactor-Analytic Studies, 1st ed. Cambridge University \nPress, Cambridge, UK, (1993).\n9.\t Chen, S.A. and Goodwill, A.M. Neuroplasticity and \nadult learning. In Third Intern. Handbook of Lifelong \nLearning. Springer, (2022), 1–19.\n10.\t Constantinescu, A.O., O’Reilly, J.X., and Behrens, T.E. \nOrganizing conceptual knowledge in humans with a \ngridlike code. Science 352, 6292 (2016), 1464–1468.\n11.\t Cooper, S., Wang, K., Israni, M., and Sorby, S. \nSpatial skills training in introductory computing. In \nProceedings of the 11th Annual Intern. Conf. on Intern. \nComputing Education Research. ACM, (2015), 13–20.\n12.\t Darabi, A., Arrington, T.L., and Sayilir, E. Learning \nfrom failure: A meta-analysis of the empirical studies. \nEducational Technology Research and Develop",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 46,
+    "text": "Education Research. ACM, (2015), 13–20.\n12.\t Darabi, A., Arrington, T.L., and Sayilir, E. Learning \nfrom failure: A meta-analysis of the empirical studies. \nEducational Technology Research and Development \n66 (2018), 1101–1118.\n13.\t Feng, J., Spence, I., and Pratt, J. Playing an action \nvideo game reduces gender differences in spatial \ncognition. Psychological Science 18, 10 (Oct. 2007), \n850–855.\n14.\t Fincher, S. et al. Predictors of success in a first \nprogramming course. In Proceedings of the 8th \nAustralasian Computing Education Conf. Australian \nComputer Society Inc., (2006), 189–196.\n15.\t Fisher, M., Cox, A., and Zhao, L. Using sex differences \nto link spatial cognition and program comprehension. \nIn 2006 22nd IEEE Intern. Conf. on Software \nMaintenance. IEEE, (2006), 289–298.\n16.\t Gold, A.U. et al. Spatial skills in undergraduate \nstudents—Influence of gender, motivation, academic \ntraining, and childhood play. Geosphere 14, 2 (Apr. \n2018), 668–683.\n17.\t González, C.R. et al. Im",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 47,
+    "text": "old, A.U. et al. Spatial skills in undergraduate \nstudents—Influence of gender, motivation, academic \ntraining, and childhood play. Geosphere 14, 2 (Apr. \n2018), 668–683.\n17.\t González, C.R. et al. Improving spatial skills: \nAn orienteering experience in real and virtual \nenvironments with first year engineering students. \nProcedia Computer Science 25, (2013), 428–435.\n18.\t Jackson, A., Godwin, A., Bartholomew, S., and Mentzer, \nN. Learning from failure: A systematized review. Int. J. \nTechnol. Des. Educ. 32, 3 (2022), 1853–1873.\n19.\t Jirout, J.J. and Newcombe, N.S. Building blocks \nfor developing spatial skills: Evidence from a large, \nrepresentative U.S. sample. Psychological Science 26, \n3 (Mar. 2015), 302–310.\n20.\tJones, S. and Burnett, G. Spatial skills and navigation \nof source code. In Proceedings of the 12th Annual \nSIGCSE Conf. on Innovation and Technology in \nComputer Science Education. ACM, (2007), 231.\n21.\t Jones, S. and Burnett, G. Spatial ability and learning to \nprogram.",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 48,
+    "text": " In Proceedings of the 12th Annual \nSIGCSE Conf. on Innovation and Technology in \nComputer Science Education. ACM, (2007), 231.\n21.\t Jones, S. and Burnett, G. Spatial ability and learning to \nprogram. Human Technology: An Interdisciplinary J. \non Humans in ICT Environments 4, 1 (2008), 47–61.\n22.\t Judd, N. and Klingberg, T. Training spatial cognition \nenhances mathematical learning in a randomized \nstudy of 17,000 children. Nature Human Behaviour 5, \n11 (2021), 1548–1554.\n23.\t Ly, A. et al. Spatial skills and demographic factors in \nchildren who played with them less.19 \nNewman et al. observed that struc­\ntured block play in the form of a game \ncalled Blocks Rock!, where two players \nrace to build an image of a construc­\ntion on a card with real blocks, led to \nimprovements in mental-rotation test \nscores.27 Gold et al. observed both vid­\neo game and construction play hav­\ning a lasting effect on spatial skills in \ntheir undergraduate students. Spatial \nskills were significantly higher",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 49,
+    "text": "ion test \nscores.27 Gold et al. observed both vid­\neo game and construction play hav­\ning a lasting effect on spatial skills in \ntheir undergraduate students. Spatial \nskills were significantly higher among \nstudents who frequently played action \nand sports video games and who fre­\nquently engaged in construction play \nwhen they were children.16\nTo improve skills, a learner should \nfeel challenged, and occasionally \nneeds to push through moments of \nfrustration.18 \nChallenges, \nhowever, \nshould not extend to feeling hope­\nless or overwhelmed. Adult learn­\ners should aim for no more than one \ntraining session a day and a few in­\nstances of frustration in each training \nsession.24 The time spent on the task \nis less important than the perceived \nchallenge, so a 10-minute task that \nincludes three periods of frustration \nis similar to a 60-minute task that in­\ncludes three periods of frustration. \nThis feeling of frustration accompa­\nnies a neurochemical cascade in the \nbrain that unlocks",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 50,
+    "text": "three periods of frustration \nis similar to a 60-minute task that in­\ncludes three periods of frustration. \nThis feeling of frustration accompa­\nnies a neurochemical cascade in the \nbrain that unlocks neuroplasticity \nand learning.26 Kids can endure more \ntraining sessions but are likely less \nable to cope with feelings of frustra­\ntion, so games or puzzles that are rela­\ntively easier are more appropriate.12 \nUnlike adults, kids also benefit from \npassive neuroplasticity, so they are \nable to learn without pushing them­\nselves to the point of frustration.9\nRegardless of how someone choos­\nes to improve their spatial skills, we \nnow understand more about the ben­\nefits of spatial skills on CS achieve­\nment than ever before. Spatial skills \nare valuable across CS: from early \nstages to academic positions, from \nbroad module results to specific CS \ntasks, and probably in any form of \nnew conceptual learning. The malle­\nability of spatial skills makes train­\ning valuable in practically an",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  },
+  {
+    "chunk_id": 51,
+    "text": "emic positions, from \nbroad module results to specific CS \ntasks, and probably in any form of \nnew conceptual learning. The malle­\nability of spatial skills makes train­\ning valuable in practically any context \nand through myriad means. The re­\nsearch suggests that, with a little bit \nof attention to the type of games and \npuzzles we play, we can improve per­\nformance in CS degree programs and \nThis work is licensed under a \nCreative Commons Attribution \nInternational 4.0 License.\nJANUARY 2025  |  VOL. 68  |  NO. 1  |  COMMUNICATIONS OF THE ACM    75\nresearch and advances\n",
+    "source_identifier": "Improving CS Performance Spatial Skills.pdf",
+    "chunking_method": "simple_sliding_window",
+    "source_extraction_methods": [
+      "pymupdf_extraction_text"
+    ]
+  }
+]
