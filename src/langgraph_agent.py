@@ -438,19 +438,20 @@ class LangGraphRAGAgent:
                 
                 collection_info[collection_name] = {
                     "embedded_fields": ingestion_config.get("contents_to_embed", []) if ingestion_config else [],
-                    "source_file": ingestion_config.get("source_file", "unknown") if ingestion_config else "unknown"
+                    "source_file": ingestion_config.get("source_file", "unknown") if ingestion_config else "unknown",
+                    "description": ingestion_config.get("description", "No description available") if ingestion_config else "No description available"
                 }
             except Exception as e:
                 collection_info[collection_name] = {"error": str(e)}
         
         analysis_prompt = f"""Analyze this user query and create a search strategy.
 
-AVAILABLE COLLECTIONS:
+AVAILABLE COLLECTIONS WITH DESCRIPTIONS:
 {json.dumps(collection_info, indent=2)}
 
 USER QUERY: "{state['query']}"
 
-Based on the query and available collections, determine:
+Based on the query and the detailed descriptions of available collections, determine:
 
 1. INTENT: What is the user trying to accomplish?
 2. QUERY_TYPE: Classify as one of:
@@ -460,10 +461,12 @@ Based on the query and available collections, determine:
    - "comparative_analysis": Comparing different items or programs
    - "informational": General information requests
 
-3. TARGET_COLLECTIONS: Which collections are most relevant? Choose from: {', '.join(self.collection_names)}
+3. TARGET_COLLECTIONS: Which collections are most relevant based on their descriptions and content? Choose from: {', '.join(self.collection_names)}
 4. SEARCH_STRATEGY: How should we approach searching?
 5. SEARCH_TERMS: 3-5 specific terms or phrases to search for
 6. OUTPUT_FORMAT: What type of response would be most helpful?
+
+IMPORTANT: Use the collection descriptions to understand what type of content each collection contains. Select collections that best match the user's query intent and information needs.
 
 CRITICAL: You MUST respond with ONLY valid JSON. Do not include any other text, explanations, or markdown formatting. 
 Your response must start with {{ and end with }}.
@@ -564,32 +567,20 @@ Your response must start with {{ and end with }}.
                     break
                 continue
         
-        # All attempts failed - use fallback
-        print(f"❌ All analysis attempts failed, using fallback strategy")
-        
-        # Smart fallback based on query keywords
-        query_lower = state["query"].lower()
-        
-        if any(word in query_lower for word in ["budget", "appropriation", "funding", "cost", "expense"]):
-            query_type = "budget_analysis"
-            target_collections = ["budget"] if "budget" in self.collection_names else self.collection_names
-        elif any(word in query_lower for word in ["fiscal", "note", "impact", "analysis"]):
-            query_type = "fiscal_note"
-            target_collections = ["fiscal", "budget"] if all(c in self.collection_names for c in ["fiscal", "budget"]) else self.collection_names
-        else:
-            query_type = "informational"
-            target_collections = self.collection_names
-        
+        # All attempts failed - use generalized fallback
+        print(f"❌ All analysis attempts failed, using generalized fallback strategy")
+
+        # Generalized fallback - search all collections with basic strategy
         state["reasoning"] = {
             "intent": f"search for information about: {state['query']}",
-            "query_type": query_type,
-            "target_collections": target_collections,
-            "search_strategy": "broad search with keyword matching",
+            "query_type": "informational",
+            "target_collections": self.collection_names,  # Search all collections when uncertain
+            "search_strategy": "comprehensive search across all available collections",
             "search_terms": [state["query"]] + state["query"].split()[:3],
             "output_format": "informational",
             "confidence": "low"
         }
-        state["messages"].append(AIMessage(content="Analysis failed, using keyword-based fallback strategy"))
+        state["messages"].append(AIMessage(content="Analysis failed, using comprehensive search across all collections"))
         
         return state
     
@@ -805,7 +796,7 @@ Be thorough and comprehensive in your searching."""
         
         print(f"📝 Building context from {len(search_results)} collection results and {len(web_results)} web results")
         
-        for i, result in enumerate(search_results[:50]):  # Increased from 20 to 50 results
+        for i, result in enumerate(search_results):  # Increased from 20 to 50 results
             collection = result.get("collection", "unknown")
             content = result.get("content", "")
             metadata = result.get("metadata", {})
@@ -1603,7 +1594,7 @@ GENERAL REFINEMENT STRATEGY:
             print(f"❌ Error saving debug file: {e}")
             return ""
     
-    def process_query(self, query: str, threshold: float = 0.5) -> Dict[str, Any]:
+    def process_query(self, query: str, threshold: float) -> Dict[str, Any]:
         """Process a query using the LangGraph agent"""
         
         start_time = time.time()
@@ -1622,7 +1613,7 @@ GENERAL REFINEMENT STRATEGY:
             confidence="medium",
             # Iterative search enhancements
             search_iterations=0,
-            max_iterations=3,
+            max_iterations=1,
             needs_refinement=False,
             refinement_strategy={},
             search_history=[],
@@ -1639,7 +1630,6 @@ GENERAL REFINEMENT STRATEGY:
             # Filter sources by threshold
             filtered_sources = [
                 source for source in final_state["sources"]
-                if source.get("score", 0.0) >= threshold
             ]
             
             processing_time = time.time() - start_time

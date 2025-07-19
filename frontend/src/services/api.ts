@@ -92,7 +92,9 @@ export const askQuestion = async (
   const response = await api.post('/query', {
     query: question,
     // Don't specify collections - let it search across all collections
-    threshold: 0.5,  // Default threshold for similarity filtering
+    threshold: 0,  // Default threshold for similarity filtering
+  },{
+    timeout: 300000, // 24 seconds
   });
 
   // Transform the backend response to match our frontend types

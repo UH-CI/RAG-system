@@ -24,7 +24,7 @@ class QueryProcessor:
         self.collection_names = config["collections"]
         
         # Initialize Gemini model
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-pro')
     
     def get_collection_sample(self, collection_name: str) -> Dict[str, Any]:
         """Get a sample document from a collection for context"""
@@ -190,7 +190,7 @@ Respond in JSON format:
                 "confidence": "low"
             }
     
-    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float = 0.5) -> List[Dict[str, Any]]:
+    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float) -> List[Dict[str, Any]]:
         """Step 2: Execute searches based on reasoning results with similarity threshold filtering"""
         
         target_collections = reasoning_result.get("target_collections", self.collection_names)
@@ -297,7 +297,7 @@ Respond in JSON format:
             
             # Prepare source info for response
             sources.append({
-                "content": result["content"][:300] + "..." if len(result["content"]) > 300 else result["content"],
+                "content": result["content"],
                 "metadata": {k: v for k, v in result["metadata"].items() 
                            if k not in ['search_term', 'reasoning_intent']},
                 "score": result.get("score"),
@@ -451,7 +451,7 @@ Answer:"""
                 "total_documents_found": len(search_results)
             }
     
-    def process_query(self, user_query: str, threshold: float = 0.5) -> Dict[str, Any]:
+    def process_query(self, user_query: str, threshold: float) -> Dict[str, Any]:
         """Main method: Execute the complete query processing pipeline with threshold filtering"""
         
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
