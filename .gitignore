@@ -29,3 +29,5 @@ src/chroma_db/
 /src/documents/step2_chunking/output/bills_chunked.json
 /src/documents/step2_chunking/output/bills_chunked_metadata.json
 
+/text_extraction_methods/hawaii_chunked_content.json
+/text_extraction_methods/hawaii_complete_content.json
