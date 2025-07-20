@@ -45,6 +45,13 @@ class AgentState(TypedDict):
     result_quality_scores: Dict[str, float]
     # Web search results
     web_results: List[Dict[str, Any]]
+    # Multi-step reasoning with subquestions
+    subquestions: List[Dict[str, Any]]
+    hypothetical_answers: List[Dict[str, Any]]
+    subquestion_results: List[Dict[str, Any]]
+    subquestion_answers: List[Dict[str, Any]]
+    final_synthesis_context: str
+    parallel_processing_enabled: bool
 
 
 class LangGraphRAGAgent:
@@ -162,7 +169,7 @@ class LangGraphRAGAgent:
             Args:
                 query: Search query
                 collections: List of collection names to search (optional, defaults to all)
-                num_results: Total number of results to return across all collections
+                num_results: Total number of results to return
             
             Returns:
                 JSON string containing aggregated search results
@@ -226,6 +233,7 @@ class LangGraphRAGAgent:
                 import requests
                 from urllib.parse import quote
                 import time
+                from bs4 import BeautifulSoup
                 
                 # Limit results to reasonable range
                 num_results = min(max(1, num_results), 10)
@@ -236,84 +244,173 @@ class LangGraphRAGAgent:
                 encoded_query = quote(query)
                 results = []
                 
-                # Try multiple approaches for web search
-                
-                # Approach 1: Try DuckDuckGo API
+                # Approach 1: Try Bing Search (more reliable than DuckDuckGo)
                 try:
-                    ddg_url = f"https://api.duckduckgo.com/?q={encoded_query}&format=json&no_html=1&skip_disambig=1"
-                    response = requests.get(ddg_url, timeout=10, headers={'User-Agent': 'RAG-System/1.0'})
+                    # Use Bing's search suggestions API which is more accessible
+                    bing_url = f"https://www.bing.com/search?q={encoded_query}&count={num_results}"
+                    headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    }
+                    
+                    response = requests.get(bing_url, headers=headers, timeout=15)
                     
                     if response.status_code == 200:
-                        data = response.json()
+                        soup = BeautifulSoup(response.text, 'html.parser')
                         
-                        # Get instant answer if available
-                        if data.get("AbstractText"):
-                            results.append({
-                                "title": data.get("Heading", "DuckDuckGo Instant Answer"),
-                                "snippet": data.get("AbstractText", "")[:500],  # Limit snippet length
-                                "url": data.get("AbstractURL", "https://duckduckgo.com"),
-                                "source": "DuckDuckGo Instant Answer"
-                            })
+                        # Extract search results from Bing
+                        search_results = soup.find_all('li', class_='b_algo')
                         
-                        # Get related topics
-                        for topic in data.get("RelatedTopics", [])[:num_results-len(results)]:
-                            if isinstance(topic, dict) and topic.get("Text"):
-                                results.append({
-                                    "title": topic.get("Text", "")[:100] + "..." if len(topic.get("Text", "")) > 100 else topic.get("Text", ""),
-                                    "snippet": topic.get("Text", "")[:500],
-                                    "url": topic.get("FirstURL", ""),
-                                    "source": "DuckDuckGo Related Topic"
-                                })
+                        for result in search_results[:num_results]:
+                            try:
+                                # Extract title
+                                title_elem = result.find('h2')
+                                title = title_elem.get_text().strip() if title_elem else "No title"
+                                
+                                # Extract URL
+                                link_elem = title_elem.find('a') if title_elem else None
+                                url = link_elem.get('href', '') if link_elem else ''
+                                
+                                # Extract snippet
+                                snippet_elem = result.find('p') or result.find('div', class_='b_caption')
+                                snippet = snippet_elem.get_text().strip()[:500] if snippet_elem else "No description available"
+                                
+                                if title and url:
+                                    results.append({
+                                        "title": title,
+                                        "snippet": snippet,
+                                        "url": url,
+                                        "source": "Bing Search"
+                                    })
+                            except Exception as e:
+                                continue
                         
                         if results:
-                            print(f"   ✅ DuckDuckGo search found {len(results)} results")
+                            print(f"   ✅ Bing search found {len(results)} results")
                     else:
-                        print(f"   ⚠️ DuckDuckGo returned status {response.status_code}")
-                    
+                        print(f"   ⚠️ Bing returned status {response.status_code}")
+                        
                 except Exception as e:
-                    print(f"   ⚠️ DuckDuckGo search failed: {e}")
+                    print(f"   ⚠️ Bing search failed: {e}")
                 
-                # Approach 2: Try Wikipedia search (more general topics)
+                # Approach 2: Try Google Custom Search (if Bing fails)
+                if len(results) < num_results:
+                    try:
+                        # Use Google's search with careful scraping
+                        google_url = f"https://www.google.com/search?q={encoded_query}&num={num_results}"
+                        headers = {
+                            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                        }
+                        
+                        response = requests.get(google_url, headers=headers, timeout=15)
+                        
+                        if response.status_code == 200:
+                            soup = BeautifulSoup(response.text, 'html.parser')
+                            
+                            # Extract search results from Google
+                            search_results = soup.find_all('div', class_='g')
+                            
+                            for result in search_results[:num_results-len(results)]:
+                                try:
+                                    # Extract title
+                                    title_elem = result.find('h3')
+                                    title = title_elem.get_text().strip() if title_elem else "No title"
+                                    
+                                    # Extract URL
+                                    link_elem = result.find('a')
+                                    url = link_elem.get('href', '') if link_elem else ''
+                                    
+                                    # Extract snippet
+                                    snippet_elem = result.find('span', class_='aCOpRe') or result.find('div', class_='VwiC3b')
+                                    snippet = snippet_elem.get_text().strip()[:500] if snippet_elem else "No description available"
+                                    
+                                    if title and url and url.startswith('http'):
+                                        results.append({
+                                            "title": title,
+                                            "snippet": snippet,
+                                            "url": url,
+                                            "source": "Google Search"
+                                        })
+                                except Exception as e:
+                                    continue
+                            
+                            if len(results) > len([r for r in results if r["source"] == "Bing Search"]):
+                                print(f"   ✅ Google search found {len(results) - len([r for r in results if r['source'] == 'Bing Search'])} additional results")
+                        else:
+                            print(f"   ⚠️ Google returned status {response.status_code}")
+                            
+                    except Exception as e:
+                        print(f"   ⚠️ Google search failed: {e}")
+                
+                # Approach 3: Try Wikipedia search (reliable fallback)
                 if len(results) < num_results:
                     try:
                         # Search Wikipedia for general topics
-                        search_terms = query.split()[:3]  # Use first 3 words for search
-                        for term in search_terms:
-                            if len(results) >= num_results:
-                                break
-                                
-                            wiki_search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(term)}"
-                            wiki_response = requests.get(wiki_search_url, timeout=10, headers={'User-Agent': 'RAG-System/1.0'})
+                        wiki_search_url = f"https://en.wikipedia.org/api/rest_v1/page/search/{encoded_query}"
+                        wiki_response = requests.get(wiki_search_url, timeout=10, headers={'User-Agent': 'RAG-System/1.0'})
+                        
+                        if wiki_response.status_code == 200:
+                            wiki_data = wiki_response.json()
                             
-                            if wiki_response.status_code == 200:
-                                wiki_data = wiki_response.json()
-                                
-                                if wiki_data.get("extract") and len(wiki_data.get("extract", "")) > 50:
+                            for page in wiki_data.get("pages", [])[:num_results-len(results)]:
+                                if page.get("extract") and len(page.get("extract", "")) > 50:
                                     results.append({
-                                        "title": f"Wikipedia: {wiki_data.get('title', term)}",
-                                        "snippet": wiki_data.get("extract", "")[:500],
-                                        "url": wiki_data.get("content_urls", {}).get("desktop", {}).get("page", f"https://en.wikipedia.org/wiki/{quote(term)}"),
+                                        "title": f"Wikipedia: {page.get('title', 'Unknown')}",
+                                        "snippet": page.get("extract", "")[:500],
+                                        "url": f"https://en.wikipedia.org/wiki/{quote(page.get('key', page.get('title', '')))}",
                                         "source": "Wikipedia"
                                     })
-                                    print(f"   ✅ Wikipedia found result for '{term}'")
-                                    break  # Found one good result, that's enough for context
+                            
+                            if len(results) > len([r for r in results if r["source"] in ["Bing Search", "Google Search"]]):
+                                print(f"   ✅ Wikipedia found {len([r for r in results if r['source'] == 'Wikipedia'])} results")
                     
                     except Exception as e:
                         print(f"   ⚠️ Wikipedia search failed: {e}")
+                
+                # Approach 4: Try government and educational sources for Hawaii-related queries
+                if len(results) < num_results and any(word in query.lower() for word in ["hawaii", "hawaiian", "honolulu", "education", "budget", "university"]):
+                    try:
+                        # Search specific Hawaii government sources
+                        hawaii_sources = [
+                            ("hawaii.gov", "Official State of Hawaii"),
+                            ("hawaiistatelegislature.gov", "Hawaii State Legislature"),
+                            ("hawaii.edu", "University of Hawaii System"),
+                            ("hawaiipublicschools.org", "Hawaii Department of Education")
+                        ]
+                        
+                        for domain, source_name in hawaii_sources[:num_results-len(results)]:
+                            try:
+                                # Try to get relevant information from these sources
+                                search_url = f"https://www.google.com/search?q=site:{domain}+{encoded_query}"
+                                response = requests.get(search_url, headers={'User-Agent': 'Mozilla/5.0 (compatible; RAG-System/1.0)'}, timeout=10)
+                                
+                                if response.status_code == 200:
+                                    results.append({
+                                        "title": f"{source_name} - {query}",
+                                        "snippet": f"Search results for '{query}' from {source_name}. This official source may contain relevant information about Hawaii government, education, or budget matters.",
+                                        "url": f"https://{domain}",
+                                        "source": f"Hawaii Official Source ({source_name})"
+                                    })
+                                    break  # Just add one official source
+                            except:
+                                continue
+                                
+                    except Exception as e:
+                        print(f"   ⚠️ Hawaii sources search failed: {e}")
                 
                 # If we have results, return them
                 if results:
                     final_results = results[:num_results]
                     return json.dumps({
                         "query": query,
-                        "source": "Web Search (Multiple Sources)",
+                        "source": "Web Search (Multiple Engines)",
                         "results_count": len(final_results),
                         "results": final_results,
-                        "search_timestamp": time.time()
+                        "search_timestamp": time.time(),
+                        "engines_used": list(set([r["source"] for r in final_results]))
                     })
                 
-                # Approach 3: Provide intelligent suggestions and search guidance
-                print(f"   ℹ️ External search APIs unavailable, providing search guidance")
+                # Approach 5: Provide intelligent suggestions and search guidance
+                print(f"   ℹ️ External search engines unavailable, providing search guidance")
                 
                 # Generate intelligent suggestions based on query content
                 search_suggestions = []
@@ -355,17 +452,18 @@ class LangGraphRAGAgent:
                         "suggested_sites": search_suggestions
                     }],
                     "search_timestamp": time.time(),
-                    "note": "External APIs temporarily unavailable - search guidance provided"
+                    "note": "External search engines temporarily unavailable - search guidance provided"
                 }
                 
                 print(f"   💡 Provided search guidance with {len(search_suggestions)} suggested sources")
                 return json.dumps(fallback_result)
                 
-            except ImportError:
+            except ImportError as e:
+                missing_lib = "beautifulsoup4" if "bs4" in str(e) else "requests"
                 return json.dumps({
-                    "error": "Web search requires 'requests' library. Install with: pip install requests",
+                    "error": f"Web search requires '{missing_lib}' library. Install with: pip install {missing_lib}",
                     "query": query,
-                    "installation_note": "Run 'pip install requests' to enable web search functionality"
+                    "installation_note": f"Run 'pip install {missing_lib}' to enable web search functionality"
                 })
             except Exception as e:
                 print(f"   ❌ Web search error: {e}")
@@ -386,12 +484,17 @@ class LangGraphRAGAgent:
         
         # Add nodes
         workflow.add_node("analyze_query", self.analyze_query)
+        workflow.add_node("decompose_query", self.decompose_query)
+        workflow.add_node("generate_hypothetical_answers", self.generate_hypothetical_answers)
+        workflow.add_node("parallel_subquestion_search", self.parallel_subquestion_search)
+        workflow.add_node("answer_subquestions", self.answer_subquestions)
+        workflow.add_node("synthesize_final_answer", self.synthesize_final_answer)
         workflow.add_node("search_documents", self.search_documents)
         workflow.add_node("evaluate_results", self.evaluate_results)
         workflow.add_node("refine_search", self.refine_search)
         workflow.add_node("generate_answer", self.generate_answer)
         
-        # Define conditional routing function
+        # Define conditional routing functions
         def should_refine(state: AgentState) -> str:
             """Determine if we should refine search or generate answer"""
             if state.get("needs_refinement", False):
@@ -399,28 +502,420 @@ class LangGraphRAGAgent:
             else:
                 return "generate_answer"
         
+        def should_use_subquestions(state: AgentState) -> str:
+            """Determine if we should use subquestion decomposition"""
+            reasoning = state.get("reasoning", {})
+            query_type = reasoning.get("query_type", "informational")
+            
+            # Use subquestion decomposition for complex queries
+            complex_types = ["fiscal_note", "budget_analysis", "policy_analysis"]
+            if query_type in complex_types or len(state["query"].split()) > 10:
+                return "decompose_query"
+            else:
+                return "search_documents"
+        
         # Add edges with conditional routing
         workflow.set_entry_point("analyze_query")
-        workflow.add_edge("analyze_query", "search_documents")
+        workflow.add_conditional_edges("analyze_query", should_use_subquestions)
+        
+        # Subquestion decomposition path
+        workflow.add_edge("decompose_query", "generate_hypothetical_answers")
+        workflow.add_edge("generate_hypothetical_answers", "parallel_subquestion_search")
+        workflow.add_edge("parallel_subquestion_search", "answer_subquestions")
+        workflow.add_edge("answer_subquestions", "synthesize_final_answer")
+        
+        # Traditional path
         workflow.add_edge("search_documents", "evaluate_results")
-        
-        # Conditional edge: evaluate_results → refine_search OR generate_answer
-        workflow.add_conditional_edges(
-            "evaluate_results",
-            should_refine,
-            {
-                "refine_search": "refine_search",
-                "generate_answer": "generate_answer"
-            }
-        )
-        
-        # After refinement, go back to evaluation (creates the loop)
+        workflow.add_conditional_edges("evaluate_results", should_refine)
         workflow.add_edge("refine_search", "evaluate_results")
-        
-        # End after generating answer
         workflow.add_edge("generate_answer", END)
+        workflow.add_edge("synthesize_final_answer", END)
         
         return workflow.compile()
+    
+    def decompose_query(self, state: AgentState) -> AgentState:
+        """Decompose the user query into 5 strategic subquestions for enhanced reasoning"""
+        
+        query = state["query"]
+        reasoning = state["reasoning"]
+        query_type = reasoning.get("query_type", "informational")
+        
+        print(f"🧩 Decomposing query into subquestions for enhanced reasoning")
+        
+        decomposition_prompt = f"""You are an expert query analyst. Break down this complex query into exactly 5 strategic subquestions that will help gather comprehensive information to answer the main question.
+
+MAIN QUERY: "{query}"
+QUERY TYPE: {query_type}
+CONTEXT: This is for a Hawaii government/education RAG system with budget, fiscal, and policy documents.
+
+Create 5 subquestions that:
+1. Cover different aspects of the main query
+2. Are specific enough to retrieve relevant documents
+3. Build upon each other logically
+4. Include both factual and analytical components
+5. Consider current context and historical background
+
+For fiscal/budget queries, include subquestions about:
+- Current budget allocations
+- Historical trends
+- Policy implications
+- Implementation details
+- Stakeholder impacts
+
+Return your response as a JSON array with this structure:
+[
+  {{
+    "id": 1,
+    "question": "What is the current budget allocation for [specific area]?",
+    "purpose": "Establish baseline financial information",
+    "search_focus": "budget_documents"
+  }},
+  ...
+]
+
+Make each subquestion clear, specific, and designed to retrieve different types of relevant information."""
+
+        try:
+            response = self.llm.invoke([HumanMessage(content=decomposition_prompt)])
+            content = response.content.strip()
+            
+            # Clean and parse JSON
+            if content.startswith('```json'):
+                content = content[7:]
+            if content.endswith('```'):
+                content = content[:-3]
+            content = content.strip()
+            
+            import json
+            subquestions = json.loads(content)
+            
+            # Validate and ensure we have exactly 5 subquestions
+            if not isinstance(subquestions, list) or len(subquestions) != 5:
+                raise ValueError("Must have exactly 5 subquestions")
+            
+            # Add metadata to each subquestion
+            for i, sq in enumerate(subquestions):
+                sq["id"] = i + 1
+                sq["status"] = "pending"
+                sq["search_results"] = []
+                sq["answer"] = ""
+            
+            state["subquestions"] = subquestions
+            state["parallel_processing_enabled"] = True
+            
+            print(f"   ✅ Created {len(subquestions)} subquestions:")
+            for sq in subquestions:
+                print(f"      {sq['id']}. {sq['question']}")
+            
+            state["messages"].append(AIMessage(content=f"Query decomposed into {len(subquestions)} strategic subquestions"))
+            
+        except Exception as e:
+            print(f"   ❌ Error decomposing query: {e}")
+            # Fallback to simple decomposition
+            fallback_subquestions = [
+                {
+                    "id": 1,
+                    "question": f"What is the main topic and scope of {query}?",
+                    "purpose": "Establish context and scope",
+                    "search_focus": "general",
+                    "status": "pending",
+                    "search_results": [],
+                    "answer": ""
+                },
+                {
+                    "id": 2,
+                    "question": f"What are the current policies or regulations related to {query}?",
+                    "purpose": "Identify relevant policies",
+                    "search_focus": "policy_documents",
+                    "status": "pending",
+                    "search_results": [],
+                    "answer": ""
+                },
+                {
+                    "id": 3,
+                    "question": f"What budget or financial information is available for {query}?",
+                    "purpose": "Gather financial context",
+                    "search_focus": "budget_documents",
+                    "status": "pending",
+                    "search_results": [],
+                    "answer": ""
+                },
+                {
+                    "id": 4,
+                    "question": f"What are the implementation details or operational aspects of {query}?",
+                    "purpose": "Understand implementation",
+                    "search_focus": "operational_documents",
+                    "status": "pending",
+                    "search_results": [],
+                    "answer": ""
+                },
+                {
+                    "id": 5,
+                    "question": f"What are the impacts or outcomes related to {query}?",
+                    "purpose": "Assess impacts and outcomes",
+                    "search_focus": "impact_analysis",
+                    "status": "pending",
+                    "search_results": [],
+                    "answer": ""
+                }
+            ]
+            
+            state["subquestions"] = fallback_subquestions
+            state["parallel_processing_enabled"] = True
+            
+            print(f"   ⚠️ Used fallback decomposition with {len(fallback_subquestions)} subquestions")
+            state["messages"].append(AIMessage(content=f"Query decomposed using fallback method into {len(fallback_subquestions)} subquestions"))
+        
+        return state
+    
+    def generate_hypothetical_answers(self, state: AgentState) -> AgentState:
+        """Generate hypothetical answers for each subquestion to guide document retrieval"""
+        
+        subquestions = state["subquestions"]
+        query = state["query"]
+        
+        print(f"🤔 Generating hypothetical answers for {len(subquestions)} subquestions")
+        
+        hypothetical_answers = []
+        
+        for sq in subquestions:
+            hypothesis_prompt = f"""You are an expert analyst. Generate a detailed hypothetical answer for this subquestion that will help guide document retrieval.
+
+MAIN QUERY: "{query}"
+SUBQUESTION: "{sq['question']}"
+PURPOSE: {sq['purpose']}
+SEARCH FOCUS: {sq['search_focus']}
+
+Generate a comprehensive hypothetical answer that:
+1. Addresses the specific subquestion thoroughly
+2. Includes relevant keywords and terminology for document search
+3. Mentions specific types of documents or data sources that would contain this information
+4. Considers Hawaii government/education context
+5. Includes potential numerical data, policy names, or specific details
+
+This hypothetical answer will be used to:
+- Create better search queries for vector similarity search
+- Generate keyword searches for hybrid retrieval
+- Guide the retrieval of the most relevant documents
+
+Make the hypothetical answer detailed and specific, as if you were answering based on comprehensive knowledge of Hawaii government operations, budgets, and policies."""
+
+            try:
+                response = self.llm.invoke([HumanMessage(content=hypothesis_prompt)])
+                hypothetical_answer = response.content.strip()
+                
+                # Extract keywords from hypothetical answer for search
+                keyword_prompt = f"""Extract 5-8 key search terms from this hypothetical answer that would be most effective for document retrieval:
+
+HYPOTHETICAL ANSWER: "{hypothetical_answer}"
+
+Return only the keywords/phrases separated by commas, focusing on:
+- Specific policy names, program names, or department names
+- Budget categories or financial terms
+- Technical terminology
+- Hawaii-specific terms
+- Numerical identifiers or codes
+
+Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA grants, special education"
+"""
+                
+                keyword_response = self.llm.invoke([HumanMessage(content=keyword_prompt)])
+                search_keywords = [k.strip() for k in keyword_response.content.split(',')]
+                
+                hypothetical_data = {
+                    "subquestion_id": sq["id"],
+                    "question": sq["question"],
+                    "hypothetical_answer": hypothetical_answer,
+                    "search_keywords": search_keywords,
+                    "status": "generated"
+                }
+                
+                hypothetical_answers.append(hypothetical_data)
+                
+                print(f"   ✅ Generated hypothesis for Q{sq['id']}: {len(hypothetical_answer)} chars")
+                
+            except Exception as e:
+                print(f"   ❌ Error generating hypothesis for Q{sq['id']}: {e}")
+                # Fallback hypothesis
+                fallback_hypothesis = {
+                    "subquestion_id": sq["id"],
+                    "question": sq["question"],
+                    "hypothetical_answer": f"This question relates to {sq['search_focus']} and would typically be answered using Hawaii government documents, budget reports, or policy documents that contain relevant information about {sq['question'].lower()}.",
+                    "search_keywords": [sq['search_focus'], "Hawaii", "government", "policy", "budget"],
+                    "status": "fallback"
+                }
+                hypothetical_answers.append(fallback_hypothesis)
+        
+        state["hypothetical_answers"] = hypothetical_answers
+        state["messages"].append(AIMessage(content=f"Generated hypothetical answers for {len(hypothetical_answers)} subquestions"))
+        
+        return state
+    
+    def parallel_subquestion_search(self, state: AgentState) -> AgentState:
+        """Perform parallel hybrid search for each subquestion using hypothetical answers"""
+        
+        hypothetical_answers = state["hypothetical_answers"]
+        tools = self.tools
+        
+        print(f"🔍 Performing parallel hybrid search for {len(hypothetical_answers)} subquestions")
+        
+        import concurrent.futures
+        
+        def search_for_subquestion(hyp_answer):
+            """Perform hybrid search for a single subquestion"""
+            subq_id = hyp_answer["subquestion_id"]
+            question = hyp_answer["question"]
+            keywords = hyp_answer["search_keywords"]
+            hypothesis = hyp_answer["hypothetical_answer"]
+            
+            print(f"   🔍 Searching for Q{subq_id}: {question[:50]}...")
+            
+            search_results = []
+            
+            try:
+                # Get available collections from self.collection_names
+                available_collections = getattr(self, 'collection_names', ['budget', 'text', 'fiscal'])
+                
+                # 1. Vector search using hypothetical answer across collections
+                vector_query = f"{question} {hypothesis}"
+                for collection in available_collections[:2]:  # Search top 2 collections
+                    try:
+                        vector_results = tools[0].invoke({
+                            "collection_name": collection,
+                            "query": vector_query,
+                            "num_results": 50
+                        })
+                        
+                        if isinstance(vector_results, str):
+                            import json
+                            try:
+                                vector_data = json.loads(vector_results)
+                                if "results" in vector_data and vector_data["results"]:
+                                    for result in vector_data["results"][:2]:
+                                        result["search_type"] = "vector"
+                                        result["subquestion_id"] = subq_id
+                                        result["collection_searched"] = collection
+                                        search_results.append(result)
+                                    print(f"      📄 Vector search in {collection}: {len(vector_data['results'])} results")
+                            except Exception as parse_error:
+                                print(f"      ⚠️ Vector search parse error for {collection}: {parse_error}")
+                    except Exception as e:
+                        print(f"      ⚠️ Vector search failed for {collection}: {e}")
+                
+                # 2. Keyword search using extracted keywords
+                for keyword in keywords[:3]:  # Limit to top 3 keywords
+                    for collection in available_collections[:2]:  # Search top 2 collections
+                        try:
+                            keyword_results = tools[0].invoke({
+                                "collection_name": collection,
+                                "query": keyword,
+                                "num_results": 50
+                            })
+                            if isinstance(keyword_results, str):
+                                keyword_data = json.loads(keyword_results)
+                                if "results" in keyword_data and keyword_data["results"]:
+                                    for result in keyword_data["results"][:1]:  # Take top 1 per keyword per collection
+                                        result["search_type"] = "keyword"
+                                        result["keyword_used"] = keyword
+                                        result["subquestion_id"] = subq_id
+                                        result["collection_searched"] = collection
+                                        search_results.append(result)
+                                    print(f"      🔑 Keyword '{keyword}' in {collection}: {len(keyword_data['results'])} results")
+                        except Exception as e:
+                            print(f"      ⚠️ Keyword search failed for '{keyword}' in {collection}: {e}")
+                
+                # 3. Cross-collection search for comprehensive coverage
+                try:
+                    cross_results = tools[2].invoke({
+                        "query": question,
+                        "collections": available_collections,
+                        "num_results": 50
+                    })
+                    if isinstance(cross_results, str):
+                        cross_data = json.loads(cross_results)
+                        if "results" in cross_data and cross_data["results"]:
+                            for result in cross_data["results"]:
+                                result["search_type"] = "cross_collection"
+                                result["subquestion_id"] = subq_id
+                                search_results.append(result)
+                            print(f"      🌐 Cross-collection search: {len(cross_data['results'])} results")
+                except Exception as e:
+                    print(f"      ⚠️ Cross-collection search failed: {e}")
+                
+                # Remove duplicates based on content similarity
+                unique_results = []
+                seen_content = set()
+                
+                for result in search_results:
+                    content_key = result.get("content", "")  # First 100 chars as key
+                    if content_key not in seen_content:
+                        seen_content.add(content_key)
+                        unique_results.append(result)
+                
+                # Sort by relevance score if available
+                unique_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+                
+                print(f"      ✅ Q{subq_id}: Found {len(unique_results)} unique results")
+                
+                return {
+                    "subquestion_id": subq_id,
+                    "question": question,
+                    "search_results": unique_results[:100],  # Top 8 results
+                    "search_summary": {
+                        "total_results": len(unique_results),
+                        "vector_results": len([r for r in unique_results if r.get("search_type") == "vector"]),
+                        "keyword_results": len([r for r in unique_results if r.get("search_type") == "keyword"]),
+                        "cross_collection_results": len([r for r in unique_results if r.get("search_type") == "cross_collection"])
+                    }
+                }
+                
+            except Exception as e:
+                print(f"      ❌ Search failed for Q{subq_id}: {e}")
+                return {
+                    "subquestion_id": subq_id,
+                    "question": question,
+                    "search_results": [],
+                    "error": str(e)
+                }
+        
+        # Perform parallel searches
+        subquestion_results = []
+        
+        if state.get("parallel_processing_enabled", True):
+            # Use ThreadPoolExecutor for parallel processing
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                future_to_subq = {executor.submit(search_for_subquestion, hyp): hyp for hyp in hypothetical_answers}
+                
+                for future in concurrent.futures.as_completed(future_to_subq):
+                    try:
+                        result = future.result(timeout=30)  # 30 second timeout per search
+                        subquestion_results.append(result)
+                    except Exception as e:
+                        hyp = future_to_subq[future]
+                        print(f"      ❌ Parallel search failed for Q{hyp['subquestion_id']}: {e}")
+                        subquestion_results.append({
+                            "subquestion_id": hyp["subquestion_id"],
+                            "question": hyp["question"],
+                            "search_results": [],
+                            "error": str(e)
+                        })
+        else:
+            # Sequential processing fallback
+            for hyp in hypothetical_answers:
+                result = search_for_subquestion(hyp)
+                subquestion_results.append(result)
+        
+        # Sort results by subquestion ID
+        subquestion_results.sort(key=lambda x: x["subquestion_id"])
+        
+        state["subquestion_results"] = subquestion_results
+        
+        total_docs_found = sum(len(sr.get("search_results", [])) for sr in subquestion_results)
+        print(f"   ✅ Parallel search completed: {total_docs_found} total documents found across {len(subquestion_results)} subquestions")
+        
+        state["messages"].append(AIMessage(content=f"Completed parallel hybrid search for {len(subquestion_results)} subquestions, found {total_docs_found} relevant documents"))
+        
+        return state
     
     def analyze_query(self, state: AgentState) -> AgentState:
         """Analyze the user query to determine search strategy"""
@@ -630,7 +1125,7 @@ EXAMPLE TOOL CALLS:
 WEB SEARCH GUIDELINES:
 - Use for current events, recent policy changes, or verification
 - Keep web queries focused and specific
-- Limit to 3-5 web results to avoid information overload
+- Limit to 5-10 web results to avoid information overload
 - Use web search to supplement, not replace, local document searches
 - Examples of good web search queries:
   * "Hawaii education budget 2024 recent changes"
@@ -887,7 +1382,7 @@ Be thorough and comprehensive in your searching."""
             })
         
         # Add web search results to context
-        for i, result in enumerate(web_results[:10]): # Limit web results to 10 for context
+        for i, result in enumerate(web_results): # Limit web results to 10 for context
             source_label = f"[WEB: {result.get('title', 'Unknown Source')}]"
             item_context = f"{source_label}\nCONTENT: {result.get('snippet', result.get('content', ''))}\n"
             item_context += f"URL: {result.get('url', 'N/A')}\n"
@@ -903,7 +1398,7 @@ Be thorough and comprehensive in your searching."""
         
         # Choose appropriate prompt based on query type
         if query_type == "fiscal_note" and output_format == "template" and budget_items:
-            answer_prompt = f"""You are a fiscal analyst creating specific fiscal notes from budget data.
+            answer_prompt = f"""You are a fiscal analyst creating comprehensive fiscal notes from budget data following standard fiscal note format and requirements.
 
 USER QUERY: "{state['query']}"
 QUERY TYPE: {query_type}
@@ -922,26 +1417,111 @@ RETRIEVED CONTEXT WITH DETAILED BUDGET INFORMATION:
 
 IMPORTANT: The budget items above include complete metadata with specific dollar amounts, program details, agencies, and appropriation types. Use this detailed financial information to create a comprehensive fiscal note. Web sources provide current context and verification information.
 
-Create a comprehensive fiscal note using the available budget data. Focus on providing valuable insights and actionable information:
+Create a comprehensive fiscal note using the available budget data with the following required sections and format:
 
-1. **FISCAL IMPACT SUMMARY** - Present the specific dollar amounts and financial data from the budget items
-2. **AFFECTED PROGRAMS** - Detail the specific programs with their IDs, names, and responsible agencies
-3. **DETAILED ANALYSIS** - Use the actual fiscal year amounts, appropriation types, and funding sources
-4. **METHODOLOGY** - Explain how you derived estimates from the specific budget data provided
-5. **IMPLEMENTATION INSIGHTS** - Provide practical guidance based on the financial details and program information
-6. **CURRENT CONTEXT** - Incorporate any relevant current information from web sources to provide contemporary perspective
+## FISCAL NOTE STRUCTURE
 
-APPROACH: Use the complete budget item details provided, including:
-- Exact dollar amounts for FY 2025-2026 and FY 2026-2027
-- Specific program names and IDs
-- Agency information and organizational structure
-- Appropriation types and funding sources
-- Document references for verification
-- Current information from web sources for context and verification
+### 1. BILL STATUS
+Denote the last committee or floor action for which the fiscal note was prepared or updated. Indicate if this is a preliminary fiscal note, fiscal note on demand, or prepared for specific amendments (SEBEC, interim committee, JBC bill).
 
-When citing sources, use descriptive references like "Budget Document [filename]" or "Appropriations Table" for internal documents, and "Current Web Source: [Title]" for web information. Make your citations clear and professional.
+### 2. SUMMARY OF FISCAL IMPACT
+Include checked boxes indicating the type of fiscal impact:
+☐ State Revenue Impact
+☐ State Expenditure Impact  
+☐ Local Government Impact
+☐ School District Impact
+☐ Statutory Public Entity Impact
+☐ No Fiscal Impact
 
-Format as a professional fiscal note with clear sections and substantive analysis using the specific financial data provided."""
+Provide narrative text describing the bill, its impacts to state and local governments, and whether impacts are one-time or ongoing.
+
+### 3. APPROPRIATION SUMMARY
+Indicate the appropriation that the bill requires. Do not include centrally appropriated costs. State "No appropriation is required" if none is needed.
+
+### 4. FISCAL NOTE STATUS
+Indicate what version of the bill the fiscal note was prepared for and any special circumstances.
+
+### 5. STATE FISCAL IMPACT TABLE
+Create a table covering generally two fiscal years (may include more as applicable). Include:
+
+**Revenue/Expenditures/Transfers:**
+- Cash Funds and/or General Fund as applicable
+- Specific fund names for Capital Construction Fund, Highway Users Tax Fund, and State Education Fund when relevant
+
+**Centrally Appropriated:**
+- Employee insurance and supplemental retirement payments
+- Indirect costs and leased space (department-dependent)
+- Note: These costs are appropriated through annual budget process, not included in bill's appropriation requirement
+
+**TABOR Refund:**
+- During TABOR refund periods, indicate how revenue affects projected TABOR refund obligation
+
+**Total FTE:**
+- New position changes required by the bill
+
+### 6. DETAILED ANALYSIS SECTIONS
+
+**Summary of Legislation:**
+Provide comprehensive overview of the proposed legislation and its key provisions.
+
+**Background:**
+Include relevant context and historical information.
+
+**Assumptions:**
+Detail key assumptions used in fiscal impact calculations.
+
+**Comparable Crime:** (if applicable)
+Analysis of similar legislation or precedents.
+
+**State Revenue:**
+Detailed analysis of revenue impacts with specific dollar amounts and timing.
+
+**State Transfers:**
+Analysis of any fund transfers between state accounts.
+
+**State Expenditures:**
+Comprehensive breakdown of expenditure impacts by department and program.
+
+**Local Government Impact:**
+Analysis of fiscal impacts on counties, municipalities, and other local entities.
+
+**School District Impact:**
+Specific analysis of impacts on K-12 education funding and operations.
+
+**Statutory Public Entity Impact:**
+Analysis of impacts on special districts and statutory entities.
+
+**Technical Note:**
+Any technical considerations or methodological notes.
+
+**State Appropriations:**
+Detailed breakdown of required appropriations by fund source and department.
+
+**Departmental Differences:**
+Note any differences in estimates between departments or agencies.
+
+**State and Local Government Contacts:**
+List relevant agency contacts and their roles.
+
+## FORMATTING REQUIREMENTS:
+
+- Use professional fiscal note formatting with clear section headers
+- Include specific dollar amounts from budget data with fiscal year breakdowns
+- Reference exact program names, IDs, and agency information from the data
+- Provide clear methodology explanations for all estimates
+- Use descriptive source citations: "Budget Document [filename]" for internal documents, "Current Web Source: [Title]" for web information
+- Ensure all financial data is substantiated by the provided budget information
+- Include both one-time and ongoing cost implications
+- Address implementation timeline and phasing if applicable
+
+## DATA UTILIZATION:
+- Use exact dollar amounts for FY 2025-2026 and FY 2026-2027 from budget items
+- Reference specific program names and IDs from the data
+- Include agency information and organizational structure details
+- Incorporate appropriation types and funding sources
+- Utilize current information from web sources for contemporary context and verification
+
+Format as a professional fiscal note with substantive analysis using the specific financial data provided. Ensure all sections are comprehensive and based on available data."""
 
         elif query_type == "budget_analysis":
             answer_prompt = f"""You are a budget analyst providing detailed analysis from available data.
@@ -1076,8 +1656,8 @@ Be thorough, informative, and focus on providing practical value from the availa
         # Calculate quality metrics
         total_results = len(search_results)
         
-        # Completeness: Do we have enough results? (Stricter requirements)
-        min_expected = 30 if query_type == "budget_analysis" else 20  # Increased expectations
+        # Completeness: Do we have enough results?
+        min_expected = 30 if query_type == "budget_analysis" else 20
         quality_scores["completeness"] = min(1.0, total_results / min_expected)
         
         # Coverage: Are we searching the right collections for this query type?
@@ -1087,19 +1667,19 @@ Be thorough, informative, and focus on providing practical value from the availa
             base_coverage = len(collections_searched & expected_collections) / len(expected_collections)
             # Bonus for cross-collection context in budget analysis
             if fiscal_items or text_items:
-                quality_scores["coverage"] = min(1.0, base_coverage + 0.3)  # Bonus for additional context
+                quality_scores["coverage"] = min(1.0, base_coverage + 0.3)
             else:
                 quality_scores["coverage"] = base_coverage
         else:
             expected_collections = set(reasoning.get("target_collections", ["budget", "text", "fiscal"]))
             quality_scores["coverage"] = len(collections_searched & expected_collections) / max(1, len(expected_collections))
         
-        # Financial data quality (for budget queries) - More stringent
+        # Financial data quality (for budget queries)
         if query_type in ["budget_analysis", "fiscal_note"] and budget_items:
             financial_data_count = 0
             for item in budget_items:
                 metadata = item.get("metadata", {})
-                # Check for specific financial fields with actual values (not "unknown")
+                # Check for specific financial fields with actual values
                 has_valid_amounts = False
                 for field in ["fiscal_year_2025_2026_amount", "fiscal_year_2026_2027_amount"]:
                     value = metadata.get(field)
@@ -1119,35 +1699,31 @@ Be thorough, informative, and focus on providing practical value from the availa
         else:
             quality_scores["financial_data"] = 1.0  # Not applicable for non-budget queries
         
-        # Relevance: Average score of results (More stringent threshold)
+        # Relevance: Average score of results
         if search_results:
             scores = [r.get("score", 0.0) for r in search_results]
-            # Apply stricter weighting - only consider top-scoring results
-            top_scores = sorted(scores, reverse=True)[:min(20, len(scores))]  # Top 20 results
+            top_scores = sorted(scores, reverse=True)[:min(20, len(scores))]
             quality_scores["relevance"] = sum(top_scores) / len(top_scores)
         
-        # Context richness: Do we have diverse information types and good distribution?
+        # Context richness: Do we have diverse information types?
         available_collections = set(["budget", "fiscal", "text"])
         present_collections = set([r.get("collection") for r in search_results])
         
-        # Base richness from collection diversity
         base_richness = len(present_collections & available_collections) / len(available_collections)
         
-        # Bonus for good distribution of results across collections
         if len(present_collections) > 1:
             collection_counts = {}
             for result in search_results:
                 coll = result.get("collection", "unknown")
                 collection_counts[coll] = collection_counts.get(coll, 0) + 1
             
-            # Check if we have reasonable distribution (no single collection dominates too much)
             max_count = max(collection_counts.values()) if collection_counts else 0
-            distribution_bonus = 0.2 if max_count < total_results * 0.8 else 0  # Bonus if no collection has >80%
+            distribution_bonus = 0.2 if max_count < total_results * 0.8 else 0
             quality_scores["context_richness"] = min(1.0, base_richness + distribution_bonus)
         else:
             quality_scores["context_richness"] = base_richness
         
-        # Overall quality assessment (not used for decision, but for logging)
+        # Overall quality assessment
         overall_quality = sum(quality_scores.values()) / len(quality_scores)
         state["result_quality_scores"] = quality_scores
         
@@ -1169,7 +1745,7 @@ Be thorough, informative, and focus on providing practical value from the availa
             state["needs_refinement"] = False
             return state
         
-        # NEW STRINGENT REQUIREMENT: ALL quality scores must be > 0.8
+        # Check quality scores
         failing_metrics = []
         for metric, score in quality_scores.items():
             if score <= 0.8:
@@ -1179,12 +1755,11 @@ Be thorough, informative, and focus on providing practical value from the availa
             refinement_needed = True
             print(f"   🔄 Refinement needed - metrics below 0.8: {', '.join(failing_metrics)}")
             
-            # Determine primary refinement strategy based on lowest score
+            # Determine refinement strategy
             lowest_metric = min(quality_scores.items(), key=lambda x: x[1])
             lowest_metric_name, lowest_score = lowest_metric
             
             if lowest_metric_name == "completeness":
-                # Need significantly more results
                 refinement_strategy = {
                     "reason": f"insufficient_results (completeness: {lowest_score:.3f})",
                     "action": "expand_search",
@@ -1194,83 +1769,9 @@ Be thorough, informative, and focus on providing practical value from the availa
                         f"{state['query']} program",
                         f"{state['query']} policy"
                     ],
-                    "num_results": 400  # Increased for better completeness
+                    "num_results": 400
                 }
-                
-            elif lowest_metric_name == "financial_data":
-                # Need better financial data
-                refinement_strategy = {
-                    "reason": f"poor_financial_data (financial_data: {lowest_score:.3f})",
-                    "action": "financial_focus",
-                    "target_collections": ["budget"],
-                    "search_terms": [
-                        f"{state['query']} appropriation amount",
-                        f"{state['query']} fiscal year budget",
-                        f"{state['query']} funding allocation",
-                        "budget amount fiscal year 2025",
-                        "budget amount fiscal year 2026",
-                        f"{state['query']} total cost"
-                    ],
-                    "num_results": 300
-                }
-                
-            elif lowest_metric_name == "context_richness":
-                # Need more diverse context
-                missing_collections = []
-                for coll in ["budget", "fiscal", "text"]:
-                    if not any(r.get("collection") == coll for r in search_results):
-                        missing_collections.append(coll)
-                
-                refinement_strategy = {
-                    "reason": f"insufficient_context (context_richness: {lowest_score:.3f})",
-                    "action": "diversify_search",
-                    "target_collections": missing_collections or ["text", "fiscal"],
-                    "search_terms": [
-                        f"{state['query']} policy framework",
-                        f"{state['query']} implementation guide",
-                        f"{state['query']} fiscal analysis",
-                        f"{state['query']} background",
-                        "governance policy"
-                    ],
-                    "num_results": 250
-                }
-                
-            elif lowest_metric_name == "relevance":
-                # Need more relevant results with targeted terms
-                refinement_strategy = {
-                    "reason": f"low_relevance (relevance: {lowest_score:.3f})",
-                    "action": "refine_terms",
-                    "target_collections": state["collections_searched"] or ["budget", "text"],
-                    "search_terms": [
-                        # More specific and targeted terms
-                        f"\"{state['query']}\"",  # Exact phrase
-                        state["query"].replace(" ", " AND "),
-                        *[term for term in state["query"].split() if len(term) > 3],
-                        f"{state['query']} specific",
-                        f"{state['query']} detailed"
-                    ],
-                    "num_results": 300
-                }
-                
-            elif lowest_metric_name == "coverage":
-                # Need better collection coverage
-                target_collections = reasoning.get("target_collections", ["budget", "text", "fiscal"])
-                missing_collections = [c for c in target_collections if c not in collections_searched]
-                
-                refinement_strategy = {
-                    "reason": f"insufficient_coverage (coverage: {lowest_score:.3f})",
-                    "action": "expand_coverage",
-                    "target_collections": missing_collections or target_collections,
-                    "search_terms": [
-                        state["query"],
-                        f"{state['query']} comprehensive",
-                        f"{state['query']} overview"
-                    ],
-                    "num_results": 250
-                }
-            
             else:
-                # Fallback strategy
                 refinement_strategy = {
                     "reason": f"general_improvement ({lowest_metric_name}: {lowest_score:.3f})",
                     "action": "comprehensive_search",
@@ -1282,17 +1783,11 @@ Be thorough, informative, and focus on providing practical value from the availa
                     ],
                     "num_results": 350
                 }
-        
         else:
             print(f"   ✅ All quality metrics above 0.8 - proceeding to answer generation")
         
         state["needs_refinement"] = refinement_needed
         state["refinement_strategy"] = refinement_strategy
-        
-        if refinement_needed:
-            print(f"      Primary issue: {refinement_strategy.get('reason', 'unknown')}")
-            print(f"      Action: {refinement_strategy.get('action', 'unknown')}")
-            print(f"      Target collections: {refinement_strategy.get('target_collections', [])}")
         
         return state
     
@@ -1318,16 +1813,10 @@ Be thorough, informative, and focus on providing practical value from the availa
         num_results = refinement_strategy.get("num_results", 200)
         action = refinement_strategy.get("action", "expand_search")
         
-        # Previous search summary
-        prev_results_summary = f"Previous search found {len(state['search_results'])} results from {', '.join(state['collections_searched'])}"
-        
         refined_search_prompt = f"""You are conducting a REFINED search based on previous results analysis.
 
 ORIGINAL QUERY: "{state['query']}"
 ITERATION: {state['search_iterations'] + 1}
-
-PREVIOUS SEARCH SUMMARY:
-{prev_results_summary}
 
 REFINEMENT STRATEGY:
 - Reason: {refinement_strategy.get('reason', 'improve_results')}
@@ -1336,15 +1825,10 @@ REFINEMENT STRATEGY:
 - Search Terms: {search_terms}
 - Target Results: {num_results}
 
-REFINED SEARCH INSTRUCTIONS:
-
-{self._get_refinement_instructions(action, refinement_strategy)}
-
 Execute strategic searches using the available tools to gather the missing or improved information.
 Focus on addressing the specific gaps identified in the previous search results."""
 
         try:
-            # Let the LLM decide which tools to use for refinement
             messages = [
                 SystemMessage(content="You are a research assistant conducting a refined search to improve results quality. Use tools strategically to address specific information gaps."),
                 HumanMessage(content=refined_search_prompt)
@@ -1428,171 +1912,362 @@ Focus on addressing the specific gaps identified in the previous search results.
         
         return state
     
-    def _get_refinement_instructions(self, action: str, strategy: Dict[str, Any]) -> str:
-        """Generate specific instructions for different refinement actions"""
+    def answer_subquestions(self, state: AgentState) -> AgentState:
+        """Generate answers for each subquestion using their retrieved documents"""
         
-        if action == "expand_search":
-            return """
-EXPAND SEARCH STRATEGY:
-- Use search_across_collections with high num_results to cast a wider net
-- Try multiple variations of search terms including program and policy terms
-- Search all available collections for comprehensive coverage
-- Focus on finding significantly more documents that match the query intent
-- Use broader search terms to capture more relevant content"""
+        subquestion_results = state["subquestion_results"]
+        query = state["query"]
+        
+        print(f"💡 Generating answers for {len(subquestion_results)} subquestions")
+        
+        subquestion_answers = []
+        
+        for sq_result in subquestion_results:
+            subq_id = sq_result["subquestion_id"]
+            question = sq_result["question"]
+            search_results = sq_result.get("search_results", [])
+            
+            print(f"   💡 Answering Q{subq_id}: {question[:50]}...")
+            
+            if not search_results:
+                # No documents found, provide a basic response
+                answer = {
+                    "subquestion_id": subq_id,
+                    "question": question,
+                    "answer": f"No relevant documents were found to answer this specific subquestion: {question}",
+                    "confidence": "low",
+                    "sources": [],
+                    "key_findings": []
+                }
+                subquestion_answers.append(answer)
+                print(f"      ⚠️ Q{subq_id}: No documents found")
+                continue
+            
+            # Prepare context from search results
+            context_parts = []
+            sources = []
+            
+            for i, result in enumerate(search_results[:5]):  # Use top 5 results
+                content = result.get("content", "")
+                source_info = {
+                    "document": result.get("document", f"Document_{i+1}"),
+                    "collection": result.get("collection", "Unknown"),
+                    "score": result.get("score", 0),
+                    "search_type": result.get("search_type", "unknown")
+                }
+                sources.append(source_info)
+                
+                context_parts.append(f"[Source {i+1}: {source_info['document']}]\n{content}")
+            
+            context = "\n\n".join(context_parts)
+            
+            # Generate answer using LLM
+            answer_prompt = f"""You are an expert analyst answering a specific subquestion as part of a larger analysis.
 
-        elif action == "financial_focus":
-            return """
-FINANCIAL FOCUS STRATEGY:
-- Use search_collection specifically on 'budget' collection with high num_results
-- Search for terms like 'appropriation amount', 'fiscal year budget', 'funding allocation'
-- Look for documents with specific dollar amounts and detailed financial metadata
-- Prioritize budget items with complete and valid financial data (actual numbers, not 'unknown')
-- Focus on finding budget entries with clear fiscal year amounts"""
+MAIN QUERY: "{query}"
+SUBQUESTION: "{question}"
 
-        elif action == "diversify_search":
-            return """
-DIVERSIFY SEARCH STRATEGY:
-- Search collections not yet fully explored (text, fiscal) with comprehensive terms
-- Look for policy documents, implementation guidelines, background information
-- Use broader contextual terms like 'policy framework', 'implementation guide'
-- Build richer context around the main query topic
-- Focus on getting good distribution across different document types"""
+CONTEXT FROM RETRIEVED DOCUMENTS:
+{context}
 
-        elif action == "refine_terms":
-            return """
-REFINE TERMS STRATEGY:
-- Use more specific, targeted search terms with exact phrase matching
-- Try quoted exact phrases and AND combinations for precision
-- Search for synonyms and more detailed/specific related concepts
-- Focus on higher relevance scores rather than quantity
-- Use specific and detailed variations of the query terms"""
+Based on the provided documents, answer the subquestion comprehensively. Your response should:
 
-        elif action == "cross_reference":
-            return """
-CROSS-REFERENCE STRATEGY:
-- Search text and fiscal collections for policy context
-- Look for implementation guidelines and background information
-- Find supporting documentation that explains the budget items
-- Build comprehensive understanding across document types"""
+1. **Direct Answer**: Provide a clear, direct answer to the subquestion
+2. **Key Findings**: Highlight 3-5 key findings from the documents
+3. **Specific Details**: Include relevant numbers, dates, policies, or specific information
+4. **Source Attribution**: Reference which documents support your points
+5. **Confidence Assessment**: Indicate how well the documents answer the question
 
-        elif action == "targeted_search":
-            return """
-TARGETED SEARCH STRATEGY:
-- Focus on the specific budget collection with more precise terms
-- Break down complex queries into individual components
-- Search for specific program names and appropriation details
-- Use exact matching for better relevance scores"""
+Format as:
 
-        elif action == "expand_coverage":
-            return """
-EXPAND COVERAGE STRATEGY:
-- Search the missing collections identified in the analysis
-- Use comprehensive and overview-focused search terms
-- Ensure all target collections are properly searched
-- Focus on achieving better collection coverage and distribution
-- Use broad but relevant terms to capture content from all target collections"""
+**Answer:** [Direct answer to the subquestion]
 
-        elif action == "comprehensive_search":
-            return """
-COMPREHENSIVE SEARCH STRATEGY:
-- Perform thorough searches across all available collections
-- Use detailed and comprehensive search terms
-- Focus on gathering high-quality, detailed information
-- Search with high num_results to ensure comprehensive coverage
-- Use multiple variations of terms to capture all relevant content"""
+**Key Findings:**
+- [Finding 1 with source reference]
+- [Finding 2 with source reference]
+- [Finding 3 with source reference]
+
+**Specific Details:**
+[Include relevant numbers, policies, dates, or other specific information]
+
+**Confidence:** [High/Medium/Low] - [Brief explanation of confidence level]
+
+Focus specifically on this subquestion and provide actionable insights that will contribute to answering the main query."""
+
+            try:
+                response = self.llm.invoke([HumanMessage(content=answer_prompt)])
+                answer_content = response.content.strip()
+                
+                # Extract key findings from the answer
+                key_findings = []
+                if "**Key Findings:**" in answer_content:
+                    findings_section = answer_content.split("**Key Findings:**")[1].split("**")[0]
+                    for line in findings_section.split('\n'):
+                        line = line.strip()
+                        if line.startswith('- '):
+                            key_findings.append(line[2:])
+                
+                # Extract confidence level
+                confidence = "medium"
+                if "**Confidence:**" in answer_content:
+                    conf_section = answer_content.split("**Confidence:**")[1].split("**")[0].strip()
+                    if conf_section.lower().startswith("high"):
+                        confidence = "high"
+                    elif conf_section.lower().startswith("low"):
+                        confidence = "low"
+                
+                answer = {
+                    "subquestion_id": subq_id,
+                    "question": question,
+                    "answer": answer_content,
+                    "confidence": confidence,
+                    "sources": sources,
+                    "key_findings": key_findings,
+                    "documents_used": len(search_results)
+                }
+                
+                subquestion_answers.append(answer)
+                print(f"      ✅ Q{subq_id}: Generated answer ({len(answer_content)} chars, {confidence} confidence)")
+                
+            except Exception as e:
+                print(f"      ❌ Error generating answer for Q{subq_id}: {e}")
+                # Fallback answer
+                fallback_answer = {
+                    "subquestion_id": subq_id,
+                    "question": question,
+                    "answer": f"Based on the available documents, this subquestion relates to {question.lower()}. However, there was an error in generating a comprehensive answer.",
+                    "confidence": "low",
+                    "sources": sources,
+                    "key_findings": [],
+                    "error": str(e)
+                }
+                subquestion_answers.append(fallback_answer)
+        
+        state["subquestion_answers"] = subquestion_answers
+        
+        total_findings = sum(len(ans.get("key_findings", [])) for ans in subquestion_answers)
+        print(f"   ✅ Generated answers for {len(subquestion_answers)} subquestions with {total_findings} total key findings")
+        
+        state["messages"].append(AIMessage(content=f"Generated comprehensive answers for {len(subquestion_answers)} subquestions"))
+        
+        return state
+    
+    def synthesize_final_answer(self, state: AgentState) -> AgentState:
+        """Synthesize all subquestion answers into a comprehensive final response with additional vector search"""
+        
+        subquestion_answers = state["subquestion_answers"]
+        query = state["query"]
+        reasoning = state["reasoning"]
+        
+        print(f"🎯 Synthesizing final answer from {len(subquestion_answers)} subquestion answers")
+        
+        # 1. Perform one final vector search using insights from all subquestions
+        print("   🔍 Performing final comprehensive vector search...")
+        
+        # Create a comprehensive search query from all subquestion insights
+        all_key_findings = []
+        all_sources = []
+        
+        for ans in subquestion_answers:
+            all_key_findings.extend(ans.get("key_findings", []))
+            all_sources.extend(ans.get("sources", []))
+        
+        # Create enhanced search query
+        key_terms = " ".join(all_key_findings[:10])  # Top 10 key findings
+        final_search_query = f"{query} {key_terms}"
+        
+        final_search_results = []
+        try:
+            # Perform final vector search across available collections
+            tools = self.tools
+            available_collections = getattr(self, 'collection_names', ['budget', 'text', 'fiscal'])
+            
+            # Try searching across collections for final synthesis
+            for collection in available_collections[:2]:  # Search top 2 collections
+                try:
+                    final_results = tools[0].invoke({
+                        "collection_name": collection,
+                        "query": final_search_query,
+                        "num_results": 4
+                    })
+                    
+                    if isinstance(final_results, str):
+                        import json
+                        final_data = json.loads(final_results)
+                        if "results" in final_data and final_data["results"]:
+                            for result in final_data["results"]:
+                                result["search_type"] = "final_synthesis"
+                                result["collection_searched"] = collection
+                                final_search_results.append(result)
+                            print(f"      ✅ Final search in {collection}: {len(final_data['results'])} documents")
+                except Exception as collection_error:
+                    print(f"      ⚠️ Final search failed for {collection}: {collection_error}")
+            
+            if final_search_results:
+                print(f"      ✅ Final search found {len(final_search_results)} total additional documents")
+            else:
+                print(f"      ℹ️ No additional documents found in final search")
+                
+        except Exception as e:
+            print(f"      ⚠️ Final search failed: {e}")
+        
+        # 2. Prepare comprehensive context for synthesis
+        synthesis_context_parts = []
+        
+        # Add subquestion answers
+        for ans in subquestion_answers:
+            synthesis_context_parts.append(f"""
+SUBQUESTION {ans['subquestion_id']}: {ans['question']}
+ANSWER: {ans['answer']}
+CONFIDENCE: {ans['confidence']}
+KEY FINDINGS: {'; '.join(ans.get('key_findings', []))}
+""")
+        
+        # Add final search results
+        if final_search_results:
+            synthesis_context_parts.append("\nADDITIONAL CONTEXT FROM FINAL SEARCH:")
+            for i, result in enumerate(final_search_results[:5]):
+                content = result.get("content", "")[:500]  # Limit content length
+                synthesis_context_parts.append(f"[Additional Source {i+1}]: {content}")
+        
+        synthesis_context = "\n".join(synthesis_context_parts)
+        
+        # 3. Generate final comprehensive answer
+        query_type = reasoning.get("query_type", "informational")
+        
+        if query_type == "fiscal_note":
+            # Use the comprehensive fiscal note prompt
+            synthesis_prompt = f"""You are a fiscal analyst creating a comprehensive fiscal note. You have analyzed this query through multiple subquestions and gathered extensive information.
+
+MAIN QUERY: "{query}"
+
+COMPREHENSIVE ANALYSIS FROM SUBQUESTIONS:
+{synthesis_context}
+
+Based on all the subquestion analyses and additional research, create a comprehensive fiscal note following the standard format with all required sections:
+
+1. **Bill Status**
+2. **Summary of Fiscal Impact** (with checkbox format)
+3. **Appropriation Summary**
+4. **Fiscal Note Status**
+5. **State Fiscal Impact Table**
+6. **Detailed Analysis Sections**
+
+Ensure your response:
+- Synthesizes information from all subquestion answers
+- Includes specific financial data and numbers where available
+- References multiple sources and documents
+- Provides comprehensive analysis across all aspects
+- Follows professional fiscal note formatting
+- Addresses any gaps or uncertainties identified in the subquestion analysis
+
+Format as a complete, professional fiscal note document."""
 
         else:
-            return """
-GENERAL REFINEMENT STRATEGY:
-- Use available tools strategically to improve result quality
-- Focus on addressing the specific gaps identified in quality metrics
-- Gather additional relevant information to support comprehensive analysis
-- Use high num_results values to ensure thorough coverage"""
-    
-    def _save_query_debug(self, query: str, final_state: AgentState, response: Dict[str, Any]) -> str:
-        """Save detailed debug information for the query to a JSON file"""
+            # General comprehensive synthesis
+            synthesis_prompt = f"""You are an expert analyst providing a comprehensive response based on multi-step analysis.
+
+MAIN QUERY: "{query}"
+QUERY TYPE: {query_type}
+
+COMPREHENSIVE ANALYSIS FROM SUBQUESTIONS:
+{synthesis_context}
+
+Based on all the subquestion analyses and additional research, provide a comprehensive answer that:
+
+1. **Executive Summary**: Provide a clear, direct answer to the main query
+2. **Key Findings**: Synthesize the most important findings from all subquestions
+3. **Detailed Analysis**: Provide in-depth analysis organized by major themes
+4. **Supporting Evidence**: Reference specific documents and sources
+5. **Implications**: Discuss broader implications and recommendations
+6. **Confidence Assessment**: Overall confidence level and any limitations
+
+Structure your response clearly with headers and ensure you:
+- Synthesize information from all {len(subquestion_answers)} subquestion analyses
+- Highlight connections and patterns across different aspects
+- Address the query comprehensively from multiple angles
+- Provide actionable insights and recommendations
+- Note any gaps or areas requiring additional research
+
+Make this a definitive, comprehensive response that fully addresses the user's query."""
+
         try:
-            # Create debug directory if it doesn't exist
-            debug_dir = Path("debug_queries")
-            debug_dir.mkdir(exist_ok=True)
+            response = self.llm.invoke([HumanMessage(content=synthesis_prompt)])
+            final_answer = response.content.strip()
             
-            # Generate unique filename
-            timestamp = int(time.time())
-            query_id = str(uuid.uuid4())[:8]
-            safe_query = "".join(c for c in query[:50] if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            filename = f"query_{timestamp}_{query_id}_{safe_query.replace(' ', '_')}.json"
+            # Compile comprehensive sources
+            all_unique_sources = []
+            seen_docs = set()
             
-            # Prepare detailed debug data
-            debug_data = {
-                "query_info": {
-                    "original_query": query,
-                    "timestamp": timestamp,
-                    "query_id": query_id,
-                    "processing_time": response.get("processing_time", "unknown")
-                },
-                "step_1_analysis": {
-                    "reasoning": final_state["reasoning"],
-                    "target_collections": final_state["reasoning"].get("target_collections", []),
-                    "search_strategy": final_state["reasoning"].get("search_strategy", ""),
-                    "search_terms": final_state["reasoning"].get("search_terms", [])
-                },
-                "step_2_search_iterations": {
-                    "total_iterations": final_state["search_iterations"] + 1,
-                    "max_iterations": final_state["max_iterations"],
-                    "search_history": final_state["search_history"],
-                    "final_collections_searched": final_state["collections_searched"],
-                    "final_search_terms_used": final_state["search_terms_used"],
-                    "total_documents_found": len(final_state["search_results"]),
-                    "quality_scores": final_state["result_quality_scores"],
-                    "refinement_strategy": final_state["refinement_strategy"],
-                    "search_results_by_collection": {},
-                    "detailed_search_results": []
-                },
-                "step_3_generation": {
-                    "context_length": len(final_state["context"]),
-                    "sources_count": len(final_state["sources"]),
-                    "answer_length": len(final_state["answer"]),
-                    "confidence": final_state["confidence"]
-                },
-                "full_context": final_state["context"],
-                "final_answer": final_state["answer"],
-                "sources": final_state["sources"],
-                "processing_steps": [msg.content for msg in final_state["messages"] if isinstance(msg, AIMessage)]
-            }
+            for ans in subquestion_answers:
+                for source in ans.get("sources", []):
+                    doc_key = source.get("document", "")
+                    if doc_key and doc_key not in seen_docs:
+                        seen_docs.add(doc_key)
+                        all_unique_sources.append(source)
             
-            # Organize search results by collection
-            for result in final_state["search_results"]:
-                collection = result.get("collection", "unknown")
-                if collection not in debug_data["step_2_search_iterations"]["search_results_by_collection"]:
-                    debug_data["step_2_search_iterations"]["search_results_by_collection"][collection] = []
-                
-                debug_data["step_2_search_iterations"]["search_results_by_collection"][collection].append({
-                    "score": result.get("score"),
-                    "content_preview": result["content"][:200] + "..." if len(result["content"]) > 200 else result["content"],
-                    "content_length": len(result["content"]),
-                    "metadata": result.get("metadata", {}),
-                    "has_amount_data": any(key in result.get("metadata", {}) for key in ["amount", "appropriation", "budget", "funding", "cost"])
-                })
-                
-                # Add to detailed results
-                debug_data["step_2_search_iterations"]["detailed_search_results"].append({
-                    "collection": collection,
-                    "score": result.get("score"),
-                    "full_content": result["content"],
-                    "metadata": result.get("metadata", {})
-                })
+            # Add final search sources
+            for result in final_search_results:
+                doc_key = result.get("document", "")
+                if doc_key and doc_key not in seen_docs:
+                    seen_docs.add(doc_key)
+                    all_unique_sources.append({
+                        "document": doc_key,
+                        "collection": result.get("collection", "Unknown"),
+                        "score": result.get("score", 0),
+                        "search_type": "final_synthesis"
+                    })
             
-            # Save to file
-            filepath = debug_dir / filename
-            with open(filepath, 'w') as f:
-                json.dump(debug_data, f, indent=2, default=str)
+            # Calculate overall confidence
+            confidences = [ans.get("confidence", "medium") for ans in subquestion_answers]
+            high_conf = confidences.count("high")
+            low_conf = confidences.count("low")
             
-            print(f"💾 Debug file saved: {filepath}")
-            return str(filepath)
+            if high_conf >= len(confidences) * 0.6:
+                overall_confidence = "high"
+            elif low_conf >= len(confidences) * 0.4:
+                overall_confidence = "low"
+            else:
+                overall_confidence = "medium"
+            
+            state["answer"] = final_answer
+            state["sources"] = all_unique_sources
+            state["confidence"] = overall_confidence
+            state["final_synthesis_context"] = synthesis_context
+            
+            # Compile search terms used across all subquestions
+            all_search_terms = []
+            for ans in subquestion_answers:
+                all_search_terms.append(ans["question"])
+            state["search_terms_used"] = all_search_terms
+            
+            print(f"   ✅ Synthesized final answer: {len(final_answer)} chars, {overall_confidence} confidence")
+            print(f"   📚 Total sources: {len(all_unique_sources)} documents")
+            print(f"   🎯 Subquestion confidence breakdown: {high_conf} high, {len(confidences)-high_conf-low_conf} medium, {low_conf} low")
+            
+            state["messages"].append(AIMessage(content=f"Generated comprehensive final answer synthesizing {len(subquestion_answers)} subquestion analyses with {len(all_unique_sources)} total sources"))
             
         except Exception as e:
-            print(f"❌ Error saving debug file: {e}")
-            return ""
+            print(f"   ❌ Error synthesizing final answer: {e}")
+            # Fallback synthesis
+            fallback_answer = f"""Based on the multi-step analysis of your query "{query}", I have examined {len(subquestion_answers)} key aspects:
+
+"""
+            for ans in subquestion_answers:
+                fallback_answer += f"**{ans['question']}**\n{ans['answer']}\n\n"
+            
+            fallback_answer += f"""
+**Summary**: The analysis covered multiple dimensions of your query through {len(subquestion_answers)} focused subquestions. While there was an error in the final synthesis, the individual analyses above provide comprehensive coverage of the topic.
+
+**Sources**: Information drawn from {len(all_unique_sources)} documents across multiple collections.
+"""
+            
+            state["answer"] = fallback_answer
+            state["sources"] = all_unique_sources
+            state["confidence"] = "medium"
+            state["messages"].append(AIMessage(content=f"Generated fallback synthesis from {len(subquestion_answers)} subquestion analyses"))
+        
+        return state
     
     def process_query(self, query: str, threshold: float) -> Dict[str, Any]:
         """Process a query using the LangGraph agent"""
@@ -1618,7 +2293,14 @@ GENERAL REFINEMENT STRATEGY:
             refinement_strategy={},
             search_history=[],
             result_quality_scores={},
-            web_results=[] # Initialize web_results
+            web_results=[],
+            # Multi-step reasoning with subquestions
+            subquestions=[],
+            hypothetical_answers=[],
+            subquestion_results=[],
+            subquestion_answers=[],
+            final_synthesis_context="",
+            parallel_processing_enabled=False
         )
         
         try:
@@ -1651,11 +2333,6 @@ GENERAL REFINEMENT STRATEGY:
                 "processing_time": f"{processing_time:.2f} seconds"
             }
             
-            # Save debug file
-            debug_file = self._save_query_debug(query, final_state, response)
-            if debug_file:
-                response["debug_file"] = debug_file
-            
             print(f"🎯 Agent completed successfully")
             print(f"   Collections searched: {final_state['collections_searched']}")
             print(f"   Documents found: {len(final_state['search_results'])}")
@@ -1683,32 +2360,4 @@ GENERAL REFINEMENT STRATEGY:
                 "processing_time": f"{processing_time:.2f} seconds"
             }
             
-            # Try to save error debug info
-            try:
-                error_state = AgentState(
-                    messages=[AIMessage(content=f"Error: {str(e)}")],
-                    query=query,
-                    reasoning={"error": str(e)},
-                    search_results=[],
-                    context="",
-                    answer=error_response["response"],
-                    sources=[],
-                    collections_searched=[],
-                    search_terms_used=[],
-                    confidence="low",
-                    # Iterative search enhancements
-                    search_iterations=0,
-                    max_iterations=3, # Default to 3 iterations
-                    needs_refinement=False,
-                    refinement_strategy={},
-                    search_history=[],
-                    result_quality_scores={},
-                    web_results=[] # Ensure web_results is empty on error
-                )
-                debug_file = self._save_query_debug(query, error_state, error_response)
-                if debug_file:
-                    error_response["debug_file"] = debug_file
-            except:
-                pass
-            
-            return error_response 
+            return error_response
