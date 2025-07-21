@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
+import { MessageSquare, AlertCircle, Loader2, FileText } from 'lucide-react';
 import CollectionsSidebar from './components/CollectionsSidebar';
 import ChatInterface from './components/ChatInterface';
 import CreateGroupModal from './components/CreateGroupModal';
+import FiscalNoteGeneration from './components/FiscalNoteGeneration';
 import type { Collection, ChatMessage } from './types';
 import { getCollections, askQuestion } from './services/api';
 
+type AppView = 'chat' | 'fiscal-note';
+
 function App() {
+  const [currentView, setCurrentView] = useState<AppView>('chat');
   const [collections, setCollections] = useState<Collection[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,11 +28,10 @@ function App() {
       
       // Transform the backend response to our Collection type
       const collectionsArray: Collection[] = Object.entries(response.collections).map(
-        ([id, stats]) => ({
-          id,
-          name: stats.name,
-          count: stats.count,
-          status: stats.status,
+        ([collectionName, totalCollections]) => ({
+          name: collectionName,
+          total_collections: totalCollections,
+          status: "active",
         })
       );
       
@@ -140,19 +143,57 @@ function App() {
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 rounded-lg p-2">
-                <MessageSquare className="w-6 h-6 text-white" />
+              <div className={`rounded-lg p-2 ${
+                currentView === 'chat' ? 'bg-blue-600' : 'bg-green-600'
+              }`}>
+                {currentView === 'chat' ? (
+                  <MessageSquare className="w-6 h-6 text-white" />
+                ) : (
+                  <FileText className="w-6 h-6 text-white" />
+                )}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Document Chat</h1>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {currentView === 'chat' ? 'Document Chat' : 'Fiscal Note Generation'}
+                </h1>
                 <p className="text-sm text-gray-500">
-                  Ask questions across all your document collections
+                  {currentView === 'chat'
+                    ? 'Ask questions across all your document collections'
+                    : 'Upload documents and analyze using selected collections'
+                  }
                 </p>
               </div>
             </div>
             
-            {/* Status Indicator */}
-            <div className="flex items-center space-x-2">
+            {/* Navigation */}
+            <div className="flex items-center space-x-4">
+              <nav className="flex space-x-1">
+                <button
+                  onClick={() => setCurrentView('chat')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'chat'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 inline mr-2" />
+                  Chat
+                </button>
+                <button
+                  onClick={() => setCurrentView('fiscal-note')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'fiscal-note'
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 inline mr-2" />
+                  Fiscal Note
+                </button>
+              </nav>
+              
+              {/* Status Indicator */}
+              <div className="flex items-center space-x-2">
               {collectionsLoading && (
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,13 +214,17 @@ function App() {
                   <span className="text-sm">Connection Error</span>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Chat Interface */}
+        {/* Main Content */}
         <div className="flex-1 overflow-hidden">
-          {collectionsLoading ? (
+          {currentView === 'fiscal-note' ? (
+            <FiscalNoteGeneration onBack={() => setCurrentView('chat')} />
+          ) : (
+            collectionsLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
@@ -217,11 +262,12 @@ function App() {
               </div>
             </div>
           ) : (
-            <ChatInterface
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              loading={loading}
-            />
+              <ChatInterface
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                loading={loading}
+              />
+            )
           )}
         </div>
       </div>

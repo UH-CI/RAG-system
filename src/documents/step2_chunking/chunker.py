@@ -249,6 +249,9 @@ def chunk_document(
     
     logger.info(f"Chunking complete. Saved {len(final_results)} items to {output_json_path}")
     logger.info(f"Metadata saved to {metadata_path}")
+    
+    # Return the chunked results
+    return final_results
 
 
 # This basic setup allows the script to be used as a module.

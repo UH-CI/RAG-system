@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { X, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import type { CreateGroupData, CreateGroupStep, DocumentParsingType, UploadProgress } from '../types';
-import { createGroup, uploadDocuments } from '../services/api';
+import { createCollection, uploadDocuments } from '../services/api';
 import GroupNameStep from './CreateGroupModal/GroupNameStep';
 import DocumentUploadStep from './CreateGroupModal/DocumentUploadStep';
 import ParsingTypeStep from './CreateGroupModal/ParsingTypeStep';
@@ -115,8 +115,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     try {
       // Step 1: Create the group
-      const createResponse = await createGroup(groupData.name, groupData.description);
-      const groupId = createResponse.collection_id;
+      const createResponse = await createCollection(groupData.name);
+      const collectionName = createResponse.collection_name;
 
       // Step 2: Initialize upload progress
       const initialProgress: UploadProgress[] = groupData.documents.map(file => ({
@@ -128,7 +128,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
       // Step 3: Upload documents
       await uploadDocuments(
-        groupId,
+        collectionName,
         groupData.documents,
         groupData.parsingType,
         groupData.customParsingDescription,

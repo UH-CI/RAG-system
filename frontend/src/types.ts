@@ -12,19 +12,12 @@ export interface CollectionStats {
 }
 
 export interface CollectionsResponse {
-  collections: Record<string, CollectionStats>;
-  config: {
-    default_collection: string;
-    collection_aliases?: Record<string, string>;
-    total_collections: number;
-  };
+  collections: Collection[];
+  total_collections: number;
 }
 
 export interface Collection {
-  id: string;
   name: string;
-  count: number;
-  status: string;
 }
 
 export interface SearchResponse {

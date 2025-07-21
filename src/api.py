@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Query
+from fastapi import FastAPI, HTTPException, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, TypedDict
@@ -9,6 +9,7 @@ from pathlib import Path
 import json
 import google.generativeai as genai
 from tqdm import tqdm
+import logging
 
 from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
 from documents.step0_document_upload.google_upload import download_pdfs_from_drive
@@ -452,32 +453,22 @@ async def get_documents():
 
 @app.get("/collections")
 async def get_collections():
-    """Get available collections and their stats"""
-    collection_stats = {}
-    
-    for collection_name, manager in collection_managers.items():
-        try:
-            collection = manager.collection
-            count = collection.count()
-            collection_stats[collection_name] = {
-                "count": count,
-                "name": collection_name,
-                "status": "active"
-            }
-        except Exception as e:
-            collection_stats[collection_name] = {
-                "count": 0,
-                "name": collection_name,
-                "status": f"error: {str(e)}"
-            }
-    
+    """Get list of collections stored in documents/storage_documents folder, 
+    AKA, list of directories in documents/storage_documents folder"""
+    base_path = "documents/storage_documents"
+    collections = []
+
+    for entry in os.listdir(base_path):
+        full_path = os.path.join(base_path, entry)
+        if os.path.isdir(full_path):
+            print(f"Found collection: {entry}")
+            collections.append({
+                "name": entry,
+            })
+
     return {
-        "collections": collection_stats,
-        "config": {
-            "default_collection": config.get("default_collection"),
-            "collection_aliases": config.get("collection_aliases", {}),
-            "total_collections": len(collection_names)
-        }
+        "collections": collections,
+        "total_collections": len(collections)
     }
 
 @app.post("/search", response_model=List[DocumentResponse])
@@ -573,17 +564,69 @@ async def query_documents(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
+class ChunkingRequest(BaseModel):
+    chosen_methods: List[str] = ["pymupdf_extraction_text"]
+
 @app.post("/step2-chunking")
-async def step2_chunking(filenames: List[str], chosen_methods: List[str], identifier: str, chunk_size: int = 1000, chunk_overlap: int = 200, use_ai: bool = False, prompt_description: Optional[str] = None, previous_pages_to_include: int = 1, context_items_to_show: int = 2, rewrite_query: bool = False ):
-    try:
-        print(f"Starting chunking for {filenames}...")
-        for filename in filenames:
-            file_path = os.path.join("documents", "extracted_text", filename.replace(".pdf", ".json"))
-            output_json_path = os.path.join("documents", "chunked_text", filename.replace(".pdf", ".json"))
+async def step2_chunking(
+    collection_name: str,
+    request: ChunkingRequest,
+    identifier: str = "fiscal_note",
+    chunk_size: int = 1000,
+    chunk_overlap: int = 200,
+    use_ai: bool = False,
+    prompt_description: Optional[str] = None,
+    previous_pages_to_include: int = 1,
+    context_items_to_show: int = 2,
+    rewrite_query: bool = False
+):
+    """
+    Chunk extracted text from all JSON files in a specific collection.
+    
+    Args:
+        collection_name (str): Name of the collection to process.
+        chosen_methods (List[str]): Methods to use for chunking.
+        identifier (str): Identifier for the chunking process.
+        chunk_size (int): Size of each chunk.
+        chunk_overlap (int): Overlap between chunks.
+        use_ai (bool): Whether to use AI for chunking.
+        prompt_description (Optional[str]): Prompt description for AI chunking.
+        previous_pages_to_include (int): Number of previous pages for context.
+        context_items_to_show (int): Number of context items to show.
+        rewrite_query (bool): Whether to rewrite the query.
+    """
+    logging.info(f"Starting chunking for collection '{collection_name}'")
+    # Define paths
+    collection_extracted_dir = os.path.join("documents", "extracted_text", collection_name)
+    collection_chunked_dir = os.path.join("documents", "chunked_text", collection_name)
+
+    # Check if collection extracted directory exists
+    if not os.path.exists(collection_extracted_dir):
+        raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found in extracted text")
+    
+    # Create chunked text directory for collection
+    os.makedirs(collection_chunked_dir, exist_ok=True)
+    
+    # Get all JSON files in the extracted text collection
+    json_files = [f for f in os.listdir(collection_extracted_dir) if f.lower().endswith('.json')]
+    logging.info(f"Found {len(json_files)} JSON files in collection '{collection_name}'")
+    if not json_files:
+        raise HTTPException(status_code=404, detail=f"No extracted text files found in collection '{collection_name}'")
+    
+    processed_files = []
+    errors = []
+    
+    logging.info(f"Starting chunking for collection '{collection_name}' with {len(json_files)} files...")
+    
+    for filename in json_files:
+        try:
+            file_path = os.path.join(collection_extracted_dir, filename)
+            output_json_path = os.path.join(collection_chunked_dir, filename)
+            logging.info(f"Processing file: {filename}")
             chunked_data = chunk_document(
                 input_json_path=file_path,
                 output_json_path=output_json_path,
-                chosen_methods=chosen_methods,
+                chosen_methods=request.chosen_methods,
                 identifier=identifier,
                 use_ai=use_ai,
                 prompt_description=prompt_description,
@@ -593,26 +636,77 @@ async def step2_chunking(filenames: List[str], chosen_methods: List[str], identi
                 chunk_size=chunk_size,
                 overlap=chunk_overlap
             )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error chunking: {str(e)}")
+            
+            # Save the chunked data to a JSON file
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(chunked_data, f, indent=2, ensure_ascii=False)
+            
+            logging.info(f"Chunked text saved to: {output_json_path}")
+            processed_files.append({
+                "filename": filename,
+                "output_path": output_json_path,
+                "chunks_created": len(chunked_data) if isinstance(chunked_data, list) else 1
+            })
+            
+        except Exception as e:
+            error_msg = f"Error processing {filename}: {str(e)}"
+            print(f"❌ {error_msg}")
+            errors.append(error_msg)
     
-    try:    
-        # Save the chunked data to a JSON file
-        with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(chunked_data, f, indent=2, ensure_ascii=False)
-        print(f"Chunked text saved to: {output_json_path}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving chunked text: {str(e)}")
+    if not processed_files:
+        raise HTTPException(status_code=500, detail=f"Failed to chunk any files in collection '{collection_name}'. Errors: {'; '.join(errors)}")
     
-    return {"message": "Chunking completed successfully"}
+    return {
+        "message": f"Chunking completed for collection '{collection_name}'",
+        "collection_name": collection_name,
+        "processed_files": processed_files,
+        "total_processed": len(processed_files),
+        "errors": errors
+    }
 
 @app.post("/step1-text-extraction") 
-async def step1_text_extraction(filenames: List[str], contains_tables: bool = False, contains_images_of_text: bool = False, contains_images_of_nontext: bool = False):
-    try:
-        print(f"Starting text extraction for {filenames}...")
-        for filename in filenames:
-            file_path = os.path.join("documents", "storage_documents", filename)
-            output_json_path = os.path.join("documents", "extracted_text", filename.replace(".pdf", ".json"))
+async def step1_text_extraction(
+    collection_name: str, 
+    contains_tables: bool = False, 
+    contains_images_of_text: bool = False, 
+    contains_images_of_nontext: bool = False
+):
+    """
+    Extract text from all PDF files in a specific collection.
+    
+    Args:
+        collection_name (str): Name of the collection to process.
+        contains_tables (bool): Whether PDFs contain tables that should be extracted.
+        contains_images_of_text (bool): Whether PDFs contain images with text that should be OCR'd.
+        contains_images_of_nontext (bool): Whether PDFs contain non-text images.
+    """
+    # Define paths
+    collection_storage_dir = os.path.join("documents", "storage_documents", collection_name)
+    collection_extracted_dir = os.path.join("documents", "extracted_text", collection_name)
+    
+    # Check if collection storage directory exists
+    if not os.path.exists(collection_storage_dir):
+        raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found in storage documents")
+    
+    # Create extracted text directory for collection
+    os.makedirs(collection_extracted_dir, exist_ok=True)
+    
+    # Get all PDF files in the collection
+    pdf_files = [f for f in os.listdir(collection_storage_dir) if f.lower().endswith('.pdf')]
+    
+    if not pdf_files:
+        raise HTTPException(status_code=404, detail=f"No PDF files found in collection '{collection_name}'")
+    
+    processed_files = []
+    errors = []
+    
+    print(f"Starting text extraction for collection '{collection_name}' with {len(pdf_files)} files...")
+    
+    for filename in pdf_files:
+        try:
+            file_path = os.path.join(collection_storage_dir, filename)
+            output_json_path = os.path.join(collection_extracted_dir, filename.replace(".pdf", ".json"))
+            
             extracted_data = extract_pdf_text(
                 pdf_file_path=file_path,
                 output_path=output_json_path,
@@ -620,18 +714,33 @@ async def step1_text_extraction(filenames: List[str], contains_tables: bool = Fa
                 contains_images_of_text=contains_images_of_text,
                 contains_images_of_nontext=contains_images_of_nontext
             )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error extracting text: {str(e)}")
+            
+            # Save the extracted data to a JSON file
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(extracted_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"Extracted text saved to: {output_json_path}")
+            processed_files.append({
+                "filename": filename,
+                "output_path": output_json_path,
+                "pages_extracted": len(extracted_data) if isinstance(extracted_data, list) else 1
+            })
+            
+        except Exception as e:
+            error_msg = f"Error processing {filename}: {str(e)}"
+            print(f"❌ {error_msg}")
+            errors.append(error_msg)
     
-    try:    
-        # Save the extracted data to a JSON file
-        with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(extracted_data, f, indent=2, ensure_ascii=False)
-        print(f"Extracted text saved to: {output_json_path}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving extracted text: {str(e)}")
+    if not processed_files:
+        raise HTTPException(status_code=500, detail=f"Failed to extract text from any files in collection '{collection_name}'. Errors: {'; '.join(errors)}")
     
-    return {"message": "Text extraction completed successfully"}
+    return {
+        "message": f"Text extraction completed for collection '{collection_name}'",
+        "collection_name": collection_name,
+        "processed_files": processed_files,
+        "total_processed": len(processed_files),
+        "errors": errors
+    }
 
 
 @app.post("/upload-through-google-drive")
@@ -652,89 +761,99 @@ async def upload_through_google_drive(
         raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
 
     
+@app.post("/create-collection")
+async def create_collection(collection_name: str):
+    """
+    Create a new collection by setting up the necessary directory structure.
+    
+    Args:
+        collection_name (str): Name of the collection to create.
+    """
+    # Validate collection name
+    if not collection_name or not collection_name.strip():
+        raise HTTPException(status_code=400, detail="Collection name cannot be empty")
+    
+    # Sanitize collection name
+    sanitized_name = collection_name.strip().lower().replace(' ', '_')
+    
+    # Create directory structure for the collection
+    collection_storage_dir = os.path.join("./documents/storage_documents", sanitized_name)
+    collection_extracted_dir = os.path.join("./documents/extracted_text", sanitized_name)
+    collection_chunked_dir = os.path.join("./documents/chunked_text", sanitized_name)
+    
+    try:
+        # Create directories
+        os.makedirs(collection_storage_dir, exist_ok=True)
+        os.makedirs(collection_extracted_dir, exist_ok=True)
+        os.makedirs(collection_chunked_dir, exist_ok=True)
+        
+        print(f"✅ Created collection directories for: {sanitized_name}")
+        
+        return {
+            "message": f"Collection '{sanitized_name}' created successfully",
+            "collection_name": sanitized_name,
+            "directories_created": {
+                "storage": collection_storage_dir,
+                "extracted_text": collection_extracted_dir,
+                "chunked_text": collection_chunked_dir
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create collection '{sanitized_name}': {str(e)}")
+
 @app.post("/upload-pdf")
 async def upload_pdf(
-    file: UploadFile = File(...),
-    contains_tables: bool = Query(False, description="Set to True if the PDF contains tables."),
-    contains_images_of_text: bool = Query(False, description="Set to True if the PDF has images containing text."),
-    contains_images_of_nontext: bool = Query(False, description="Set to True for non-text images (uses OCR as a placeholder)."),
-    # New parameters for chunking
-    use_ai: bool = Query(False, description="If True, uses AI-powered chunking; otherwise, simple chunking."),
-    chosen_methods: Optional[List[str]] = Query(None, description="For AI chunking: list of text fields to combine (e.g., ['pymupdf_extraction_text'])."),
-    prompt_description: Optional[str] = Query(None, description="For AI chunking: prompt for LLM on how to extract items."),
-    previous_pages_to_include: int = Query(1, description="For AI chunking: number of previous pages for context."),
-    context_items_to_show: int = Query(2, description="For AI chunking: number of previously extracted items for few-shot examples."),
-    rewrite_query: bool = Query(False, description="For AI chunking: If True, refine prompt_description with LLM."),
-    chosen_method: Optional[str] = Query(None, description="For simple chunking: single text field to chunk (e.g., 'pymupdf_extraction_text')."),
-    chunk_size: int = Query(1000, description="For simple chunking: character count per chunk."),
-    overlap: int = Query(100, description="For simple chunking: character overlap between chunks.")
+    collection_name: str,
+    files: List[UploadFile] = File(...)
 ):
     """
-    Uploads a PDF document to the storage directory, extracts its text, and then chunks it.
+    Uploads PDF files to a specific collection directory.
 
     Args:
-        file (UploadFile): The PDF file to upload.
-        contains_tables (bool): Whether the PDF contains tables that should be extracted.
-        contains_images_of_text (bool): Whether the PDF contains images with text that should be OCR'd.
-        contains_images_of_nontext (bool): Whether the PDF contains non-text images (OCR used as placeholder).
-        use_ai (bool): If True, uses AI-powered chunking; otherwise, simple chunking.
-        chosen_methods (Optional[List[str]]): For AI chunking: list of text fields to combine (e.g., ['pymupdf_extraction_text']).
-        prompt_description (Optional[str]): For AI chunking: prompt for LLM on how to extract items.
-        previous_pages_to_include (int): For AI chunking: number of previous pages for context.
-        context_items_to_show (int): For AI chunking: number of previously extracted items for few-shot examples.
-        rewrite_query (bool): For AI chunking: If True, refine prompt_description with LLM.
-        chosen_method (Optional[str]): For simple chunking: single text field to chunk (e.g., 'pymupdf_extraction_text').
-        chunk_size (int): For simple chunking: character count per chunk.
-        overlap (int): For simple chunking: character overlap between chunks.
+        collection_name (str): Name of the collection to organize files under.
+        files (List[UploadFile]): List of PDF files to upload.
     """
-    # NOTE: Ensure 'extract_pdf_text' is imported from 'src.documents.step1_text_extraction.pdf_text_extractor'
-    # and 'chunk_document' from 'src.documents.step2_chunking.chunker'.
-    # 'Query' from 'fastapi' and 'os', 'json', 'List', 'Optional' should be imported at the top of this file.
-
-    PDF_STORAGE_DIR = "./documents/storage_documents"
-    EXTRACTED_TEXT_DIR = "./documents/extracted_text"
-    CHUNKED_TEXT_DIR = "./documents/chunked_text" # New directory for chunked output
+    # Create collection-specific directory structure
+    collection_storage_dir = os.path.join("./documents/storage_documents", collection_name)
     
-    # Ensure directories exist
-    os.makedirs(PDF_STORAGE_DIR, exist_ok=True)
-    os.makedirs(EXTRACTED_TEXT_DIR, exist_ok=True)
-    os.makedirs(CHUNKED_TEXT_DIR, exist_ok=True) # Ensure chunked directory exists
-
-    file_location = os.path.join(PDF_STORAGE_DIR, file.filename)
+    # Ensure collection directory exists
+    os.makedirs(collection_storage_dir, exist_ok=True)
     
-    # Derive output JSON filename for the extracted text
-    base_filename = os.path.splitext(file.filename)[0]
-    output_json_filename = f"{base_filename}.json"
-    output_json_path = os.path.join(EXTRACTED_TEXT_DIR, output_json_filename)
+    uploaded_files = []
     
-    # Derive output JSON filename for the chunked text
-    chunked_json_filename = f"{base_filename}_chunked.json"
-    chunked_json_path = os.path.join(CHUNKED_TEXT_DIR, chunked_json_filename)
-
-    try:
-        # Write the file in chunks to handle potentially large files
-        with open(file_location, "wb") as buffer:
-            while contents := await file.read(1024 * 1024): # Read 1MB chunks
-                buffer.write(contents)
+    for file in files:
+        # Validate file type
+        if not file.filename.lower().endswith('.pdf'):
+            raise HTTPException(status_code=400, detail=f"File {file.filename} is not a PDF")
         
-        print(f"Successfully uploaded {file.filename} to {file_location}")
-        result = process_pdf_file(file_location, output_json_path, chunked_json_path, contains_tables, contains_images_of_text, contains_images_of_nontext, use_ai, chosen_methods, prompt_description, previous_pages_to_include, context_items_to_show, rewrite_query, chosen_method, chunk_size, overlap)
-
-        return {
-            "message": result,
-            "pdf_path": file_location,
-            "extracted_json_path": output_json_path,
-            "chunked_json_path": chunked_json_path, # Add chunked path to response
-            "pages_extracted": len(extracted_data)
-        }
-    except Exception as e:
-        # Clean up the uploaded PDF if extraction or chunking fails
-        if os.path.exists(file_location):
-            os.remove(file_location)
-        # Clean up extracted JSON if chunking fails
-        if os.path.exists(output_json_path):
-            os.remove(output_json_path)
-        raise HTTPException(status_code=500, detail=f"Could not upload, extract, or chunk text from file: {e}")
+        file_location = os.path.join(collection_storage_dir, file.filename)
+        
+        try:
+            # Write the file in chunks to handle potentially large files
+            with open(file_location, "wb") as buffer:
+                while contents := await file.read(1024 * 1024): # Read 1MB chunks
+                    buffer.write(contents)
+            
+            print(f"Successfully uploaded {file.filename} to {file_location}")
+            uploaded_files.append({
+                "filename": file.filename,
+                "path": file_location,
+                "size": os.path.getsize(file_location)
+            })
+            
+        except Exception as e:
+            # Clean up the uploaded PDF if upload fails
+            if os.path.exists(file_location):
+                os.remove(file_location)
+            raise HTTPException(status_code=500, detail=f"Could not upload file {file.filename}: {e}")
+    
+    return {
+        "message": f"Successfully uploaded {len(uploaded_files)} PDF file(s) to collection '{collection_name}'",
+        "collection_name": collection_name,
+        "uploaded_files": uploaded_files,
+        "total_files": len(uploaded_files)
+    }
 
 @app.post("/reset")
 async def reset_collections(collections: Optional[List[str]] = None):

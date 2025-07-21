@@ -32,3 +32,6 @@ src/chroma_db/
 /text_extraction_methods/hawaii_chunked_content.json
 /text_extraction_methods/hawaii_complete_content.json
 /src/documents/bills_chunked.json
+/src/documents/storage_documents/*
+/src/documents/extracted_text/*
+/src/documents/chunked_text/*

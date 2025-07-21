@@ -55,7 +55,7 @@ Each collection has specific fields that will be embedded as specified in config
                        help='Append documents to existing collections without resetting (same as --no-reset)')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind server to')
     parser.add_argument('--port', type=int, default=8200, help='Port to bind server to')
-    parser.add_argument('--reload', action='store_true', help='Enable auto-reload for development')
+    parser.add_argument('--no-reload', action='store_true', help='Disable auto-reload (enabled by default for development)')
     parser.add_argument('--log-level', choices=['debug', 'info', 'warning', 'error'], default='info',
                        help='Log level')
     args = parser.parse_args()
@@ -304,7 +304,7 @@ Each collection has specific fields that will be embedded as specified in config
             "api:app",
             host=args.host,
             port=args.port,
-            reload=args.reload,
+            reload=not args.no_reload,
             log_level=args.log_level,
             access_log=True
         )
