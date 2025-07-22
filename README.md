@@ -12,7 +12,7 @@ A generalized document search and question-answering system built with ChromaDB 
 ### 1. Clone and Setup
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/UH-CI/RAG-system/tree/financial_data
 cd course-RAG
 
 # Navigate to source directory and setup environment
@@ -25,10 +25,10 @@ cp .env.example .env
 ```bash
 # Return to project root and run deployment with ingestion
 cd ..
-./deploy.sh docker --ingest
+./deploy.sh docker
 ```
 
-This will start the ingestion process. The documents in `/src/documents` will be ingested according to the configuration in `config.json`.
+The documents in `/src/documents` will be ingested according to the configuration in `config.json`.
 
 ### 3. Understanding Document Configuration
 

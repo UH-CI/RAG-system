@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, TypedDict
+from typing import List, Optional, Dict, Any, TypedDict, AsyncGenerator
 import os
 import tempfile
 import shutil
@@ -10,6 +11,11 @@ import json
 import google.generativeai as genai
 from tqdm import tqdm
 import logging
+import asyncio
+import time
+from datetime import datetime
+from documents.step0_document_upload.web_scraper import ai_crawler
+from typing import Generator
 
 from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
 from documents.step0_document_upload.google_upload import download_pdfs_from_drive
@@ -567,6 +573,12 @@ async def query_documents(request: QueryRequest):
 class ChunkingRequest(BaseModel):
     chosen_methods: List[str] = ["pymupdf_extraction_text"]
 
+class ChatWithPDFRequest(BaseModel):
+    query: str = Field(..., description="User's question about the document")
+    session_collection: str = Field(..., description="Unique collection ID for the uploaded document")
+    context_collections: List[str] = Field(default=[], description="Additional collections to use as context")
+    threshold: float = Field(default=0, description="Similarity threshold for search results")
+
 @app.post("/step2-chunking")
 async def step2_chunking(
     collection_name: str,
@@ -664,6 +676,133 @@ async def step2_chunking(
         "errors": errors
     }
 
+@app.post("/chat-with-pdf")
+async def chat_with_pdf(request: ChatWithPDFRequest):
+    """
+    Chat with a specific document (session collection) using additional collections as context.
+    
+    This is a generalized endpoint that allows users to:
+    1. Upload a document to a unique session collection
+    2. Ask questions about that document
+    3. Use other collections as additional context for better answers
+    
+    Args:
+        request: ChatWithPDFRequest containing query, session_collection, context_collections, and threshold
+    """
+    try:
+        # Combine session collection with context collections
+        all_collections = [request.session_collection] + request.context_collections
+        
+        # Filter out any collections that don't exist
+        valid_collections = []
+        for collection_name in all_collections:
+            collection_path = os.path.join("documents", "chunked_text", collection_name)
+            if os.path.exists(collection_path) and os.listdir(collection_path):
+                valid_collections.append(collection_name)
+            else:
+                logging.warning(f"Collection '{collection_name}' not found or empty, skipping")
+        
+        if not valid_collections:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No valid collections found. Session collection '{request.session_collection}' and context collections {request.context_collections} are either missing or empty."
+            )
+        
+        logging.info(f"Processing chat query with collections: {valid_collections}")
+        
+        # Use the specialized single PDF method with primary collection and context collections
+        response = langgraph_agent.process_query_with_single_pdf(
+            query=request.query,
+            primary_collection=request.session_collection,
+            context_collections=request.context_collections,
+            threshold=request.threshold
+        )
+        
+        return {
+            "response": response.get("response", "No response generated"),
+            "rest_of_response": response,
+            "sources": response.get("sources", []),
+            "session_collection": request.session_collection,
+            "context_collections": request.context_collections,
+            "valid_collections_used": valid_collections,
+            "query": request.query
+        }
+        
+    except Exception as e:
+        logging.error(f"Error in chat-with-pdf: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing chat query: {str(e)}")
+
+def generate_stream(request: ChatWithPDFRequest) -> Generator[str, None, None]:
+    try:
+        print(f"📡 Starting stream generation...")
+        
+        # Validate collections
+        valid_collections = []
+        
+        # Check session collection
+        if request.session_collection and request.session_collection in collection_managers:
+            valid_collections.append(request.session_collection)
+            print(f"✅ Valid session collection: {request.session_collection}")
+        else:
+            print(f"❌ Invalid session collection: {request.session_collection}")
+        
+        # Check context collections
+        if request.context_collections:
+            for collection in request.context_collections:
+                if collection in collection_managers:
+                    valid_collections.append(collection)
+                    print(f"✅ Valid context collection: {collection}")
+                else:
+                    print(f"❌ Invalid context collection: {collection}")
+        
+        if not valid_collections:
+            error_msg = f"data: {json.dumps({'type': 'error', 'message': 'No valid collections found'})}\n\n"
+            print(f"❌ No valid collections, sending: {error_msg}")
+            yield error_msg
+            return
+        
+        # Send initial status
+        initial_status = f"data: {json.dumps({'type': 'status', 'message': 'Starting analysis...', 'timestamp': datetime.now().isoformat()})}\n\n"
+        print(f"📤 Sending initial status: {initial_status.strip()}")
+        yield initial_status
+        
+        # Send a test message to verify streaming is working
+        test_message = f"data: {json.dumps({'type': 'status', 'message': 'TEST: Streaming connection established!', 'timestamp': datetime.now().isoformat()})}\n\n"
+        print(f"📤 Sending test message: {test_message.strip()}")
+        yield test_message
+        
+        # Create a streaming version of the LangGraph agent
+        print(f"🔄 Starting streaming agent with collections: {valid_collections}")
+        for update in langgraph_agent.process_query_with_single_pdf_stream(
+            query=request.query,
+            primary_collection=request.session_collection,
+            context_collections=request.context_collections,
+            threshold=request.threshold
+        ):
+            stream_data = f"data: {json.dumps(update)}\n\n"
+            print(f"📤 Streaming update: {update.get('type', 'unknown')} - {update.get('message', '')[:100]}...")
+            yield stream_data
+            
+    except Exception as e:
+        logging.error(f"Error in streaming chat-with-pdf: {str(e)}")
+        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+@app.post("/chat-with-pdf-stream")
+async def chat_with_pdf_stream(request: ChatWithPDFRequest):
+    """Streaming version of chat-with-pdf that provides real-time updates"""
+    
+    print(f"🚀 STREAMING ENDPOINT CALLED: query='{request.query[:50]}...', session_collection='{request.session_collection}'")
+    
+    return StreamingResponse(
+        generate_stream(request),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "text/event-stream"
+        }
+    )
+
 @app.post("/step1-text-extraction") 
 async def step1_text_extraction(
     collection_name: str, 
@@ -742,6 +881,24 @@ async def step1_text_extraction(
         "errors": errors
     }
 
+@app.post("/crawl-through-web")
+async def crawl_through_web(
+    start_url: str,
+    extraction_prompt: str,
+    collection_name: str,
+    null_is_okay: bool = True
+):
+    try:
+        # Save to src/documents/storage_documents
+        stats = ai_crawler(
+            start_url=start_url,
+            extraction_prompt=extraction_prompt,
+            collection_name=collection_name,
+            null_is_okay=null_is_okay
+        )
+        return {"message": f"Crawling completed successfully for {collection_name} with {len(stats)} items created"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
 
 @app.post("/upload-through-google-drive")
 async def upload_through_google_drive(

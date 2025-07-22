@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional, TypedDict, Annotated
 from pathlib import Path
 import time
 import uuid
+import logging
 
 # LangGraph and LangChain imports
 from langgraph.graph import StateGraph, END
@@ -52,6 +53,10 @@ class AgentState(TypedDict):
     subquestion_answers: List[Dict[str, Any]]
     final_synthesis_context: str
     parallel_processing_enabled: bool
+    # Primary collection support for single PDF analysis
+    primary_collection: Optional[str]
+    primary_document_text: Optional[str]
+    context_collections: List[str]
 
 
 class LangGraphRAGAgent:
@@ -65,8 +70,8 @@ class LangGraphRAGAgent:
         # Initialize the LLM
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-1.5-flash",
-            temperature=0.1,
-            max_tokens=2000
+            temperature=0.3,  # Increased from 0.1 to encourage longer, more comprehensive responses
+            max_tokens=25000  # Increased for comprehensive fiscal notes with primary document context
         )
         
         # Create tools
@@ -75,11 +80,73 @@ class LangGraphRAGAgent:
         # Create the graph
         self.graph = self._create_graph()
     
+    def _fetch_primary_document_text(self, primary_collection: str) -> Optional[str]:
+        """
+        Fetch the primary document text from the chunked_text directory.
+        
+        Args:
+            primary_collection: Name of the primary collection
+            
+        Returns:
+            Combined text from all chunks in the primary document, or None if not found
+        """
+        try:
+            import os
+            import json
+            
+            # Path to the chunked text collection
+            collection_path = os.path.join("documents", "chunked_text", primary_collection)
+            
+            if not os.path.exists(collection_path):
+                logging.warning(f"Primary collection path not found: {collection_path}")
+                return None
+            
+            # Find JSON files (excluding metadata files)
+            json_files = [f for f in os.listdir(collection_path) 
+                         if f.endswith('.json') and not f.endswith('_metadata.json')]
+            
+            if not json_files:
+                logging.warning(f"No document files found in primary collection: {primary_collection}")
+                return None
+            
+            combined_text = []
+            
+            for json_file in json_files:
+                file_path = os.path.join(collection_path, json_file)
+                
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    # Extract text from chunks
+                    if isinstance(data, list):
+                        for chunk in data:
+                            if isinstance(chunk, dict) and 'text' in chunk:
+                                combined_text.append(chunk['text'])
+                    elif isinstance(data, dict) and 'text' in data:
+                        combined_text.append(data['text'])
+                        
+                except Exception as e:
+                    logging.error(f"Error reading file {json_file}: {e}")
+                    continue
+            
+            if combined_text:
+                full_text = "\n\n".join(combined_text)
+                logging.info(f"Successfully loaded primary document text: {len(full_text)} characters from {len(json_files)} files")
+                return full_text
+            else:
+                logging.warning(f"No text content found in primary collection: {primary_collection}")
+                return None
+                
+        except Exception as e:
+            logging.error(f"Error fetching primary document text: {e}")
+            return None
+    
     def _create_tools(self) -> List:
         """Create tools for the agent to use"""
         
         @tool
-        def search_collection(collection_name: str, query: str, num_results: int = 200) -> str:
+        def search_collection(collection_name: str, query: str, num_results: int = 50) -> str:
             """
             Search a specific collection for documents related to the query.
             
@@ -101,11 +168,15 @@ class LangGraphRAGAgent:
                 # Format results for the agent
                 formatted_results = []
                 for result in results:
+                    # Ensure metadata includes collection name for proper source attribution
+                    metadata = result.get("metadata", {})
+                    metadata["collection"] = collection_name
+                    
                     formatted_results.append({
                         "content": result["content"],
-                        "metadata": result.get("metadata", {}),
+                        "metadata": metadata,
                         "score": result.get("score", 0.0),
-                        "collection": collection_name
+                        "collection": collection_name  # Keep for backwards compatibility
                     })
                 
                 return json.dumps({
@@ -162,7 +233,7 @@ class LangGraphRAGAgent:
                 return json.dumps({"error": f"Error getting info for {collection_name}: {str(e)}"})
         
         @tool
-        def search_across_collections(query: str, collections: List[str] = None, num_results: int = 200) -> str:
+        def search_across_collections(query: str, collections: List[str] = None, num_results: int = 50) -> str:
             """
             Search across multiple collections simultaneously.
             
@@ -483,6 +554,7 @@ class LangGraphRAGAgent:
         workflow = StateGraph(AgentState)
         
         # Add nodes
+        workflow.add_node("fetch_primary_document", self.fetch_primary_document)
         workflow.add_node("analyze_query", self.analyze_query)
         workflow.add_node("decompose_query", self.decompose_query)
         workflow.add_node("generate_hypothetical_answers", self.generate_hypothetical_answers)
@@ -515,7 +587,8 @@ class LangGraphRAGAgent:
                 return "search_documents"
         
         # Add edges with conditional routing
-        workflow.set_entry_point("analyze_query")
+        workflow.set_entry_point("fetch_primary_document")
+        workflow.add_edge("fetch_primary_document", "analyze_query")
         workflow.add_conditional_edges("analyze_query", should_use_subquestions)
         
         # Subquestion decomposition path
@@ -533,20 +606,60 @@ class LangGraphRAGAgent:
         
         return workflow.compile()
     
+    def fetch_primary_document(self, state: AgentState) -> AgentState:
+        """
+        Fetch the primary document text if a primary collection is specified.
+        This allows the agent to focus on the uploaded PDF content.
+        """
+        primary_collection = state.get("primary_collection")
+        
+        if primary_collection:
+            logging.info(f"Fetching primary document text from collection: {primary_collection}")
+            primary_text = self._fetch_primary_document_text(primary_collection)
+            
+            if primary_text:
+                state["primary_document_text"] = primary_text
+                logging.info(f"Successfully loaded primary document: {len(primary_text)} characters")
+            else:
+                logging.warning(f"Could not load primary document from collection: {primary_collection}")
+                state["primary_document_text"] = None
+        else:
+            state["primary_document_text"] = None
+            logging.debug("No primary collection specified")
+        
+        return state
+    
     def decompose_query(self, state: AgentState) -> AgentState:
         """Decompose the user query into 5 strategic subquestions for enhanced reasoning"""
         
         query = state["query"]
         reasoning = state["reasoning"]
         query_type = reasoning.get("query_type", "informational")
+        primary_document_text = state.get("primary_document_text")
         
         print(f"🧩 Decomposing query into subquestions for enhanced reasoning")
+        
+        # Build context section with primary document if available
+        context_section = "CONTEXT: This is for a Hawaii government/education RAG system with budget, fiscal, and policy documents."
+        
+        if primary_document_text:
+            # Intelligently truncate primary document for prompt to fit context limits
+            max_doc_chars = 15000  # Leave room for other prompt content and response
+            if len(primary_document_text) > max_doc_chars:
+                # Take first 10k chars and last 5k chars to preserve beginning and end
+                truncated_text = primary_document_text[:10000] + "\n\n[... MIDDLE CONTENT TRUNCATED FOR CONTEXT LIMITS ...]\n\n" + primary_document_text[-5000:]
+                print(f"📄 Truncated primary document: {len(primary_document_text)} → {len(truncated_text)} characters")
+            else:
+                truncated_text = primary_document_text
+                print(f"📄 Including full primary document context ({len(primary_document_text)} characters)")
+            
+            context_section += f"\n\nPRIMARY DOCUMENT CONTENT (focus your analysis on this document):\n{truncated_text}"
         
         decomposition_prompt = f"""You are an expert query analyst. Break down this complex query into exactly 5 strategic subquestions that will help gather comprehensive information to answer the main question.
 
 MAIN QUERY: "{query}"
 QUERY TYPE: {query_type}
-CONTEXT: This is for a Hawaii government/education RAG system with budget, fiscal, and policy documents.
+{context_section}
 
 Create 5 subquestions that:
 1. Cover different aspects of the main query
@@ -682,6 +795,7 @@ Make each subquestion clear, specific, and designed to retrieve different types 
             hypothesis_prompt = f"""You are an expert analyst. Generate a detailed hypothetical answer for this subquestion that will help guide document retrieval.
 
 MAIN QUERY: "{query}"
+{state['primary_document_text'] and f"PRIMARY DOCUMENT: {state['primary_document_text']}" or ""}
 SUBQUESTION: "{sq['question']}"
 PURPOSE: {sq['purpose']}
 SEARCH FOCUS: {sq['search_focus']}
@@ -698,26 +812,14 @@ This hypothetical answer will be used to:
 - Generate keyword searches for hybrid retrieval
 - Guide the retrieval of the most relevant documents
 
-Make the hypothetical answer detailed and specific, as if you were answering based on comprehensive knowledge of Hawaii government operations, budgets, and policies."""
+Make the hypothetical answer a single sentence."""
 
             try:
                 response = self.llm.invoke([HumanMessage(content=hypothesis_prompt)])
                 hypothetical_answer = response.content.strip()
                 
                 # Extract keywords from hypothetical answer for search
-                keyword_prompt = f"""Extract 5-8 key search terms from this hypothetical answer that would be most effective for document retrieval:
-
-HYPOTHETICAL ANSWER: "{hypothetical_answer}"
-
-Return only the keywords/phrases separated by commas, focusing on:
-- Specific policy names, program names, or department names
-- Budget categories or financial terms
-- Technical terminology
-- Hawaii-specific terms
-- Numerical identifiers or codes
-
-Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA grants, special education"
-"""
+                keyword_prompt = hypothetical_answer
                 
                 keyword_response = self.llm.invoke([HumanMessage(content=keyword_prompt)])
                 search_keywords = [k.strip() for k in keyword_response.content.split(',')]
@@ -768,8 +870,6 @@ Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA 
             keywords = hyp_answer["search_keywords"]
             hypothesis = hyp_answer["hypothetical_answer"]
             
-            print(f"   🔍 Searching for Q{subq_id}: {question[:50]}...")
-            
             search_results = []
             
             try:
@@ -778,43 +878,25 @@ Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA 
                 
                 # 1. Vector search using hypothetical answer across collections
                 vector_query = f"{question} {hypothesis}"
-                for collection in available_collections[:2]:  # Search top 2 collections
+                for collection in available_collections:
                     try:
-                        vector_results = tools[0].invoke({
-                            "collection_name": collection,
-                            "query": vector_query,
-                            "num_results": 50
-                        })
-                        
-                        if isinstance(vector_results, str):
-                            import json
-                            try:
-                                vector_data = json.loads(vector_results)
-                                if "results" in vector_data and vector_data["results"]:
-                                    for result in vector_data["results"][:2]:
-                                        result["search_type"] = "vector"
-                                        result["subquestion_id"] = subq_id
-                                        result["collection_searched"] = collection
-                                        search_results.append(result)
-                                    print(f"      📄 Vector search in {collection}: {len(vector_data['results'])} results")
-                            except Exception as parse_error:
-                                print(f"      ⚠️ Vector search parse error for {collection}: {parse_error}")
+                        results = self.collection_managers[collection].search_similar_chunks(vector_query, 50)
+                        for result in results:
+                            result["collection"] = collection
+                            result["subquestion_id"] = subq_id
+                            search_results.append(result)
                     except Exception as e:
-                        print(f"      ⚠️ Vector search failed for {collection}: {e}")
-                
-                # 2. Keyword search using extracted keywords
-                for keyword in keywords[:3]:  # Limit to top 3 keywords
-                    for collection in available_collections[:2]:  # Search top 2 collections
+                        print(f"      ⚠️ Search failed for {collection}: {e}")
                         try:
                             keyword_results = tools[0].invoke({
                                 "collection_name": collection,
                                 "query": keyword,
-                                "num_results": 50
+                                "num_results": 10
                             })
                             if isinstance(keyword_results, str):
                                 keyword_data = json.loads(keyword_results)
                                 if "results" in keyword_data and keyword_data["results"]:
-                                    for result in keyword_data["results"][:1]:  # Take top 1 per keyword per collection
+                                    for result in keyword_data["results"]:  # Increased from 1 to 3 per keyword per collection
                                         result["search_type"] = "keyword"
                                         result["keyword_used"] = keyword
                                         result["subquestion_id"] = subq_id
@@ -829,7 +911,7 @@ Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA 
                     cross_results = tools[2].invoke({
                         "query": question,
                         "collections": available_collections,
-                        "num_results": 50
+                        "num_results": 0
                     })
                     if isinstance(cross_results, str):
                         cross_data = json.loads(cross_results)
@@ -847,7 +929,7 @@ Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA 
                 seen_content = set()
                 
                 for result in search_results:
-                    content_key = result.get("content", "")  # First 100 chars as key
+                    content_key = result.get("content", "") 
                     if content_key not in seen_content:
                         seen_content.add(content_key)
                         unique_results.append(result)
@@ -860,7 +942,7 @@ Example: "Department of Education, Title I funding, per-pupil expenditure, IDEA 
                 return {
                     "subquestion_id": subq_id,
                     "question": question,
-                    "search_results": unique_results[:100],  # Top 8 results
+                    "search_results": unique_results,  
                     "search_summary": {
                         "total_results": len(unique_results),
                         "vector_results": len([r for r in unique_results if r.get("search_type") == "vector"]),
@@ -1002,9 +1084,7 @@ Your response must start with {{ and end with }}.
                 
                 response = self.llm.invoke(messages)
                 content = response.content.strip()
-                
-                print(f"   Raw response: {content[:100]}...")
-                
+                                
                 # Clean up the response
                 if content.startswith('```json'):
                     content = content[7:]
@@ -1205,7 +1285,7 @@ Be thorough and comprehensive in your searching."""
                     unique_results.append(result)
             
             # Sort by score
-            if unique_results and "score" in unique_results[0]:
+            if unique_results and "score" in unique_results:
                 unique_results.sort(key=lambda x: x.get("score", 0), reverse=True)
             
             # Fallback search if we don't have enough results
@@ -1221,7 +1301,7 @@ Be thorough and comprehensive in your searching."""
                             manager = self.collection_managers[collection_name]
                             # Use the main query and search terms
                             for search_term in [state["query"]] + search_terms[:3]:
-                                results = manager.search_similar_chunks(search_term, 25)
+                                results = manager.search_similar_chunks(search_term, 50)
                                 for result in results:
                                     result["metadata"]["collection"] = collection_name
                                     fallback_results.append(result)
@@ -1291,7 +1371,7 @@ Be thorough and comprehensive in your searching."""
         
         print(f"📝 Building context from {len(search_results)} collection results and {len(web_results)} web results")
         
-        for i, result in enumerate(search_results):  # Increased from 20 to 50 results
+        for i, result in enumerate(search_results):  
             collection = result.get("collection", "unknown")
             content = result.get("content", "")
             metadata = result.get("metadata", {})
@@ -1374,7 +1454,7 @@ Be thorough and comprehensive in your searching."""
             
             # Prepare source for response
             sources.append({
-                "content": content[:800],  # Increased from 300 to 800 chars
+                "content": content,
                 "metadata": {k: v for k, v in result.get("metadata", {}).items() 
                            if k not in ['search_term', 'reasoning_intent']},
                 "score": result.get("score"),
@@ -1927,8 +2007,6 @@ Focus on addressing the specific gaps identified in the previous search results.
             question = sq_result["question"]
             search_results = sq_result.get("search_results", [])
             
-            print(f"   💡 Answering Q{subq_id}: {question[:50]}...")
-            
             if not search_results:
                 # No documents found, provide a basic response
                 answer = {
@@ -1947,17 +2025,20 @@ Focus on addressing the specific gaps identified in the previous search results.
             context_parts = []
             sources = []
             
-            for i, result in enumerate(search_results[:5]):  # Use top 5 results
+            for i, result in enumerate(search_results[:50]):
                 content = result.get("content", "")
-                source_info = {
-                    "document": result.get("document", f"Document_{i+1}"),
-                    "collection": result.get("collection", "Unknown"),
-                    "score": result.get("score", 0),
-                    "search_type": result.get("search_type", "unknown")
-                }
-                sources.append(source_info)
-                
-                context_parts.append(f"[Source {i+1}: {source_info['document']}]\n{content}")
+                if content:  # Only include sources with actual content
+                    source_info = {
+                        "content": content,
+                        "metadata": {
+                            "collection": result.get("collection", "Unknown"),
+                            "document": result.get("document", f"Document_{i+1}"),
+                            "search_type": result.get("search_type", "subquestion_search")
+                        },
+                        "score": result.get("score", 0)
+                    }
+                    sources.append(source_info)
+                    context_parts.append(f"[Source {i+1}: {source_info['metadata']['document']}]\n{content}")
             
             context = "\n\n".join(context_parts)
             
@@ -2058,8 +2139,11 @@ Focus specifically on this subquestion and provide actionable insights that will
         subquestion_answers = state["subquestion_answers"]
         query = state["query"]
         reasoning = state["reasoning"]
+        primary_document_text = state.get("primary_document_text")
         
         print(f"🎯 Synthesizing final answer from {len(subquestion_answers)} subquestion answers")
+        if primary_document_text:
+            print(f"📄 Including primary document context in final synthesis")
         
         # 1. Perform one final vector search using insights from all subquestions
         print("   🔍 Performing final comprehensive vector search...")
@@ -2083,12 +2167,12 @@ Focus specifically on this subquestion and provide actionable insights that will
             available_collections = getattr(self, 'collection_names', ['budget', 'text', 'fiscal'])
             
             # Try searching across collections for final synthesis
-            for collection in available_collections[:2]:  # Search top 2 collections
+            for collection in available_collections:  # Search top 2 collections
                 try:
                     final_results = tools[0].invoke({
                         "collection_name": collection,
                         "query": final_search_query,
-                        "num_results": 4
+                        "num_results": 50
                     })
                     
                     if isinstance(final_results, str):
@@ -2126,11 +2210,17 @@ KEY FINDINGS: {'; '.join(ans.get('key_findings', []))}
         # Add final search results
         if final_search_results:
             synthesis_context_parts.append("\nADDITIONAL CONTEXT FROM FINAL SEARCH:")
-            for i, result in enumerate(final_search_results[:5]):
-                content = result.get("content", "")[:500]  # Limit content length
+            for i, result in enumerate(final_search_results[:50]):
+                content = result.get("content", "")
                 synthesis_context_parts.append(f"[Additional Source {i+1}]: {content}")
         
         synthesis_context = "\n".join(synthesis_context_parts)
+        
+        # DEBUG: Track context lengths with optimization
+        print(f"🔍 CONTEXT LENGTH DEBUG:")
+        print(f"   Synthesis context length: {len(synthesis_context)} characters")
+        print(f"   Number of subquestion answers: {len(subquestion_answers)}")
+        print(f"   Number of final search results: {len(final_search_results)}")
         
         # 3. Generate final comprehensive answer
         query_type = reasoning.get("query_type", "informational")
@@ -2139,38 +2229,38 @@ KEY FINDINGS: {'; '.join(ans.get('key_findings', []))}
             # Use the comprehensive fiscal note prompt
             synthesis_prompt = f"""You are a fiscal analyst creating a comprehensive fiscal note. You have analyzed this query through multiple subquestions and gathered extensive information.
 
-MAIN QUERY: "{query}"
-
-COMPREHENSIVE ANALYSIS FROM SUBQUESTIONS:
+MAIN QUERY: "{query}"{primary_document_text}
 {synthesis_context}
 
 Based on all the subquestion analyses and additional research, create a comprehensive fiscal note following the standard format with all required sections:
 
-1. **Bill Status**
-2. **Summary of Fiscal Impact** (with checkbox format)
-3. **Appropriation Summary**
-4. **Fiscal Note Status**
-5. **State Fiscal Impact Table**
-6. **Detailed Analysis Sections**
+1. **BILL STATUS**
+2. **SUMMARY OF FISCAL IMPACT**
+3. **APPROPRIATION SUMMARY**
+4. **FISCAL NOTE STATUS**
+5. **STATE FISCAL IMPACT TABLE**
+6. **DETAILED ANALYSIS SECTIONS**
 
-Ensure your response:
+CRITICAL INSTRUCTIONS - YOU MUST COMPLETE ALL SECTIONS:
 - Synthesizes information from all subquestion answers
 - Includes specific financial data and numbers where available
 - References multiple sources and documents
 - Provides comprehensive analysis across all aspects
 - Follows professional fiscal note formatting
 - Addresses any gaps or uncertainties identified in the subquestion analysis
+- COMPLETE ALL 6 SECTIONS LISTED ABOVE - DO NOT STOP EARLY
+- FILL OUT THE ENTIRE FISCAL IMPACT TABLE WITH ALL ROWS
+- PROVIDE DETAILED ANALYSIS FOR EACH SECTION
+- YOUR RESPONSE SHOULD BE AT LEAST 2000 WORDS
 
-Format as a complete, professional fiscal note document."""
+Format as a complete, professional fiscal note document with ALL sections fully developed."""
 
         else:
             # General comprehensive synthesis
             synthesis_prompt = f"""You are an expert analyst providing a comprehensive response based on multi-step analysis.
 
 MAIN QUERY: "{query}"
-QUERY TYPE: {query_type}
-
-COMPREHENSIVE ANALYSIS FROM SUBQUESTIONS:
+QUERY TYPE: {query_type}{primary_document_text}
 {synthesis_context}
 
 Based on all the subquestion analyses and additional research, provide a comprehensive answer that:
@@ -2191,9 +2281,35 @@ Structure your response clearly with headers and ensure you:
 
 Make this a definitive, comprehensive response that fully addresses the user's query."""
 
+        # DEBUG: Track full prompt and response details
+        total_prompt_length = len(synthesis_prompt)
+        print(f"🔍 FULL SYNTHESIS DEBUG:")
+        print(f"   Total prompt length: {total_prompt_length:,} characters")
+        print(f"   Primary context section length: {len(primary_document_text):,} characters" if primary_document_text else "   No primary document context")
+        print(f"   Synthesis context length: {len(synthesis_context):,} characters")
+        print(f"   LLM max_tokens setting: 16000")
+        print(f"   Estimated tokens (chars/4): ~{total_prompt_length//4:,} tokens")
+        
+        # Rough token estimation (1 token ≈ 4 characters for English)
+        estimated_input_tokens = total_prompt_length // 4
+        if estimated_input_tokens > 30000:  # Gemini 1.5 Flash context limit is ~1M tokens
+            print(f"   ⚠️  WARNING: Estimated input tokens ({estimated_input_tokens:,}) may be approaching context limits")
+        
         try:
             response = self.llm.invoke([HumanMessage(content=synthesis_prompt)])
             final_answer = response.content.strip()
+            
+            # DEBUG: Track response details
+            print(f"   ✅ LLM Response received:")
+            print(f"      Response length: {len(final_answer):,} characters")
+            print(f"      Response word count: ~{len(final_answer.split()):,} words")
+            print(f"      Response ends with: '{final_answer[-100:]}' (last 100 chars)" if len(final_answer) > 100 else f"      Full response: '{final_answer}'")
+            
+            # Check if response seems truncated
+            if len(final_answer) < 1000:
+                print(f"   ⚠️  WARNING: Response seems unusually short ({len(final_answer)} chars)")
+            if not final_answer.endswith(('.', '!', '?', '"', "'")):
+                print(f"   ⚠️  WARNING: Response may be truncated (doesn't end with punctuation)")
             
             # Compile comprehensive sources
             all_unique_sources = []
@@ -2206,16 +2322,20 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                         seen_docs.add(doc_key)
                         all_unique_sources.append(source)
             
-            # Add final search sources
+            # Add final search sources with proper content and metadata
             for result in final_search_results:
-                doc_key = result.get("document", "")
-                if doc_key and doc_key not in seen_docs:
+                content = result.get("content", "")
+                doc_key = result.get("document", content[:50] if content else "unknown")  # Use content preview as fallback
+                if content and doc_key not in seen_docs:
                     seen_docs.add(doc_key)
                     all_unique_sources.append({
-                        "document": doc_key,
-                        "collection": result.get("collection", "Unknown"),
-                        "score": result.get("score", 0),
-                        "search_type": "final_synthesis"
+                        "content": content,
+                        "metadata": {
+                            "collection": result.get("collection", "Unknown"),
+                            "document": doc_key,
+                            "search_type": "final_synthesis"
+                        },
+                        "score": result.get("score", 0)
                     })
             
             # Calculate overall confidence
@@ -2248,7 +2368,20 @@ Make this a definitive, comprehensive response that fully addresses the user's q
             state["messages"].append(AIMessage(content=f"Generated comprehensive final answer synthesizing {len(subquestion_answers)} subquestion analyses with {len(all_unique_sources)} total sources"))
             
         except Exception as e:
-            print(f"   ❌ Error synthesizing final answer: {e}")
+            print(f"   ❌ CRITICAL ERROR in LLM synthesis call: {type(e).__name__}: {str(e)}")
+            print(f"   📊 Context when error occurred:")
+            print(f"      - Prompt length: {len(synthesis_prompt):,} chars")
+            print(f"      - Estimated tokens: ~{len(synthesis_prompt)//4:,}")
+            print(f"      - Subquestion answers: {len(subquestion_answers)}")
+            print(f"      - Final search results: {len(final_search_results)}")
+            
+            # More detailed error information
+            import traceback
+            print(f"   🔍 Full error traceback:")
+            traceback.print_exc()
+            
+            print(f"   🔄 Falling back to concatenated subquestion answers...")
+            
             # Fallback synthesis
             fallback_answer = f"""Based on the multi-step analysis of your query "{query}", I have examined {len(subquestion_answers)} key aspects:
 
@@ -2268,96 +2401,347 @@ Make this a definitive, comprehensive response that fully addresses the user's q
             state["messages"].append(AIMessage(content=f"Generated fallback synthesis from {len(subquestion_answers)} subquestion analyses"))
         
         return state
-    
-    def process_query(self, query: str, threshold: float) -> Dict[str, Any]:
-        """Process a query using the LangGraph agent"""
-        
-        start_time = time.time()
-        
-        # Initialize state
-        initial_state = AgentState(
-            messages=[],
-            query=query,
-            reasoning={},
-            search_results=[],
-            context="",
-            answer="",
-            sources=[],
-            collections_searched=[],
-            search_terms_used=[],
-            confidence="medium",
-            # Iterative search enhancements
-            search_iterations=0,
-            max_iterations=1,
-            needs_refinement=False,
-            refinement_strategy={},
-            search_history=[],
-            result_quality_scores={},
-            web_results=[],
-            # Multi-step reasoning with subquestions
-            subquestions=[],
-            hypothetical_answers=[],
-            subquestion_results=[],
-            subquestion_answers=[],
-            final_synthesis_context="",
-            parallel_processing_enabled=False
-        )
+
+    def process_query_with_single_pdf_stream(self, query: str, primary_collection: str, context_collections: list = None, threshold: float = 0.0):
+        """Streaming version that yields real-time updates during subquestion processing"""
+        import time
+        from datetime import datetime
         
         try:
-            print(f"🤖 Starting LangGraph agent for query: '{query}'")
+            start_time = time.time()
             
-            # Run the workflow
-            final_state = self.graph.invoke(initial_state)
+            # Yield initial status
+            yield {
+                "type": "status",
+                "message": "Initializing multi-step reasoning...",
+                "timestamp": datetime.now().isoformat(),
+                "stage": "initialization"
+            }
+            time.sleep(0.1)  # Small delay to ensure proper streaming
             
-            # Filter sources by threshold
-            filtered_sources = [
-                source for source in final_state["sources"]
-            ]
+            # Set up collections
+            all_collections = [primary_collection]
+            if context_collections:
+                all_collections.extend(context_collections)
             
-            processing_time = time.time() - start_time
-            
-            # Prepare response
-            response = {
-                "response": final_state["answer"],
-                "sources": filtered_sources,
-                "reasoning": final_state["reasoning"],
-                "search_summary": {
-                    "collections_searched": final_state["collections_searched"],
-                    "search_terms_used": final_state["search_terms_used"],
-                    "total_documents_found": len(final_state["search_results"]),
-                    "documents_above_threshold": len(filtered_sources),
-                    "threshold_used": threshold
-                },
-                "confidence": final_state["confidence"],
-                "processing_steps": [msg.content for msg in final_state["messages"] if isinstance(msg, AIMessage)],
-                "processing_time": f"{processing_time:.2f} seconds"
+            # Initialize state with proper data structures
+            initial_state = {
+                "query": query,
+                "collections": all_collections,
+                "primary_collection": primary_collection,
+                "context_collections": context_collections or [],
+                "subquestions": [],
+                "hypothetical_answers": [],
+                "subquestion_answers": [],
+                "subquestion_results": [],
+                "search_results": [],
+                "web_results": [],
+                "answer": "",
+                "reasoning": {},  # Must be dict, not string!
+                "sources": [],
+                "threshold": threshold,
+                "messages": [],  # Add messages list for workflow compatibility
+                "primary_document_text": "",  # Required by generate_hypothetical_answers
+                "parallel_processing_enabled": True  # Enable parallel processing
             }
             
-            print(f"🎯 Agent completed successfully")
-            print(f"   Collections searched: {final_state['collections_searched']}")
-            print(f"   Documents found: {len(final_state['search_results'])}")
-            print(f"   Sources above threshold: {len(filtered_sources)}")
-            print(f"   Processing time: {processing_time:.2f}s")
+            # Yield subquestion generation start
+            yield {
+                "type": "status",
+                "message": "Generating subquestions for comprehensive analysis...",
+                "timestamp": datetime.now().isoformat(),
+                "stage": "subquestion_generation"
+            }
+            time.sleep(0.1)  # Small delay to ensure proper streaming
             
-            return response
+            # Generate subquestions using the correct workflow method
+            print("🔍 DEBUG: Starting decompose_query...")
+            try:
+                state = self.decompose_query(initial_state)
+                print(f"🔍 DEBUG: decompose_query completed. State keys: {list(state.keys())}")
+                print(f"🔍 DEBUG: subquestions type: {type(state.get('subquestions', []))}")
+            except Exception as e:
+                print(f"❌ DEBUG: Error in decompose_query: {e}")
+                raise
+            
+            # Extract subquestion text for frontend display
+            try:
+                subquestion_texts = [sq["question"] for sq in state["subquestions"]]
+                print(f"🔍 DEBUG: Extracted {len(subquestion_texts)} subquestion texts")
+            except Exception as e:
+                print(f"❌ DEBUG: Error extracting subquestion texts: {e}")
+                print(f"❌ DEBUG: subquestions data: {state.get('subquestions', [])}")
+                raise
+            
+            # Yield generated subquestions
+            yield {
+                "type": "subquestions_generated",
+                "subquestions": subquestion_texts,
+                "count": len(subquestion_texts),
+                "timestamp": datetime.now().isoformat()
+            }
+            time.sleep(0.2)  # Delay to allow frontend to process subquestions
+            
+            # Generate hypothetical answers for all subquestions
+            yield {
+                "type": "status",
+                "message": "Generating hypothetical answers to guide document search...",
+                "timestamp": datetime.now().isoformat(),
+                "stage": "hypothetical_answer"
+            }
+            
+            print("🔍 DEBUG: Starting generate_hypothetical_answers...")
+            try:
+                state = self.generate_hypothetical_answers(state)
+                print(f"🔍 DEBUG: generate_hypothetical_answers completed. hypothetical_answers type: {type(state.get('hypothetical_answers', []))}")
+            except Exception as e:
+                print(f"❌ DEBUG: Error in generate_hypothetical_answers: {e}")
+                raise
+            
+            # Extract hypothetical answers for frontend display
+            try:
+                # Debug: Print the actual structure of hypothetical answers
+                print(f"🔍 DEBUG: hypothetical_answers structure: {state.get('hypothetical_answers', [])}")
+                
+                # Handle different possible structures
+                hypothetical_answer_texts = []
+                for ha in state["hypothetical_answers"]:
+                    if isinstance(ha, dict):
+                        if "answer" in ha:
+                            hypothetical_answer_texts.append(ha["answer"])
+                        elif "hypothesis" in ha:
+                            hypothetical_answer_texts.append(ha["hypothesis"])
+                        elif "content" in ha:
+                            hypothetical_answer_texts.append(ha["content"])
+                        else:
+                            # If it's a dict but no expected keys, convert to string
+                            hypothetical_answer_texts.append(str(ha))
+                    else:
+                        # If it's not a dict, use as-is
+                        hypothetical_answer_texts.append(str(ha))
+                        
+                print(f"🔍 DEBUG: Extracted {len(hypothetical_answer_texts)} hypothetical answer texts")
+            except Exception as e:
+                print(f"❌ DEBUG: Error extracting hypothetical answer texts: {e}")
+                print(f"❌ DEBUG: hypothetical_answers data: {state.get('hypothetical_answers', [])}")
+                # Fallback to empty list
+                hypothetical_answer_texts = []
+            
+            yield {
+                "type": "hypothetical_answers_generated",
+                "hypothetical_answers": hypothetical_answer_texts,
+                "timestamp": datetime.now().isoformat()
+            }
+            time.sleep(0.2)  # Delay to allow frontend to process hypothetical answers
+            
+            # Perform parallel search for all subquestions
+            yield {
+                "type": "status",
+                "message": "Performing parallel document search for all subquestions...",
+                "timestamp": datetime.now().isoformat(),
+                "stage": "search"
+            }
+            time.sleep(0.1)  # Small delay to ensure proper streaming
+            
+            print("🔍 DEBUG: Starting parallel_subquestion_search...")
+            try:
+                state = self.parallel_subquestion_search(state)
+                print(f"🔍 DEBUG: parallel_subquestion_search completed. subquestion_results type: {type(state.get('subquestion_results', []))}")
+            except Exception as e:
+                print(f"❌ DEBUG: Error in parallel_subquestion_search: {e}")
+                raise
+            
+            # Process each subquestion with streaming updates
+            for i, subquestion_data in enumerate(state["subquestions"]):
+                subquestion_text = subquestion_data["question"]
+                
+                yield {
+                    "type": "subquestion_start",
+                    "subquestion": subquestion_text,
+                    "index": i,
+                    "total": len(state["subquestions"]),
+                    "timestamp": datetime.now().isoformat()
+                }
+                time.sleep(0.1)  # Small delay between subquestions
+                
+                # Generate answer for this subquestion
+                yield {
+                    "type": "status",
+                    "message": f"Analyzing subquestion {i+1}/{len(state['subquestions'])}: {subquestion_text[:100]}...",
+                    "timestamp": datetime.now().isoformat(),
+                    "stage": "answer_generation",
+                    "subquestion_index": i
+                }
+                time.sleep(0.1)  # Small delay for status updates
+            
+            # Stream each subquestion answer as soon as it is generated
+            subquestion_answers = []
+            for i, subquestion_data in enumerate(state["subquestions"]):
+                subquestion_text = subquestion_data["question"]
+                
+                # Prepare context for this subquestion
+                search_results = []
+                if i < len(state.get("subquestion_results", [])):
+                    search_results = state["subquestion_results"][i].get("search_results", [])
+                
+                # Build primary document context
+                primary_document_text = state.get("primary_document_text", "")
+                prompt_context = f"PRIMARY DOCUMENT CONTEXT:\n{primary_document_text}\n\n" if primary_document_text else ""
+                
+                # Build context from search results
+                context_parts = []
+                sources = []
+                for j, result in enumerate(search_results[:50]):
+                    content = result.get("content", "")
+                    if content:
+                        source_info = {
+                            "content": content,
+                            "metadata": {
+                                "collection": result.get("collection", "Unknown"),
+                                "document": result.get("document", f"Document_{j+1}"),
+                                "search_type": result.get("search_type", "subquestion_search")
+                            },
+                            "score": result.get("score", 0)
+                        }
+                        sources.append(source_info)
+                        context_parts.append(f"[Source {j+1}: {source_info['metadata']['document']}]\n{content}")
+                context = "\n\n".join(context_parts)
+                
+                # Generate answer using LLM
+                answer_prompt = f"""You are an expert analyst answering a specific subquestion as part of a larger analysis.\n\n{prompt_context}MAIN QUERY: \"{query}\"\nSUBQUESTION: \"{subquestion_text}\"\n\nCONTEXT FROM RETRIEVED DOCUMENTS:\n{context}\n\nBased on the provided documents, answer the subquestion comprehensively. Your response should:\n\n1. **Direct Answer**: Provide a clear, direct answer to the subquestion\n2. **Key Findings**: Highlight 3-5 key findings from the documents\n3. **Specific Details**: Include relevant numbers, dates, policies, or specific information\n4. **Source Attribution**: Reference which documents support your points\n5. **Confidence Assessment**: Indicate how well the documents answer the question\n\nFormat as:\n\n**Answer:** [Direct answer to the subquestion]\n\n**Key Findings:**\n- [Finding 1 with source reference]\n- [Finding 2 with source reference]\n- [Finding 3 with source reference]\n\n**Specific Details:**\n[Include relevant numbers, policies, dates, or other specific information]\n\n**Confidence:** [High/Medium/Low] - [Brief explanation of confidence level]\n\nFocus specifically on this subquestion and provide actionable insights that will contribute to answering the main query."""
+                try:
+                    response = self.llm.invoke([HumanMessage(content=answer_prompt)])
+                    answer_content = response.content.strip()
+                    # No truncation: send full answer
+                    confidence = "medium"
+                    if "**Confidence:**" in answer_content:
+                        conf_section = answer_content.split("**Confidence:**")[1].split("**")[0].strip()
+                        if conf_section.lower().startswith("high"):
+                            confidence = "high"
+                        elif conf_section.lower().startswith("low"):
+                            confidence = "low"
+                    answer = {
+                        "subquestion_id": i,
+                        "question": subquestion_text,
+                        "answer": answer_content,
+                        "confidence": confidence,
+                        "sources": sources,
+                        "documents_used": len(search_results)
+                    }
+                except Exception as e:
+                    answer = {
+                        "subquestion_id": i,
+                        "question": subquestion_text,
+                        "answer": f"Error generating answer: {str(e)}",
+                        "confidence": "low",
+                        "sources": sources,
+                        "documents_used": len(search_results)
+                    }
+                subquestion_answers.append(answer)
+                yield {
+                    "type": "subquestion_completed",
+                    "subquestion": subquestion_text,
+                    "answer": answer["answer"],
+                    "index": i,
+                    "search_results_count": len(search_results),
+                    "timestamp": datetime.now().isoformat()
+                }
+                time.sleep(0.2)
+            state["subquestion_answers"] = subquestion_answers
+            
+            # Final synthesis
+            yield {
+                "type": "status",
+                "message": "Synthesizing comprehensive final answer...",
+                "timestamp": datetime.now().isoformat(),
+                "stage": "final_synthesis"
+            }
+            time.sleep(0.2)  # Delay before final synthesis
+            
+            # Synthesize final answer
+            final_state = self.synthesize_final_answer(state)
+            
+            # Process sources and create final response
+            processing_time = time.time() - start_time
+            
+            # Filter and organize sources with proper type checking
+            all_sources = final_state.get("sources", [])
+            
+            # Ensure all sources are dictionaries
+            valid_sources = []
+            for s in all_sources:
+                if isinstance(s, dict):
+                    valid_sources.append(s)
+                else:
+                    print(f"Warning: Invalid source type {type(s)}: {s}")
+            
+            primary_sources = [s for s in valid_sources if s.get("collection") == primary_collection]
+            context_sources = [s for s in valid_sources if s.get("collection") != primary_collection]
+            
+            # Create search summary with safe data extraction
+            collections_searched = list(set([s.get("collection", "unknown") for s in valid_sources]))
+            
+            # Safely extract search terms
+            search_terms = []
+            try:
+                subquestion_results = final_state.get("subquestion_results", [])
+                for subq_results in subquestion_results:
+                    if isinstance(subq_results, list):
+                        for result in subq_results:
+                            if isinstance(result, dict) and "search_terms" in result:
+                                terms = result.get("search_terms", [])
+                                if isinstance(terms, list):
+                                    search_terms.extend(terms)
+                search_terms = list(set(search_terms))
+            except Exception as e:
+                print(f"Warning: Error extracting search terms: {e}")
+                search_terms = []
+            
+            # Safely build response with error handling
+            response = {
+                "response": final_state.get("answer", "No answer generated"),
+                "sources": valid_sources,
+                "reasoning": final_state.get("reasoning", "No reasoning available"),
+                "primary_collection": primary_collection,
+                "context_collections": context_collections,
+                "processing_time": processing_time,
+                "search_summary": {
+                    "collections_searched": collections_searched,
+                    "search_terms_used": search_terms[:20],  # Limit to top 20
+                    "total_documents_found": len(valid_sources),
+                    "primary_sources_count": len(primary_sources),
+                    "context_sources_count": len(context_sources)
+                },
+                "subquestions": final_state.get("subquestions", []),
+                "hypothetical_answers": final_state.get("hypothetical_answers", []),
+                "subquestion_answers": final_state.get("subquestion_answers", []),
+                "subquestion_results": final_state.get("subquestion_results", []),
+                "final_state": {
+                    "total_subquestions": len(final_state.get("subquestions", [])),
+                    "total_search_results": len(final_state.get("search_results", [])),
+                    "total_web_results": len(final_state.get("web_results", [])),
+                    "answer_length": len(str(final_state.get("answer", ""))),
+                    "reasoning_length": len(str(final_state.get("reasoning", "")))
+                }
+            }
+            
+            # Yield final completion
+            yield {
+                "type": "completed",
+                "response": response,
+                "processing_time": processing_time,
+                "timestamp": datetime.now().isoformat()
+            }
             
         except Exception as e:
-            processing_time = time.time() - start_time
-            print(f"❌ Error in agent workflow: {e}")
-            error_response = {
-                "response": f"I apologize, but I encountered an error while processing your query: {str(e)}",
-                "sources": [],
-                "reasoning": {"error": str(e)},
-                "search_summary": {
-                    "collections_searched": [],
-                    "search_terms_used": [],
-                    "total_documents_found": 0,
-                    "documents_above_threshold": 0,
-                    "threshold_used": threshold
-                },
-                "confidence": "low",
-                "processing_steps": [f"Error: {str(e)}"],
-                "processing_time": f"{processing_time:.2f} seconds"
+            import traceback
+            error_traceback = traceback.format_exc()
+            logging.error(f"Error in streaming process_query_with_single_pdf: {str(e)}")
+            logging.error(f"Full traceback: {error_traceback}")
+            print(f"❌ STREAMING ERROR: {e}")
+            print(f"❌ FULL TRACEBACK: {error_traceback}")
+            yield {
+                "type": "error",
+                "message": f"Streaming error: {str(e)}",
+                "timestamp": datetime.now().isoformat()
             }
-            
-            return error_response

@@ -86,7 +86,6 @@ function App() {
           timestamp: new Date(),
           sources: response.sources,
         };
-        console.log(response)
         return [...withoutLoading, assistantMessage];
       });
     } catch (err) {

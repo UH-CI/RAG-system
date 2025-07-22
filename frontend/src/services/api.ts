@@ -295,4 +295,133 @@ export const askQuestionWithCollections = async (
   };
 };
 
+/**
+ * Chat with a specific PDF document using additional collections as context
+ */
+export const chatWithPDF = async (
+  query: string,
+  sessionCollection: string,
+  contextCollections: string[] = [],
+  threshold: number = 0
+): Promise<{
+  response: string;
+  sources: any[];
+  session_collection: string;
+  context_collections: string[];
+  valid_collections_used: string[];
+  query: string;
+}> => {
+  const response = await api.post('/chat-with-pdf', {
+    query,
+    session_collection: sessionCollection,
+    context_collections: contextCollections,
+    threshold,
+  }, {
+    timeout: 300000, // 5 minutes for complex analysis
+  });
+  console.log(response.data);
+  return response.data;
+};
+
+/**
+ * Stream chat with PDF - provides real-time updates during subquestion processing
+ */
+export const streamChatWithPDF = async (
+  query: string,
+  sessionCollection: string,
+  contextCollections: string[] = [],
+  threshold: number = 0,
+  onUpdate: (update: any) => void,
+  onError: (error: string) => void,
+  onComplete: (response: any) => void
+): Promise<void> => {
+  try {
+    console.log('🚀 FRONTEND: Starting streaming connection...');
+    console.log('📝 Request data:', { query: query.substring(0, 50) + '...', sessionCollection, contextCollections, threshold });
+    
+    const response = await fetch(`${API_BASE_URL}/chat-with-pdf-stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        session_collection: sessionCollection,
+        context_collections: contextCollections,
+        threshold,
+      }),
+    });
+
+    console.log('📡 Response status:', response.status, response.statusText);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    console.log('✅ FRONTEND: Stream reader obtained successfully');
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let messageCount = 0;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('📡 FRONTEND: Stream ended (done=true)');
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+        messageCount++;
+        
+        console.log(`📨 FRONTEND: Received chunk ${messageCount}:`, chunk.substring(0, 100) + (chunk.length > 100 ? '...' : ''));
+        
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonData = line.slice(6);
+              console.log('🔍 FRONTEND: Parsing JSON:', jsonData.substring(0, 200) + (jsonData.length > 200 ? '...' : ''));
+              const data = JSON.parse(jsonData);
+              
+              console.log('✅ FRONTEND: Parsed data:', data.type, data.message?.substring(0, 50));
+              
+              if (data.type === 'error') {
+                console.log('❌ FRONTEND: Error received:', data.message);
+                onError(data.message);
+                return;
+              } else if (data.type === 'completed') {
+                console.log('🏁 FRONTEND: Completion received');
+                onComplete(data.response);
+                return;
+              } else {
+                console.log('📤 FRONTEND: Calling onUpdate with:', data.type);
+                onUpdate(data);
+              }
+            } catch (parseError) {
+              console.error('❌ FRONTEND: Failed to parse streaming data:', parseError, 'Line:', line);
+            }
+          } else if (line.trim()) {
+            console.log('⚠️ FRONTEND: Non-data line received:', line);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  } catch (error) {
+    console.error('Streaming error:', error);
+    onError(error instanceof Error ? error.message : 'Unknown streaming error');
+  }
+};
+
 export default api; 
