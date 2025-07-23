@@ -12,7 +12,7 @@ A generalized document search and question-answering system built with ChromaDB 
 ### 1. Clone and Setup
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/UH-CI/RAG-system/
 cd course-RAG
 
 # Navigate to source directory and setup environment
