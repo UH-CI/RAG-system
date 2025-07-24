@@ -18,6 +18,11 @@ export interface CollectionsResponse {
 
 export interface Collection {
   name: string;
+  document_count?: number;
+  last_updated?: string;
+  total_size?: number;
+  path?: string;
+  status?: string;
 }
 
 export interface SearchResponse {
@@ -57,12 +62,49 @@ export interface DocumentParsingType {
   description: string;
 }
 
+export interface UploadMethod {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<any>;
+}
+
 export interface CreateGroupData {
   name: string;
   description?: string;
   documents: File[];
   parsingType: string;
   customParsingDescription?: string;
+  
+  // Upload method and related fields
+  uploadMethod?: string;
+  googleDriveUrl?: string;
+  websiteUrl?: string;
+  extractionPrompt?: string;
+  recursive?: boolean;
+  recursiveDownload?: boolean;
+  
+  // Text extraction settings
+  containsTables?: boolean;
+  containsImagesOfText?: boolean;
+  containsImagesOfNontext?: boolean;
+  containsStructuredData?: boolean;
+  extractionType?: 'basic' | 'advanced';
+  
+  // Text chunking settings
+  chunkingMethods?: string[];
+  chunkSize?: number;
+  chunkOverlap?: number;
+  useAI?: boolean;
+  useAi?: boolean;
+  splitBySentence?: boolean;
+  useSemanticSplitter?: boolean;
+  
+  // Additional settings
+  promptDescription?: string;
+  previousPagesToInclude?: number;
+  contextItemsToShow?: number;
+  rewriteQuery?: boolean;
 }
 
 export interface CreateGroupStep {
