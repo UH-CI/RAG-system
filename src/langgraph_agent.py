@@ -2464,9 +2464,17 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                 "sources": [],
                 "threshold": threshold,
                 "messages": [],  # Add messages list for workflow compatibility
-                "primary_document_text": "",  # Required by generate_hypothetical_answers
+                "primary_document_text": "",  # Will be fetched below
                 "parallel_processing_enabled": True  # Enable parallel processing
             }
+            
+            # Fetch primary document content from the uploaded PDF
+            print("🔍 Fetching primary document content...")
+            initial_state = self.fetch_primary_document(initial_state)
+            if initial_state.get("primary_document_text"):
+                print(f"📄 Successfully loaded primary document: {len(initial_state['primary_document_text'])} characters")
+            else:
+                print("⚠️ Warning: Could not load primary document text")
             
             # Yield subquestion generation start
             yield {
