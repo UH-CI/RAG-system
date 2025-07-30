@@ -71,7 +71,6 @@ class LangGraphRAGAgent:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-1.5-flash",
             temperature=0.3,  # Increased from 0.1 to encourage longer, more comprehensive responses
-            max_tokens=25000  # Increased for comprehensive fiscal notes with primary document context
         )
         
         # Create tools
@@ -588,19 +587,19 @@ class LangGraphRAGAgent:
         
         # Add edges with conditional routing
         workflow.set_entry_point("fetch_primary_document")
-        workflow.add_edge("fetch_primary_document", "analyze_query")
-        workflow.add_conditional_edges("analyze_query", should_use_subquestions)
+        workflow.add_edge("fetch_primary_document", "search_documents")
+        # workflow.add_conditional_edges("analyze_query", should_use_subquestions)
         
         # Subquestion decomposition path
-        workflow.add_edge("decompose_query", "generate_hypothetical_answers")
-        workflow.add_edge("generate_hypothetical_answers", "parallel_subquestion_search")
-        workflow.add_edge("parallel_subquestion_search", "answer_subquestions")
-        workflow.add_edge("answer_subquestions", "synthesize_final_answer")
+        # workflow.add_edge("decompose_query", "generate_hypothetical_answers")
+        # workflow.add_edge("generate_hypothetical_answers", "parallel_subquestion_search")
+        # workflow.add_edge("parallel_subquestion_search", "answer_subquestions")
+        # workflow.add_edge("answer_subquestions", "synthesize_final_answer")
         
         # Traditional path
         workflow.add_edge("search_documents", "evaluate_results")
-        workflow.add_conditional_edges("evaluate_results", should_refine)
-        workflow.add_edge("refine_search", "evaluate_results")
+        # workflow.add_conditional_edges("evaluate_results", should_refine)
+        workflow.add_edge("evaluate_results", "generate_answer")
         workflow.add_edge("generate_answer", END)
         workflow.add_edge("synthesize_final_answer", END)
         
@@ -2477,18 +2476,17 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                 print("⚠️ Warning: Could not load primary document text")
             
             # Yield subquestion generation start
-            yield {
-                "type": "status",
-                "message": "Generating subquestions for comprehensive analysis...",
-                "timestamp": datetime.now().isoformat(),
-                "stage": "subquestion_generation"
-            }
-            time.sleep(0.1)  # Small delay to ensure proper streaming
+            # yield {
+            #     "type": "status",
+            #     "message": "Generating subquestions for comprehensive analysis...",
+            #     "timestamp": datetime.now().isoformat(),
+            #     "stage": "subquestion_generation"
+            # }
             
             # Generate subquestions using the correct workflow method
-            print("🔍 DEBUG: Starting decompose_query...")
+            # print("🔍 DEBUG: Starting decompose_query...")
             try:
-                state = self.decompose_query(initial_state)
+                state = self.search_documents(initial_state)
                 print(f"🔍 DEBUG: decompose_query completed. State keys: {list(state.keys())}")
                 print(f"🔍 DEBUG: subquestions type: {type(state.get('subquestions', []))}")
             except Exception as e:
@@ -2511,7 +2509,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                 "count": len(subquestion_texts),
                 "timestamp": datetime.now().isoformat()
             }
-            time.sleep(0.2)  # Delay to allow frontend to process subquestions
+            # time.sleep(0.2)  # Delay to allow frontend to process subquestions
             
             # Generate hypothetical answers for all subquestions
             yield {
@@ -2523,7 +2521,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
             
             print("🔍 DEBUG: Starting generate_hypothetical_answers...")
             try:
-                state = self.generate_hypothetical_answers(state)
+                # state = self.generate_hypothetical_answers(state)
                 print(f"🔍 DEBUG: generate_hypothetical_answers completed. hypothetical_answers type: {type(state.get('hypothetical_answers', []))}")
             except Exception as e:
                 print(f"❌ DEBUG: Error in generate_hypothetical_answers: {e}")
@@ -2563,7 +2561,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                 "hypothetical_answers": hypothetical_answer_texts,
                 "timestamp": datetime.now().isoformat()
             }
-            time.sleep(0.2)  # Delay to allow frontend to process hypothetical answers
+            # time.sleep(0.2)  # Delay to allow frontend to process hypothetical answers
             
             # Perform parallel search for all subquestions
             yield {
@@ -2576,7 +2574,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
             
             print("🔍 DEBUG: Starting parallel_subquestion_search...")
             try:
-                state = self.parallel_subquestion_search(state)
+                # state = self.parallel_subquestion_search(state)
                 print(f"🔍 DEBUG: parallel_subquestion_search completed. subquestion_results type: {type(state.get('subquestion_results', []))}")
             except Exception as e:
                 print(f"❌ DEBUG: Error in parallel_subquestion_search: {e}")
@@ -2593,7 +2591,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                     "total": len(state["subquestions"]),
                     "timestamp": datetime.now().isoformat()
                 }
-                time.sleep(0.1)  # Small delay between subquestions
+                # time.sleep(0.1)  # Small delay between subquestions
                 
                 # Generate answer for this subquestion
                 yield {
@@ -2603,7 +2601,7 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                     "stage": "answer_generation",
                     "subquestion_index": i
                 }
-                time.sleep(0.1)  # Small delay for status updates
+                # time.sleep(0.1)  # Small delay for status updates
             
             # Stream each subquestion answer as soon as it is generated
             subquestion_answers = []
@@ -2687,7 +2685,6 @@ Make this a definitive, comprehensive response that fully addresses the user's q
                 "timestamp": datetime.now().isoformat(),
                 "stage": "final_synthesis"
             }
-            time.sleep(0.2)  # Delay before final synthesis
             
             # Synthesize final answer
             final_state = self.synthesize_final_answer(state)
