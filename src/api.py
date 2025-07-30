@@ -1,24 +1,21 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Query
+from fastapi import FastAPI, HTTPException, Query, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, TypedDict, AsyncGenerator
+from typing import List, Optional, Dict, Any
 import os
-import tempfile
-import shutil
 from pathlib import Path
 import json
 import google.generativeai as genai
 from tqdm import tqdm
 import logging
-import asyncio
-import time
 from datetime import datetime
 from documents.step0_document_upload.web_scraper import ai_crawler
 from typing import Generator
 
-from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
+from src.types.requests import *
+
 from documents.step0_document_upload.google_upload import download_pdfs_from_drive
+from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
 from documents.step2_chunking.chunker import chunk_document
 
 # Handle both relative and absolute imports
@@ -57,6 +54,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 class DynamicChromeManager(ChromaDBManager):
     """Dynamic ChromaDB manager that works with any collection name"""
@@ -317,22 +316,6 @@ def ingest_from_source_file(collection_name: str, source_file: str, ingestion_co
             "total_documents": 0
         }
 
-# API Models
-class SearchRequest(BaseModel):
-    query: str = Field(..., description="Search query")
-    collections: Optional[List[str]] = Field(default=None, description="Collections to search in")
-    num_results: int = Field(default=None, description="Number of results to return")
-    search_type: str = Field(default="semantic", description="Type of search: semantic, metadata, or both")
-
-class QueryRequest(BaseModel):
-    query: str = Field(..., description="User query")
-    collections: Optional[List[str]] = Field(default=None, description="Collections to search in")
-    threshold: float = Field(default=0.0, ge=0.0, le=1.0, description="Similarity threshold (0.0 to 1.0) - only return documents with similarity scores above this threshold")
-
-class DocumentResponse(BaseModel):
-    content: str
-    metadata: Dict[str, Any]
-    score: Optional[float] = None
 
 def get_search_params(num_results: Optional[int] = None) -> int:
     """Get search parameters with config defaults"""
@@ -402,6 +385,33 @@ def process_pdf_file( file_location: str,
         raise HTTPException(status_code=500, detail=f"Error chunking document: {str(e)}")
     return {"message": "PDF processed successfully"}
 
+
+def search_relevant_documents(query: str, collections: Optional[List[str]] = None, num_results: int = None) -> List[Dict[str, Any]]:
+    """Search for relevant documents across collections"""
+    if num_results is None:
+        num_results = get_search_params()
+    
+    search_collections = collections or collection_names
+    all_results = []
+    
+    for collection_name in search_collections:
+        try:
+            manager = get_collection_manager(collection_name)
+            results = manager.search_similar_chunks(query, num_results)
+            
+            for result in results:
+                result["metadata"]["collection"] = collection_name
+                all_results.append(result)
+        except Exception as e:
+            print(f"Error searching collection {collection_name}: {e}")
+            continue
+                            
+    # Sort by score and return top results
+    if all_results and "score" in all_results[0]:
+        all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+    
+    return all_results[:num_results]
+
 @app.get("/")
 async def root():
     processing_method = "LangGraph Agentic Workflow" if USE_LANGGRAPH else "Multi-step Reasoning"
@@ -467,9 +477,15 @@ async def get_collections():
     for entry in os.listdir(base_path):
         full_path = os.path.join(base_path, entry)
         if os.path.isdir(full_path):
+            num_documents = len(os.listdir(full_path))
+        else:
+            # Skip files like .DS_Store
+            continue
+        if os.path.isdir(full_path):
             print(f"Found collection: {entry}")
             collections.append({
                 "name": entry,
+                "num_documents": num_documents
             })
 
     return {
@@ -513,85 +529,44 @@ async def search_documents(request: SearchRequest):
     
     return all_results[:num_results]
 
-def search_relevant_documents(query: str, collections: Optional[List[str]] = None, num_results: int = None) -> List[Dict[str, Any]]:
-    """Search for relevant documents across collections"""
-    if num_results is None:
-        num_results = get_search_params()
-    
-    search_collections = collections or collection_names
-    all_results = []
-    
-    for collection_name in search_collections:
-        try:
-            manager = get_collection_manager(collection_name)
-            results = manager.search_similar_chunks(query, num_results)
-            
-            for result in results:
-                result["metadata"]["collection"] = collection_name
-                all_results.append(result)
-        except Exception as e:
-            print(f"Error searching collection {collection_name}: {e}")
-            continue
-                            
-    # Sort by score and return top results
-    if all_results and "score" in all_results[0]:
-        all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
-    
-    return all_results[:num_results]
+
 
 @app.post("/query")
 async def query_documents(request: QueryRequest):
     """Advanced query processing with agentic LangGraph workflow or multi-step reasoning fallback"""
     try:
-        if USE_LANGGRAPH and langgraph_agent is not None:
-            # Use LangGraph RAG Agent (agentic approach)
-            print(f"🤖 Using LangGraph Agent for query: '{request.query}'")
-            result = langgraph_agent.process_query(request.query, threshold=request.threshold)
+        # if USE_LANGGRAPH and langgraph_agent is not None:
+        #     # Use LangGraph RAG Agent (agentic approach)
+        #     print(f"🤖 Using LangGraph Agent for query: '{request.query}'")
+        #     result = langgraph_agent.process_query(request.query, threshold=request.threshold)
             
-            # Add metadata about the request
-            result["query"] = request.query
-            result["collections_available"] = collection_names
-            result["processing_method"] = "langgraph-agentic"
-            result["threshold_used"] = request.threshold
+        #     # Add metadata about the request
+        #     result["query"] = request.query
+        #     result["collections_available"] = collection_names
+        #     result["processing_method"] = "langgraph-agentic"
+        #     result["threshold_used"] = request.threshold
             
-        else:
-            # Fallback to traditional multi-step query processor
-            print(f"🔄 Using traditional QueryProcessor for query: '{request.query}'")
-            result = query_processor.process_query(request.query, threshold=request.threshold)
-            
-            # Add metadata about the request
-            result["query"] = request.query
-            result["collections_available"] = collection_names
-            result["processing_method"] = "multi-step-reasoning"
-            result["threshold_used"] = request.threshold
+        # else:
+        # Fallback to traditional multi-step query processor
+        print(f"🔄 Using traditional QueryProcessor for query: '{request.query}'")
+        result = query_processor.process_query(request.query, threshold=request.threshold)
+        
+        # Add metadata about the request
+        result["query"] = request.query
+        result["collections_available"] = collection_names
+        result["processing_method"] = "multi-step-reasoning"
+        result["threshold_used"] = request.threshold
         
         return result
                             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
-class ChunkingRequest(BaseModel):
-    chosen_methods: List[str] = ["pymupdf_extraction_text"]
 
-class ChatWithPDFRequest(BaseModel):
-    query: str = Field(..., description="User's question about the document")
-    session_collection: str = Field(..., description="Unique collection ID for the uploaded document")
-    context_collections: List[str] = Field(default=[], description="Additional collections to use as context")
-    threshold: float = Field(default=0, description="Similarity threshold for search results")
+
 
 @app.post("/step2-chunking")
-async def step2_chunking(
-    collection_name: str,
-    request: ChunkingRequest,
-    identifier: str = "fiscal_note",
-    chunk_size: int = 1000,
-    chunk_overlap: int = 200,
-    use_ai: bool = False,
-    prompt_description: Optional[str] = None,
-    previous_pages_to_include: int = 1,
-    context_items_to_show: int = 2,
-    rewrite_query: bool = False
-):
+async def step2_chunking(payload: ChunkingRequest):
     """
     Chunk extracted text from all JSON files in a specific collection.
     
@@ -607,28 +582,28 @@ async def step2_chunking(
         context_items_to_show (int): Number of context items to show.
         rewrite_query (bool): Whether to rewrite the query.
     """
-    logging.info(f"Starting chunking for collection '{collection_name}'")
+    logging.info(f"Starting chunking for collection '{payload.collection_name}'")
     # Define paths
-    collection_extracted_dir = os.path.join("documents", "extracted_text", collection_name)
-    collection_chunked_dir = os.path.join("documents", "chunked_text", collection_name)
+    collection_extracted_dir = os.path.join("documents", "extracted_text", payload.collection_name)
+    collection_chunked_dir = os.path.join("documents", "chunked_text", payload.collection_name)
 
     # Check if collection extracted directory exists
     if not os.path.exists(collection_extracted_dir):
-        raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found in extracted text")
+        raise HTTPException(status_code=404, detail=f"Collection '{payload.collection_name}' not found in extracted text")
     
     # Create chunked text directory for collection
     os.makedirs(collection_chunked_dir, exist_ok=True)
     
     # Get all JSON files in the extracted text collection
     json_files = [f for f in os.listdir(collection_extracted_dir) if f.lower().endswith('.json')]
-    logging.info(f"Found {len(json_files)} JSON files in collection '{collection_name}'")
+    logging.info(f"Found {len(json_files)} JSON files in collection '{payload.collection_name}'")
     if not json_files:
-        raise HTTPException(status_code=404, detail=f"No extracted text files found in collection '{collection_name}'")
+        raise HTTPException(status_code=404, detail=f"No extracted text files found in collection '{payload.collection_name}'")
     
     processed_files = []
     errors = []
     
-    logging.info(f"Starting chunking for collection '{collection_name}' with {len(json_files)} files...")
+    logging.info(f"Starting chunking for collection '{payload.collection_name}' with {len(json_files)} files...")
     
     for filename in json_files:
         try:
@@ -638,15 +613,15 @@ async def step2_chunking(
             chunked_data = chunk_document(
                 input_json_path=file_path,
                 output_json_path=output_json_path,
-                chosen_methods=request.chosen_methods,
-                identifier=identifier,
-                use_ai=use_ai,
-                prompt_description=prompt_description,
-                previous_pages_to_include=previous_pages_to_include,
-                context_items_to_show=context_items_to_show,
-                rewrite_query=rewrite_query,
-                chunk_size=chunk_size,
-                overlap=chunk_overlap
+                chosen_methods=payload.chosen_methods,
+                identifier=payload.identifier,
+                use_ai=payload.use_ai,
+                prompt_description=payload.prompt_description,
+                previous_pages_to_include=payload.previous_pages_to_include,
+                context_items_to_show=payload.context_items_to_show,
+                rewrite_query=payload.rewrite_query,
+                chunk_size=payload.chunk_size,
+                overlap=payload.chunk_overlap
             )
             
             # Save the chunked data to a JSON file
@@ -666,18 +641,18 @@ async def step2_chunking(
             errors.append(error_msg)
     
     if not processed_files:
-        raise HTTPException(status_code=500, detail=f"Failed to chunk any files in collection '{collection_name}'. Errors: {'; '.join(errors)}")
+        raise HTTPException(status_code=500, detail=f"Failed to chunk any files in collection '{payload.collection_name}'. Errors: {'; '.join(errors)}")
     
     return {
-        "message": f"Chunking completed for collection '{collection_name}'",
-        "collection_name": collection_name,
+        "message": f"Chunking completed for collection '{payload.collection_name}'",
+        "collection_name": payload.collection_name,
         "processed_files": processed_files,
         "total_processed": len(processed_files),
         "errors": errors
     }
 
 @app.post("/chat-with-pdf")
-async def chat_with_pdf(request: ChatWithPDFRequest):
+async def chat_with_pdf(payload: ChatWithPDFRequest):
     """
     Chat with a specific document (session collection) using additional collections as context.
     
@@ -687,11 +662,11 @@ async def chat_with_pdf(request: ChatWithPDFRequest):
     3. Use other collections as additional context for better answers
     
     Args:
-        request: ChatWithPDFRequest containing query, session_collection, context_collections, and threshold
+        payload: ChatWithPDFRequest containing query, session_collection, context_collections, and threshold
     """
     try:
         # Combine session collection with context collections
-        all_collections = [request.session_collection] + request.context_collections
+        all_collections = [payload.session_collection] + payload.context_collections
         
         # Filter out any collections that don't exist
         valid_collections = []
@@ -705,27 +680,27 @@ async def chat_with_pdf(request: ChatWithPDFRequest):
         if not valid_collections:
             raise HTTPException(
                 status_code=404, 
-                detail=f"No valid collections found. Session collection '{request.session_collection}' and context collections {request.context_collections} are either missing or empty."
+                detail=f"No valid collections found. Session collection '{payload.session_collection}' and context collections {payload.context_collections} are either missing or empty."
             )
         
         logging.info(f"Processing chat query with collections: {valid_collections}")
         
         # Use the specialized single PDF method with primary collection and context collections
         response = langgraph_agent.process_query_with_single_pdf(
-            query=request.query,
-            primary_collection=request.session_collection,
-            context_collections=request.context_collections,
-            threshold=request.threshold
+            query=payload.query,
+            primary_collection=payload.session_collection,
+            context_collections=payload.context_collections,
+            threshold=payload.threshold
         )
         
         return {
             "response": response.get("response", "No response generated"),
             "rest_of_response": response,
             "sources": response.get("sources", []),
-            "session_collection": request.session_collection,
-            "context_collections": request.context_collections,
+            "session_collection": payload.session_collection,
+            "context_collections": payload.context_collections,
             "valid_collections_used": valid_collections,
-            "query": request.query
+            "query": payload.query
         }
         
     except Exception as e:
@@ -736,24 +711,38 @@ def generate_stream(request: ChatWithPDFRequest) -> Generator[str, None, None]:
     try:
         print(f"📡 Starting stream generation...")
         
-        # Validate collections
+        # Validate collections by checking if they exist on disk
         valid_collections = []
         
+        def collection_exists_on_disk(collection_name: str) -> bool:
+            """Check if collection directory exists in storage_documents"""
+            collection_path = os.path.join("documents", "storage_documents", collection_name)
+            return os.path.exists(collection_path) and os.path.isdir(collection_path)
+        
         # Check session collection
-        if request.session_collection and request.session_collection in collection_managers:
-            valid_collections.append(request.session_collection)
-            print(f"✅ Valid session collection: {request.session_collection}")
-        else:
-            print(f"❌ Invalid session collection: {request.session_collection}")
+        if request.session_collection:
+            if collection_exists_on_disk(request.session_collection):
+                valid_collections.append(request.session_collection)
+                print(f"✅ Valid session collection: {request.session_collection}")
+                # Load into memory if not already loaded
+                if request.session_collection not in collection_managers:
+                    collection_managers[request.session_collection] = DynamicChromeManager(request.session_collection)
+                    print(f"📥 Loaded session collection into memory: {request.session_collection}")
+            else:
+                print(f"❌ Invalid session collection (not found on disk): {request.session_collection}")
         
         # Check context collections
         if request.context_collections:
             for collection in request.context_collections:
-                if collection in collection_managers:
+                if collection_exists_on_disk(collection):
                     valid_collections.append(collection)
                     print(f"✅ Valid context collection: {collection}")
+                    # Load into memory if not already loaded
+                    if collection not in collection_managers:
+                        collection_managers[collection] = DynamicChromeManager(collection)
+                        print(f"📥 Loaded context collection into memory: {collection}")
                 else:
-                    print(f"❌ Invalid context collection: {collection}")
+                    print(f"❌ Invalid context collection (not found on disk): {collection}")
         
         if not valid_collections:
             error_msg = f"data: {json.dumps({'type': 'error', 'message': 'No valid collections found'})}\n\n"
@@ -881,37 +870,33 @@ async def step1_text_extraction(
         "errors": errors
     }
 
+
+
 @app.post("/crawl-through-web")
 async def crawl_through_web(
-    start_url: str,
-    extraction_prompt: str,
-    collection_name: str,
-    null_is_okay: bool = True
+    payload: CrawlRequest
 ):
     try:
         # Save to src/documents/storage_documents
         stats = ai_crawler(
-            start_url=start_url,
-            extraction_prompt=extraction_prompt,
-            collection_name=collection_name,
-            null_is_okay=null_is_okay
+            start_url=  payload.start_url,
+            extraction_prompt=payload.extraction_prompt,
+            collection_name=payload.collection_name,
+            null_is_okay=payload.null_is_okay
         )
-        return {"message": f"Crawling completed successfully for {collection_name} with {len(stats)} items created"}
+        return {"message": f"Crawling completed successfully for {payload.collection_name} with {len(stats)} items created"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
 
 @app.post("/upload-through-google-drive")
-async def upload_through_google_drive(
-    drive_url: str,
-    recursive: bool = True
-):
+async def upload_through_google_drive(payload: DriveUploadRequest):
     try:
         # Save to src/documents/storage_documents
         download_path = os.path.join("documents", "storage_documents")
         stats = download_pdfs_from_drive(
-            drive_url=drive_url,
+            drive_url=payload.drive_url,
             download_path=download_path,
-            recursive=recursive
+            recursive=payload.recursive
         )
         return {"downloaded": stats["downloaded"], "failed": stats["failed"], "folders_processed": stats["folders_processed"]}
     except Exception as e:
@@ -919,33 +904,23 @@ async def upload_through_google_drive(
 
     
 @app.post("/create-collection")
-async def create_collection(collection_name: str):
-    """
-    Create a new collection by setting up the necessary directory structure.
-    
-    Args:
-        collection_name (str): Name of the collection to create.
-    """
-    # Validate collection name
+async def create_collection(payload: CollectionRequest):
+    collection_name = payload.collection_name
+
     if not collection_name or not collection_name.strip():
         raise HTTPException(status_code=400, detail="Collection name cannot be empty")
     
-    # Sanitize collection name
     sanitized_name = collection_name.strip().lower().replace(' ', '_')
     
-    # Create directory structure for the collection
     collection_storage_dir = os.path.join("./documents/storage_documents", sanitized_name)
     collection_extracted_dir = os.path.join("./documents/extracted_text", sanitized_name)
     collection_chunked_dir = os.path.join("./documents/chunked_text", sanitized_name)
-    
+
     try:
-        # Create directories
         os.makedirs(collection_storage_dir, exist_ok=True)
         os.makedirs(collection_extracted_dir, exist_ok=True)
         os.makedirs(collection_chunked_dir, exist_ok=True)
-        
-        print(f"✅ Created collection directories for: {sanitized_name}")
-        
+
         return {
             "message": f"Collection '{sanitized_name}' created successfully",
             "collection_name": sanitized_name,
@@ -955,13 +930,15 @@ async def create_collection(collection_name: str):
                 "chunked_text": collection_chunked_dir
             }
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create collection '{sanitized_name}': {str(e)}")
 
+
+
 @app.post("/upload-pdf")
 async def upload_pdf(
-    collection_name: str,
+    collection_name: str = Form(...),
     files: List[UploadFile] = File(...)
 ):
     """
@@ -1003,7 +980,9 @@ async def upload_pdf(
             # Clean up the uploaded PDF if upload fails
             if os.path.exists(file_location):
                 os.remove(file_location)
-            raise HTTPException(status_code=500, detail=f"Could not upload file {file.filename}: {e}")
+            # Convert exception to string representation to avoid binary encoding issues
+            error_msg = str(e)
+            raise HTTPException(status_code=500, detail=f"Could not upload file {file.filename}: {error_msg}")
     
     return {
         "message": f"Successfully uploaded {len(uploaded_files)} PDF file(s) to collection '{collection_name}'",

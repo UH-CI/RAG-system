@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, FileText, AlertCircle, RefreshCw, Plus, ChevronDown, ChevronRight, X, CheckCircle, Clock, AlertTriangle, File, FileSearch, Layers, Zap } from 'lucide-react';
 import type { Collection } from '../types';
+import { getCollections } from '../services/api';
 
 interface CollectionsSidebarProps {
   collections: Collection[];
@@ -26,13 +27,6 @@ interface Document {
   steps: DocumentStep[];
 }
 
-interface CollectionData {
-  id: string;
-  name: string;
-  documents: Document[];
-  isExpanded: boolean;
-}
-
 const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
   collections,
   loading,
@@ -44,179 +38,23 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Dummy collection data
-  const [collectionsData, setCollectionsData] = useState<CollectionData[]>([
-    {
-      id: 'collection-1',
-      name: 'Research Papers',
-      isExpanded: true,
-      documents: [
-        {
-          id: 'doc-1',
-          filename: 'Improving CS Performance Spatial Skills.pdf',
-          uploadDate: '2025-01-19',
-          size: '2.4 MB',
-          steps: [
-            {
-              id: 'upload',
-              name: 'Document Upload',
-              status: 'completed',
-              icon: File,
-              metadata: {
-                'File Size': '2.4 MB',
-                'Upload Date': '2025-01-19 10:30:00',
-                'File Type': 'PDF',
-                'Pages': 12
-              }
-            },
-            {
-              id: 'extract',
-              name: 'Text Extraction',
-              status: 'completed',
-              icon: FileSearch,
-              metadata: {
-                'Extraction Method': 'PyMuPDF + PDFPlumber',
-                'Text Length': '15,234 characters',
-                'Tables Found': 3,
-                'Images Found': 5,
-                'Processing Time': '2.3 seconds'
-              }
-            },
-            {
-              id: 'chunk',
-              name: 'Text Chunking',
-              status: 'completed',
-              icon: Layers,
-              metadata: {
-                'Chunk Size': '1000 tokens',
-                'Overlap': '200 tokens',
-                'Total Chunks': 18,
-                'Chunking Strategy': 'Recursive Character Split'
-              }
-            },
-            {
-              id: 'embed',
-              name: 'Generate Embeddings',
-              status: 'processing',
-              icon: Zap,
-              metadata: {
-                'Model': 'text-embedding-3-small',
-                'Dimensions': 1536,
-                'Progress': '12/18 chunks',
-                'Estimated Time': '2 minutes remaining'
-              }
-            }
-          ]
-        },
-        {
-          id: 'doc-2',
-          filename: 'Machine Learning Fundamentals.pdf',
-          uploadDate: '2025-01-18',
-          size: '3.1 MB',
-          steps: [
-            {
-              id: 'upload',
-              name: 'Document Upload',
-              status: 'completed',
-              icon: File,
-              metadata: {
-                'File Size': '3.1 MB',
-                'Upload Date': '2025-01-18 14:22:00',
-                'File Type': 'PDF',
-                'Pages': 24
-              }
-            },
-            {
-              id: 'extract',
-              name: 'Text Extraction',
-              status: 'completed',
-              icon: FileSearch,
-              metadata: {
-                'Extraction Method': 'PyMuPDF + PDFPlumber',
-                'Text Length': '28,456 characters',
-                'Tables Found': 8,
-                'Images Found': 12
-              }
-            },
-            {
-              id: 'chunk',
-              name: 'Text Chunking',
-              status: 'completed',
-              icon: Layers,
-              metadata: {
-                'Total Chunks': 32,
-                'Chunk Size': '1000 tokens',
-                'Overlap': '200 tokens'
-              }
-            },
-            {
-              id: 'embed',
-              name: 'Generate Embeddings',
-              status: 'completed',
-              icon: Zap,
-              metadata: {
-                'Model': 'text-embedding-3-small',
-                'Dimensions': 1536,
-                'Total Vectors': 32
-              }
-            }
-          ]
-        },
-        {
-          id: 'doc-3',
-          filename: 'Data Structures and Algorithms.pdf',
-          uploadDate: '2025-01-17',
-          size: '4.2 MB',
-          steps: [
-            {
-              id: 'upload',
-              name: 'Document Upload',
-              status: 'completed',
-              icon: File,
-              metadata: {
-                'File Size': '4.2 MB',
-                'Upload Date': '2025-01-17 09:15:00',
-                'File Type': 'PDF',
-                'Pages': 35
-              }
-            },
-            {
-              id: 'extract',
-              name: 'Text Extraction',
-              status: 'error',
-              icon: FileSearch,
-              metadata: {
-                'Error': 'Corrupted PDF structure detected',
-                'Retry Count': 3,
-                'Last Attempt': '2025-01-17 09:18:00'
-              }
-            },
-            {
-              id: 'chunk',
-              name: 'Text Chunking',
-              status: 'pending',
-              icon: Layers
-            },
-            {
-              id: 'embed',
-              name: 'Generate Embeddings',
-              status: 'pending',
-              icon: Zap
-            }
-          ]
-        }
-      ]
-    }
-  ]);
+  const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
 
   const toggleCollection = (collectionId: string) => {
-    setCollectionsData(prev => 
-      prev.map(collection => 
-        collection.id === collectionId 
-          ? { ...collection, isExpanded: !collection.isExpanded }
-          : collection
-      )
-    );
+    // setCollectionsData(prev => 
+    //   prev.map(collection => 
+    //     collection.id === collectionId 
+    //       ? { ...collection, isExpanded: !collection.isExpanded }
+    //       : collection
+    //   )
+    // );
   };
+
+  useEffect(() => {
+    getCollections().then((data) => {
+      setCollectionsData(data.collections);
+    });
+  }, []);
 
   const openDocumentModal = (document: Document) => {
     setSelectedDocument(document);
@@ -312,28 +150,29 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
         {!loading && !error && (
           <div className="p-4">
             {collectionsData.map((collection) => (
-              <div key={collection.id} className="mb-4">
+              <div key={collection.name} className="mb-4">
                 {/* Collection Header */}
                 <button
-                  onClick={() => toggleCollection(collection.id)}
+                  onClick={() => toggleCollection(collection.name)}
                   className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <div className="flex items-center space-x-2">
-                    {collection.isExpanded ? (
+                  <div className="flex items-center space-x-2 w-48 overflow-hidden">
+                    {/* {collection.isExpanded ? (
                       <ChevronDown className="w-4 h-4 text-gray-500" />
                     ) : (
                       <ChevronRight className="w-4 h-4 text-gray-500" />
-                    )}
-                    <Database className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-gray-900">{collection.name}</span>
+                    )} */}
+                    <Database className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                    <span className="text-xs font-medium text-gray-900 truncate">{collection.name}</span>
                   </div>
+
                   <span className="text-sm text-gray-500">
-                    {collection.documents.length} docs
+                    {collection.num_documents} docs
                   </span>
                 </button>
 
                 {/* Documents List */}
-                {collection.isExpanded && (
+                {/* {collection.isExpanded && (
                   <div className="mt-2 ml-4 space-y-1">
                     {collection.documents.map((document) => (
                       <button
@@ -358,7 +197,7 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
                       </button>
                     ))}
                   </div>
-                )}
+                )} */}
               </div>
             ))}
           </div>

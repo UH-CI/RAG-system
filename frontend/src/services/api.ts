@@ -162,14 +162,11 @@ export const uploadDocuments = async (
  * Create a new collection
  */
 export const createCollection = async (
-  collectionName: string
-): Promise<{ message: string; collection_name: string; directories_created: any }> => {
-  const response = await api.post('/create-collection', null, {
-    params: {
-      collection_name: collectionName,
-    },
+  collection_name: string,
+): Promise<{ message: string; collection_name: string; collection_path: string; directories_created: any }> => {
+  const response = await api.post('/create-collection', {
+    collection_name: collection_name,
   });
-
   return response.data;
 };
 
@@ -182,17 +179,15 @@ export const uploadPDFFiles = async (
   onProgress?: (fileName: string, progress: number) => void
 ): Promise<{ message: string; collection_name: string; uploaded_files: any[]; total_files: number }> => {
   const formData = new FormData();
-  
+  formData.append('collection_name', collectionName);
+
   files.forEach((file) => {
     formData.append('files', file);
   });
 
   const response = await api.post('/upload-pdf', formData, {
-    params: {
-      collection_name: collectionName,
-    },
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': undefined, // Let browser set multipart/form-data with boundary
     },
     onUploadProgress: (progressEvent) => {
       if (progressEvent.total && onProgress) {
@@ -203,6 +198,99 @@ export const uploadPDFFiles = async (
     },
   });
 
+  return response.data;
+};
+
+/**
+ * Upload PDF files to a collection path
+ */
+export const uploadPDFToCollection = async (
+  files: File[],
+  collection_path: string
+): Promise<any> => {
+  const formData = new FormData();
+  files.forEach(file => formData.append('files', file));
+  formData.append('collection_path', collection_path);
+  
+  const response = await api.post('/upload-pdf', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
+/**
+ * Upload documents from Google Drive
+ */
+export const uploadFromGoogleDrive = async (
+  folder_link: string,
+  collection_path: string,
+  recursive: boolean
+): Promise<any> => {
+  const response = await api.post('/upload-through-google-drive', {
+    folder_link,
+    collection_path,
+    recursive
+  });
+  return response.data;
+};
+
+/**
+ * Upload documents via web crawler
+ */
+export const uploadFromWebUrl = async (
+  url: string,
+  collection_path: string
+): Promise<any> => {
+  const response = await api.post('/web-crawler', {
+    url,
+    collection_path
+  });
+  return response.data;
+};
+
+/**
+ * Extract text from documents
+ */
+export const extractText = async (
+  collection_path: string,
+  extract_tables: boolean,
+  extract_images_with_text: boolean,
+  extract_images_without_text: boolean
+): Promise<any> => {
+  const response = await api.post('/step1-text-extraction', {
+    collection_path,
+    extract_tables,
+    extract_images_with_text,
+    extract_images_without_text
+  });
+  return response.data;
+};
+
+/**
+ * Chunk extracted text
+ */
+export const chunkText = async (
+  collection_path: string,
+  chunking_method: string,
+  chunk_size: number,
+  chunk_overlap: number,
+  use_ai: boolean,
+  context_prompt: string
+): Promise<any> => {
+  const response = await api.post('/step2-chunking', {
+    collection_name: collection_path, // Backend expects collection_name
+    chosen_methods: [chunking_method], // Backend expects chosen_methods array
+    chunk_size,
+    chunk_overlap,
+    use_ai,
+    prompt_description: context_prompt, // Backend expects prompt_description
+    identifier: 'fiscal_note', // Add required field
+    previous_pages_to_include: 1, // Add default
+    context_items_to_show: 2, // Add default
+    rewrite_query: false // Add default
+  });
   return response.data;
 };
 
@@ -247,19 +335,16 @@ export const chunkExtractedText = async (
   } = {}
 ): Promise<{ message: string; collection_name: string; processed_files: any[]; total_processed: number; errors: string[] }> => {
   const response = await api.post('/step2-chunking', {
+    collection_name: collectionName,
     chosen_methods: options.chosen_methods || ['pymupdf_extraction_text'],
-  }, {
-    params: {
-      collection_name: collectionName,
-      identifier: options.identifier || 'fiscal_note',
-      chunk_size: options.chunk_size || 1000,
-      chunk_overlap: options.chunk_overlap || 200,
-      use_ai: options.use_ai || false,
-      prompt_description: options.prompt_description,
-      previous_pages_to_include: options.previous_pages_to_include || 1,
-      context_items_to_show: options.context_items_to_show || 2,
-      rewrite_query: options.rewrite_query || false,
-    },
+    identifier: options.identifier || 'fiscal_note',
+    chunk_size: options.chunk_size || 1000,
+    chunk_overlap: options.chunk_overlap || 200,
+    use_ai: options.use_ai || false,
+    prompt_description: options.prompt_description,
+    previous_pages_to_include: options.previous_pages_to_include || 1,
+    context_items_to_show: options.context_items_to_show || 2,
+    rewrite_query: options.rewrite_query || false,
   });
 
   return response.data;

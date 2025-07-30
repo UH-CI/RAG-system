@@ -18,7 +18,7 @@ export interface CollectionsResponse {
 
 export interface Collection {
   name: string;
-  document_count?: number;
+  num_documents: number;
   last_updated?: string;
   total_size?: number;
   path?: string;

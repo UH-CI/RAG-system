@@ -873,8 +873,16 @@ Make the hypothetical answer a single sentence."""
             search_results = []
             
             try:
-                # Get available collections from self.collection_names
-                available_collections = getattr(self, 'collection_names', ['budget', 'text', 'fiscal'])
+                # Use only the collections specified by the user
+                primary_collection = state.get("primary_collection")
+                context_collections = state.get("context_collections", [])
+                # Combine primary and context collections, ensuring no duplicates
+                available_collections = [primary_collection] if primary_collection else []
+                if context_collections:
+                    # Only add context collections that aren't already in the list
+                    available_collections.extend([c for c in context_collections if c not in available_collections])
+                
+                print(f"      🔍 Searching only in specified collections: {available_collections}")
                 
                 # 1. Vector search using hypothetical answer across collections
                 vector_query = f"{question} {hypothesis}"
@@ -906,13 +914,20 @@ Make the hypothetical answer a single sentence."""
                         except Exception as e:
                             print(f"      ⚠️ Keyword search failed for '{keyword}' in {collection}: {e}")
                 
-                # 3. Cross-collection search for comprehensive coverage
+                # 3. Cross-collection search only across specified collections
                 try:
-                    cross_results = tools[2].invoke({
-                        "query": question,
-                        "collections": available_collections,
-                        "num_results": 0
-                    })
+                    # Only do cross-collection search if we have more than one collection
+                    if len(available_collections) > 1:
+                        cross_results = tools[2].invoke({
+                            "query": question,
+                            "collections": available_collections,
+                            "num_results": 0
+                        })
+                    else:
+                        # Skip cross-collection search with only one collection
+                        cross_results = "{\"results\": []}"
+                        print(f"      ℹ️ Skipping cross-collection search (only one collection specified)")
+                    
                     if isinstance(cross_results, str):
                         cross_data = json.loads(cross_results)
                         if "results" in cross_data and cross_data["results"]:
@@ -2162,9 +2177,17 @@ Focus specifically on this subquestion and provide actionable insights that will
         
         final_search_results = []
         try:
-            # Perform final vector search across available collections
+            # Perform final vector search across only specified collections
             tools = self.tools
-            available_collections = getattr(self, 'collection_names', ['budget', 'text', 'fiscal'])
+            primary_collection = state.get("primary_collection")
+            context_collections = state.get("context_collections", [])
+            # Combine primary and context collections, ensuring no duplicates
+            available_collections = [primary_collection] if primary_collection else []
+            if context_collections:
+                # Only add context collections that aren't already in the list
+                available_collections.extend([c for c in context_collections if c not in available_collections])
+            
+            print(f"      🔍 Final synthesis searching only in specified collections: {available_collections}")
             
             # Try searching across collections for final synthesis
             for collection in available_collections:  # Search top 2 collections

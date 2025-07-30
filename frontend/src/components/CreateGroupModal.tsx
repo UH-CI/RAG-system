@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Upload, FileText, ChevronDown, ChevronUp, HelpCircle, Link, Trash2 } from "lucide-react";
+import { createCollection, uploadPDFToCollection, uploadFromGoogleDrive, uploadFromWebUrl, extractText, chunkText } from "../services/api";
 
 // Modal component props interface
 
@@ -20,7 +21,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
   // Form state
   const [collectionName, setCollectionName] = useState<string>("");
   const [collectionDescription, setCollectionDescription] = useState<string>("");
-  const [uploadMethod, setUploadMethod] = useState<'file' | 'drive' | 'web'>('file');
+  const [uploadMethod, setUploadMethod] = useState<'file' | 'drive' | 'web'>('drive');
   
   // File upload state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -29,15 +30,15 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
   const [webUrl, setWebUrl] = useState<string>("");
   
   // Text extraction settings
-  const [extractTables, setExtractTables] = useState<boolean>(true);
-  const [extractImagesWithText, setExtractImagesWithText] = useState<boolean>(true);
+  const [extractTables, setExtractTables] = useState<boolean>(false);
+  const [extractImagesWithText, setExtractImagesWithText] = useState<boolean>(false);
   const [extractImagesWithoutText, setExtractImagesWithoutText] = useState<boolean>(false);
   
   // Chunking settings
   const [chunkingMethod, setChunkingMethod] = useState<'paragraph' | 'fixed' | 'semantic'>('paragraph');
   const [chunkSize, setChunkSize] = useState<number>(1000);
   const [chunkOverlap, setChunkOverlap] = useState<number>(100);
-  const [useAI, setUseAI] = useState<boolean>(true);
+  const [useAI, setUseAI] = useState<boolean>(false);
   const [contextPrompt, setContextPrompt] = useState<string>("");
 
   // Sections collapsed state
@@ -101,83 +102,46 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
   };
 
   // Form submission handler
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     try {
       // First step: Create collection
-      const createCollectionResponse = await fetch('/api/create-collection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: collectionName,
-          description: collectionDescription
-        })
-      });
-      
-      const { collection_path } = await createCollectionResponse.json();
+      const { collection_path } = await createCollection(collectionName);
       
       // Second step: Upload documents based on selected method
       if (uploadMethod === 'file' && selectedFiles.length > 0) {
-        const formData = new FormData();
-        selectedFiles.forEach(file => formData.append('files', file));
-        formData.append('collection_path', collection_path);
-        
-        await fetch('/api/upload-pdf', {
-          method: 'POST',
-          body: formData
-        });
+        await uploadPDFToCollection(selectedFiles, collection_path);
       } else if (uploadMethod === 'drive' && driveLink) {
-        await fetch('/api/upload-through-google-drive', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            folder_link: driveLink,
-            collection_path: collection_path,
-            recursive: recursive
-          })
-        });
+        await uploadFromGoogleDrive(driveLink, collection_path, recursive);
       } else if (uploadMethod === 'web' && webUrl) {
-        await fetch('/api/web-crawler', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: webUrl,
-            collection_path: collection_path
-          })
-        });
+        await uploadFromWebUrl(webUrl, collection_path);
       }
       
       // Third step: Text extraction
-      await fetch('/api/step1-text-extraction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          collection_path: collection_path,
-          extract_tables: extractTables,
-          extract_images_with_text: extractImagesWithText,
-          extract_images_without_text: extractImagesWithoutText
-        })
-      });
+      await extractText(
+        collection_path,
+        extractTables,
+        extractImagesWithText,
+        extractImagesWithoutText
+      );
       
       // Fourth step: Chunking
-      await fetch('/api/step2-chunking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          collection_path: collection_path,
-          chunking_method: chunkingMethod,
-          chunk_size: chunkSize,
-          chunk_overlap: chunkOverlap,
-          use_ai: useAI,
-          context_prompt: contextPrompt
-        })
-      });
+      await chunkText(
+        collection_path,
+        chunkingMethod,
+        chunkSize,
+        chunkOverlap,
+        useAI,
+        contextPrompt
+      );
       
       onSuccess();
     } catch (error) {
-      console.error("Error creating collection:", error);
+      console.error("Error creating collection or uploading documents:", error);
     } finally {
       setLoading(false);
+      onClose();
     }
   };
 
@@ -231,7 +195,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
                   />
                 </div>
                 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label htmlFor="collection-desc" className="block text-sm font-medium text-gray-700">
                     Description
                   </label>
@@ -243,7 +207,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
-                </div>
+                </div> */}
               </div>
             )}
           </div>
