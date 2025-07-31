@@ -128,13 +128,13 @@ function App() {
   return (
     <div className="h-screen bg-gray-100 flex overflow-hidden">
       {/* Sidebar */}
-      <CollectionsSidebar
+      {/* <CollectionsSidebar
         collections={collections}
         loading={collectionsLoading}
         error={collectionsError}
         onRefresh={loadCollections}
         onCreateGroup={handleCreateGroup}
-      />
+      /> */}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -186,7 +186,7 @@ function App() {
                   <MessageSquare className="w-4 h-4 inline mr-2" />
                   Chat
                 </button>
-                <button
+                {/* <button
                   onClick={() => setCurrentView('fiscal-note')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     currentView === 'fiscal-note'
@@ -196,7 +196,7 @@ function App() {
                 >
                   <FileText className="w-4 h-4 inline mr-2" />
                   Fiscal Note
-                </button>
+                </button> */}
               </nav>
               
               {/* Status Indicator */}

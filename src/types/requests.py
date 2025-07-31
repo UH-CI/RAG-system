@@ -56,3 +56,16 @@ class CrawlRequest(BaseModel):
 class UploadPDFRequest(BaseModel):
     collection_name: str
     files: List[UploadFile]
+
+
+class CollectionStatistics(BaseModel):
+    collection_name: str
+    document_count: int
+    embedding_model: Optional[str] = None
+    error: Optional[str] = None
+
+
+class CollectionsStatsResponse(BaseModel):
+    collections: List[CollectionStatistics]
+    total_collections: int
+    total_documents: int

@@ -14,6 +14,8 @@ try:
 except ImportError:
     from settings import settings
 
+import time
+
 
 class QueryProcessor:
     """Advanced query processor with multi-step reasoning"""
@@ -24,7 +26,7 @@ class QueryProcessor:
         self.collection_names = config["collections"]
         
         # Initialize Gemini model
-        self.model = genai.GenerativeModel('gemini-2.5-pro')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def get_collection_sample(self, collection_name: str) -> Dict[str, Any]:
         """Get a sample document from a collection for context"""
@@ -154,13 +156,8 @@ Respond in JSON format:
                 
                 reasoning_result["target_collections"] = valid_collections
                 
-                print(f"🧠 Reasoning Step Results:")
-                print(f"   Intent: {reasoning_result.get('intent', 'Unknown')}")
-                print(f"   Query Type: {reasoning_result.get('query_type', 'Unknown')}")
-                print(f"   Collections: {valid_collections}")
-                print(f"   Search terms: {reasoning_result.get('search_terms', [])}")
-                print(f"   Output format: {reasoning_result.get('output_format', 'Unknown')}")
-                print(f"   Confidence: {reasoning_result.get('confidence', 'unknown')}")
+                print(f"🧠 Reasoning Step")
+
                 
                 return reasoning_result
                 
@@ -305,7 +302,6 @@ Respond in JSON format:
             })
         
         context = "\n".join(context_parts)
-        
         # Choose appropriate prompt based on query type and output format
         if query_type == "fiscal_analysis" and output_format == "template" and budget_items:
             answer_prompt = f"""You are a fiscal analyst creating actual fiscal notes from budget data. Based on the retrieved documents, create a specific fiscal note using the available budget items.
@@ -422,7 +418,8 @@ INSTRUCTIONS:
 Answer:"""
         
         try:
-            response = self.model.generate_content(answer_prompt)
+            startTime = time.time()
+            response = self.model.generate_content("What can you tell me about educcation for the state of Hawaii")
             
             return {
                 "response": response.text,
@@ -457,14 +454,29 @@ Answer:"""
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
         
         try:
+
+            start_time = time.time()
+            print(f"🚀 Starting query processing at {start_time}")
             # Step 1: Reasoning
             reasoning_result = self.reasoning_step(user_query)
+            reasoning_time = time.time() - start_time
+            print(f"Reasoning time: {reasoning_time:.2f} seconds")
+            
+            start_time = time.time()
+            print(f"🚀 Starting search at {start_time}")
             
             # Step 2: Searching with threshold
             search_results = self.searching_step(reasoning_result, threshold)
+            search_time = time.time() - start_time
+            print(f"Search time: {search_time:.2f} seconds")
+            
+            start_time = time.time()
+            print(f"🚀 Starting answering at {start_time}")
             
             # Step 3: Answering
             final_result = self.answering_step(user_query, reasoning_result, search_results)
+            answering_time = time.time() - start_time
+            print(f"Answering time: {answering_time:.2f} seconds")
             
             print(f"✅ Query processing complete - {len(search_results)} documents above threshold")
             

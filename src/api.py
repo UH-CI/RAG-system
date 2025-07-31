@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from typing import List, Optional, Dict, Any
+from fastapi.responses import JSONResponse, StreamingResponse
+from typing import List, Dict, Any, Optional, Union
 import os
 from pathlib import Path
 import json
@@ -12,7 +12,12 @@ from datetime import datetime
 from documents.step0_document_upload.web_scraper import ai_crawler
 from typing import Generator
 
-from src.types.requests import *
+from src.types.requests import (
+    CollectionRequest, SearchRequest, QueryRequest,
+    ChunkingRequest, DocumentResponse, CrawlRequest,
+    UploadPDFRequest, ChatWithPDFRequest, DriveUploadRequest,
+    CollectionStatistics, CollectionsStatsResponse
+)
 
 from documents.step0_document_upload.google_upload import download_pdfs_from_drive
 from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
@@ -235,6 +240,24 @@ def get_collection_manager(collection_name: str) -> DynamicChromeManager:
         raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found")
     
     return collection_managers[collection_name]
+
+
+def get_collection_stats(collection_manager: DynamicChromeManager) -> Dict[str, Any]:
+    """Get statistics for a collection"""
+    try:
+        count = collection_manager.collection.count()
+        return {
+            "collection_name": collection_manager.collection_name,
+            "document_count": count,
+            "embedding_model": settings.embedding_model
+        }
+    except Exception as e:
+        print(f"Error getting stats for collection {collection_manager.collection_name}: {str(e)}")
+        return {
+            "collection_name": collection_manager.collection_name,
+            "document_count": 0,
+            "error": str(e)
+        }
 
 def get_ingestion_config(collection_name: str) -> dict:
     """Get ingestion configuration for a specific collection"""
@@ -492,6 +515,31 @@ async def get_collections():
         "collections": collections,
         "total_collections": len(collections)
     }
+
+
+@app.get("/collections/stats", response_model=CollectionsStatsResponse)
+async def get_collections_statistics():
+    """Get statistics about all collections in ChromaDB
+    
+    Returns:
+        CollectionsStatsResponse: Statistics for all collections including document counts
+    """
+    # Gather stats for all collections
+    collections_stats = []
+    total_documents = 0
+    
+    for collection_name, manager in collection_managers.items():
+        stats = get_collection_stats(manager)
+        collections_stats.append(CollectionStatistics(**stats))
+        
+        # Update total document count
+        total_documents += stats.get("document_count", 0)
+    
+    return CollectionsStatsResponse(
+        collections=collections_stats,
+        total_collections=len(collections_stats),
+        total_documents=total_documents
+    )
 
 @app.post("/search", response_model=List[DocumentResponse])
 async def search_documents(request: SearchRequest):
