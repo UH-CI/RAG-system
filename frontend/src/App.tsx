@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, AlertCircle, Loader2, FileText } from 'lucide-react';
-import CollectionsSidebar from './components/CollectionsSidebar';
+// import CollectionsSidebar from './components/CollectionsSidebar';
 import ChatInterface from './components/ChatInterface';
 import CreateGroupModal from './components/CreateGroupModal';
 import FiscalNoteGeneration from './components/FiscalNoteGeneration';
@@ -32,6 +32,7 @@ function App() {
           name: collectionName,
           total_collections: totalCollections,
           status: "active",
+          num_documents: 0,
         })
       );
       
@@ -112,9 +113,9 @@ function App() {
   // }, []); // This function is no longer needed
 
   // Handle create group modal
-  const handleCreateGroup = useCallback(() => {
-    setIsCreateModalOpen(true);
-  }, []);
+  // const handleCreateGroup = useCallback(() => {
+  //   setIsCreateModalOpen(true);
+  // }, []);
 
   const handleCreateModalClose = useCallback(() => {
     setIsCreateModalOpen(false);

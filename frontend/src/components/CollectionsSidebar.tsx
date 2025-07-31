@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, FileText, AlertCircle, RefreshCw, Plus, ChevronDown, ChevronRight, X, CheckCircle, Clock, AlertTriangle, File, FileSearch, Layers, Zap } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, X, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import type { Collection } from '../types';
 import { getCollections } from '../services/api';
 
@@ -28,7 +28,6 @@ interface Document {
 }
 
 const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
-  collections,
   loading,
   error,
   onRefresh,
@@ -40,15 +39,15 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
   // Dummy collection data
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
 
-  const toggleCollection = (collectionId: string) => {
-    // setCollectionsData(prev => 
-    //   prev.map(collection => 
-    //     collection.id === collectionId 
-    //       ? { ...collection, isExpanded: !collection.isExpanded }
-    //       : collection
-    //   )
-    // );
-  };
+  // const toggleCollection = (collectionId: string) => {
+  //   // setCollectionsData(prev => 
+  //   //   prev.map(collection => 
+  //   //     collection.id === collectionId 
+  //   //       ? { ...collection, isExpanded: !collection.isExpanded }
+  //   //       : collection
+  //   //   )
+  //   // );
+  // };
 
   useEffect(() => {
     getCollections().then((data) => {
@@ -56,10 +55,10 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
     });
   }, []);
 
-  const openDocumentModal = (document: Document) => {
-    setSelectedDocument(document);
-    setIsModalOpen(true);
-  };
+  // const openDocumentModal = (document: Document) => {
+  //   setSelectedDocument(document);
+  //   setIsModalOpen(true);
+  // };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -152,16 +151,16 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
             {collectionsData.map((collection) => (
               <div key={collection.name} className="mb-4">
                 {/* Collection Header */}
-                <button
+                {/* <button
                   onClick={() => toggleCollection(collection.name)}
                   className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <div className="flex items-center space-x-2 w-48 overflow-hidden">
-                    {/* {collection.isExpanded ? (
+                    {collection.isExpanded ? (
                       <ChevronDown className="w-4 h-4 text-gray-500" />
                     ) : (
                       <ChevronRight className="w-4 h-4 text-gray-500" />
-                    )} */}
+                    )}
                     <Database className="w-3 h-3 text-gray-600 flex-shrink-0" />
                     <span className="text-xs font-medium text-gray-900 truncate">{collection.name}</span>
                   </div>
@@ -169,7 +168,7 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
                   <span className="text-sm text-gray-500">
                     {collection.num_documents} docs
                   </span>
-                </button>
+                </button> */}
 
                 {/* Documents List */}
                 {/* {collection.isExpanded && (
@@ -236,7 +235,7 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               <div className="space-y-4">
-                {selectedDocument.steps.map((step, index) => {
+                {selectedDocument.steps.map((step) => {
                   const Icon = step.icon;
                   return (
                     <div key={step.id} className="border border-gray-200 rounded-lg p-4">

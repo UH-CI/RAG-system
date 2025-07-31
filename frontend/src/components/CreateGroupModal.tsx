@@ -20,7 +20,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
   
   // Form state
   const [collectionName, setCollectionName] = useState<string>("");
-  const [collectionDescription, setCollectionDescription] = useState<string>("");
+  const [, setCollectionDescription] = useState<string>("");
   const [uploadMethod, setUploadMethod] = useState<'file' | 'drive' | 'web'>('drive');
   
   // File upload state

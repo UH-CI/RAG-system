@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Upload, FileText, MessageSquare, Send, Loader2, CheckCircle, X, ChevronDown, ChevronRight, Clock, Search, Brain, FileCheck } from 'lucide-react';
 import type { Collection, ChatMessage } from '../types';
-import { getCollections, uploadPDFFiles, extractTextFromPDFs, chunkExtractedText, chatWithPDF, streamChatWithPDF } from '../services/api';
-
-interface FiscalNoteGenerationProps {
-  onBack: () => void;
-}
+import { getCollections, uploadPDFFiles, extractTextFromPDFs, chunkExtractedText, streamChatWithPDF } from '../services/api';
 
 
 
@@ -42,8 +38,8 @@ interface SubquestionProgress {
   timestamp?: string;
   expanded: boolean;
 }
-
-export default function FiscalNoteGeneration({ onBack }: FiscalNoteGenerationProps) {
+// @ts-ignore
+export default function FiscalNoteGeneration({ onBack }: { onBack: () => void }) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
@@ -74,6 +70,7 @@ export default function FiscalNoteGeneration({ onBack }: FiscalNoteGenerationPro
       const collectionsArray: Collection[] = response.collections.map(
         (collection) => ({
           name: collection.name,
+          num_documents: collection.num_documents,
         })
       );
       setCollections(collectionsArray);
@@ -343,66 +340,66 @@ export default function FiscalNoteGeneration({ onBack }: FiscalNoteGenerationPro
   }, [currentMessage, sessionCollectionName, selectedCollections, handleStreamingUpdate, handleStreamingError, handleStreamingComplete]);
 
   // Fallback to non-streaming if needed
-  const handleSendMessageFallback = useCallback(async () => {
-    if (!currentMessage.trim()) return;
+  // const handleSendMessageFallback = useCallback(async () => {
+  //   if (!currentMessage.trim()) return;
     
-    const userMessage: ChatMessage = {
-      id: `user_${Date.now()}`,
-      type: 'user',
-      content: currentMessage,
-      timestamp: new Date(),
-    };
+  //   const userMessage: ChatMessage = {
+  //     id: `user_${Date.now()}`,
+  //     type: 'user',
+  //     content: currentMessage,
+  //     timestamp: new Date(),
+  //   };
 
-    setMessages(prev => [...prev, userMessage]);
-    setCurrentMessage('');
-    setLoading(true);
+  //   setMessages(prev => [...prev, userMessage]);
+  //   setCurrentMessage('');
+  //   setLoading(true);
 
-    // Add loading message
-    const loadingMessage: ChatMessage = {
-      id: `loading_${Date.now()}`,
-      type: 'assistant',
-      content: '',
-      timestamp: new Date(),
-      isLoading: true,
-    };
+  //   // Add loading message
+  //   const loadingMessage: ChatMessage = {
+  //     id: `loading_${Date.now()}`,
+  //     type: 'assistant',
+  //     content: '',
+  //     timestamp: new Date(),
+  //     isLoading: true,
+  //   };
 
-    setMessages(prev => [...prev, loadingMessage]);
+  //   setMessages(prev => [...prev, loadingMessage]);
 
-    try {
-      const response = await chatWithPDF(
-        currentMessage,
-        sessionCollectionName,
-        selectedCollections,
-        0
-      );
+  //   try {
+  //     const response = await chatWithPDF(
+  //       currentMessage,
+  //       sessionCollectionName,
+  //       selectedCollections,
+  //       0
+  //     );
       
-      // Remove loading message and add real response
-      setMessages(prev => {
-        const withoutLoading = prev.filter(msg => msg.id !== loadingMessage.id);
-        const assistantMessage: ChatMessage = {
-          id: `assistant_${Date.now()}`,
-          type: 'assistant',
-          content: response.response,
-          sources: response.sources,
-          timestamp: new Date(),
-        };
-        return [...withoutLoading, assistantMessage];
-      });
-    } catch (err) {
-      // Remove loading message and show error
-      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+  //     // Remove loading message and add real response
+  //     setMessages(prev => {
+  //       const withoutLoading = prev.filter(msg => msg.id !== loadingMessage.id);
+  //       const assistantMessage: ChatMessage = {
+  //         id: `assistant_${Date.now()}`,
+  //         type: 'assistant',
+  //         content: response.response,
+  //         sources: response.sources,
+  //         timestamp: new Date(),
+  //       };
+  //       return [...withoutLoading, assistantMessage];
+  //     });
+  //   } catch (err) {
+  //     // Remove loading message and show error
+  //     setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
       
-      const errorMessage: ChatMessage = {
-        id: `error_${Date.now()}`,
-        type: 'assistant',
-        content: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentMessage, selectedCollections, uploadedDocuments]);
+  //     const errorMessage: ChatMessage = {
+  //       id: `error_${Date.now()}`,
+  //       type: 'assistant',
+  //       content: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+  //       timestamp: new Date(),
+  //     };
+  //     setMessages(prev => [...prev, errorMessage]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [currentMessage, selectedCollections, uploadedDocuments]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -785,7 +782,7 @@ export default function FiscalNoteGeneration({ onBack }: FiscalNoteGenerationPro
                     </div>
                     
                     <div className="space-y-2">
-                      {subquestions.map((subquestion, index) => (
+                      {subquestions.map((subquestion, _) => (
                         <div key={subquestion.id} className="bg-white rounded-md border border-gray-200">
                           <button
                             onClick={() => toggleSubquestionExpansion(subquestion.id)}

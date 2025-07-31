@@ -63,10 +63,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="space-y-2">
           {sources.slice(0, 3).map((source, index) => {
             // Handle different source structures from multi-step reasoning
-            const content = source.content || source.document || source.text || 'No content available';
-            const collection = source.metadata?.collection || source.collection || source.collection_searched || 'Unknown';
+            const content = source.content || 'No content available';
+            const collection = source.metadata?.collection || 'Unknown';
             const score = source.score || 0;
-            const sourceKey = source.id || source.document || `source-${index}`;
+            const sourceKey = source.id || `source-${index}`;
             
             return (
               <div key={sourceKey} className="bg-gray-50 rounded p-2 text-xs">
@@ -82,11 +82,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {collection && (
                   <span className="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                     {collection}
-                  </span>
-                )}
-                {source.search_type && (
-                  <span className="inline-block mt-1 ml-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                    {source.search_type}
                   </span>
                 )}
               </div>
