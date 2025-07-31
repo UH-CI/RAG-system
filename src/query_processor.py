@@ -419,7 +419,7 @@ Answer:"""
         
         try:
             startTime = time.time()
-            response = self.model.generate_content("What can you tell me about educcation for the state of Hawaii")
+            response = self.model.generate_content(user_query)
             
             return {
                 "response": response.text,
