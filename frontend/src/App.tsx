@@ -10,7 +10,7 @@ import { getCollections, askQuestion } from './services/api';
 type AppView = 'chat' | 'fiscal-note';
 
 function App() {
-  const [currentView, setCurrentView] = useState<AppView>('fiscal-note');
+  const [currentView, setCurrentView] = useState<AppView>('chat');
   const [collections, setCollections] = useState<Collection[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -166,7 +166,7 @@ function App() {
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? 'Ask questions about the state budget and the state of Hawaii. This interface has access to the appropriation bill 300, statutes, budget worksheets, and bills.'
+                    ? `Ask questions about the state budget and the state of Hawaii. This interface has access to the <sappropriation bill 300, statutes, budget worksheets, and bills.`
                     : 'Upload documents and analyze using selected collections'
                   }
                 </p>
