@@ -10,7 +10,7 @@ import { getCollections, askQuestion } from './services/api';
 type AppView = 'chat' | 'fiscal-note';
 
 function App() {
-  const [currentView, setCurrentView] = useState<AppView>('chat');
+  const [currentView, setCurrentView] = useState<AppView>('fiscal-note');
   const [collections, setCollections] = useState<Collection[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -143,14 +143,14 @@ function App() {
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              {currentView === 'fiscal-note' && (
+              {/* {currentView === 'fiscal-note' && (
             <button
               onClick={() => setCurrentView('chat')}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               ← Back
             </button>
-              )}
+              )} */}
               <div className={`rounded-lg p-2 ${
                 currentView === 'chat' ? 'bg-blue-600' : 'bg-green-600'
               }`}>
@@ -162,11 +162,11 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {currentView === 'chat' ? 'Document Chat' : 'Fiscal Note Generation'}
+                  {currentView === 'chat' ? 'FinBot' : 'Fiscal Note Generation'}
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? 'Ask questions across all your document collections'
+                    ? 'Ask questions about the state budget and the state of Hawaii. This interface has access to the appropriation bill 300, statutes, budget worksheets, and bills.'
                     : 'Upload documents and analyze using selected collections'
                   }
                 </p>

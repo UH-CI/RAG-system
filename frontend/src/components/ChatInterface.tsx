@@ -102,18 +102,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center py-12">
             <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to RAG Chat</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Fin Chatbot</h3>
             <p className="text-gray-600 mb-4">
-              Ask questions about your documents across all collections
+              Ask questions about the state budget and the state of Hawaii.
             </p>
             <div className="max-w-md mx-auto">
               <p className="text-sm text-gray-500 mb-3">Try asking:</p>
               <div className="space-y-2 text-sm">
                 <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
-                  <p className="text-blue-700">"What information is available in my documents?"</p>
+                  <p className="text-blue-700">"What is the budget for [UH Manoa, education, etc..] and how will that impact the future state of Hawaii??"</p>
                 </div>
                 <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
-                  <p className="text-green-700">"Can you search for documents about [topic]?"</p>
+                  <p className="text-green-700">"Can you tell me about the appropriation bill for [highway, construction, etc..] and how much will it cost?"</p>
                 </div>
               </div>
             </div>
