@@ -1,0 +1,456 @@
+filename,field,gemini_score,gemini_explanation
+fiscal_note_20250801_090745_n30_rerank_k20.json,overview,5.0,"The candidate text correctly identifies that the First Circuit program is being made permanent and that a Kona program is being established with appropriated funds and a sunset date. However, it contains a significant factual error, stating the Kona pilot program is for three years when it is for two. It also completely omits a key requirement from the gold standard: the reports to the legislature on the need for similar courts in other circuits."
+fiscal_note_20250801_090745_n30_rerank_k20.json,appropriations,1.0,"
+The candidate text is completely incorrect and does not contain any of the specific information found in the gold standard. It fails to mention the correct appropriation amounts of $514,900 and $557,000, the specific fiscal years, the ""Women's Court Pilot Program,"" or its location. Instead, the candidate text discusses entirely different bills and appropriations, making it irrelevant to the reference text."
+fiscal_note_20250801_090745_n30_rerank_k20.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to be describing a different fiscal measure or pulling from a different source entirely.
+
+- **Contradictory Methodology:** The gold standard states the costs are based on the ""First Circuit Court pilot program,"" while the candidate states they are from the ""Department of Health's proposed budget.""
+- **Contradictory Cost Details:** The candidate text provides very specific, but completely different, cost breakdowns (e.g., Clinical Psychologist salary, specific training costs, total appropriations). The gold text mentions supplies, workstations, and contractor costs, none of which are in the candidate text.
+- **Missing Critical Information:** The candidate text fails to mention that the cost approximations are being applied to the ""Kona Division,"" a key detail from the gold standard.
+- **Incorrect Reference:** The gold standard refers to ""Table 1"" for the cost breakdown, whereas the candidate cites multiple ""Documents.""
+
+The only similarity is the reference to a program in the First Circuit, but all other crucial details are wrong."
+fiscal_note_20250801_090745_n30_rerank_k20.json,agency_impact,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference. The gold standard clearly states that the Judiciary is the agency impacted, responsible for supervision, and the recipient of the appropriated funds. The candidate text incorrectly identifies the Department of Health (DOH) as the impacted agency and provides a detailed budget and staffing breakdown for the DOH, none of which is mentioned in the reference text."
+fiscal_note_20250801_090745_n30_rerank_k20.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be summarizing information from a different document or a different section of the same document. It shares no factual details with the gold standard text.
+
+- The candidate misses the central economic impact point: the cost of incarceration ($277,035) and the program's goal of reducing these costs.
+- The candidate introduces entirely new and unrelated information, such as a funding request of $801,802 and the Department of Health's involvement.
+- Critically, the candidate text directly contradicts the gold standard by stating that ""specific performance or participation statistics are not provided,"" when the gold standard is almost entirely composed of such statistics (referrals, participant numbers, graduates)."
+fiscal_note_20250801_090745_n30_rerank_k20.json,policy_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard reference.
+
+The primary policy impact described in the gold standard is that the measure makes the First Circuit Women's Court *permanent* and establishes a *new* pilot program in the Third Circuit. The candidate text directly contradicts this by stating ""The program is temporary, sunsetting on June 30, 2027."" It completely misses the core change from a pilot program to a permanent one.
+
+Furthermore, the candidate text fails to mention the new pilot program in the Third Circuit and includes fiscal details (appropriation amounts) that are not present in the gold standard for this field."
+fiscal_note_20250801_090745_n30_rerank_k20.json,revenue_sources,9.0,"The candidate text correctly identifies the revenue source as State General Funds (""general revenues of the State of Hawaii""). It receives a high score because this core fact is accurate. It is not a perfect 10 because it includes a significant amount of additional detail (specifics on appropriations, fiscal years, and the lack of other revenue streams) that is not present in the concise gold standard text. While this extra information may be correct and relevant to the source document, it goes beyond the scope of the provided gold standard."
+fiscal_note_20250801_090745_n30_rerank_k20.json,six_year_fiscal_implications,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. The gold standard provides a detailed six-year projection based on the assumption of a statewide rollout modeled after the First Circuit's program, including specific cost estimates for pilot and permanent programs ($695,236 and $705,416 respectively). In contrast, the candidate text states that there is insufficient information to create a six-year projection, cites completely different cost figures for a different program (Kona division), and claims information on long-term permanence and expansion is missing, when the gold standard explicitly makes assumptions about these very points to build its forecast."
+fiscal_note_20250801_090745_n30_rerank_k20.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090547_n25_rerank_k25.json,overview,1.0,"
+The candidate text is fundamentally flawed and misses the most important aspects of the gold standard.
+
+- **Critical Omission:** The candidate text completely omits the primary purpose of the measure, which is to **permanently establish the Women's Court Program in the First Circuit**.
+- **Factual Contradiction:** The candidate states the Kona pilot program is for three years, directly contradicting the gold standard's statement that it is a **two-year** pilot program.
+- **Inaccurate Details:** The purpose of the legislative reports is misrepresented. The gold standard requires reports on the need/cost for courts in Hilo, the Second, and Fifth Circuits, while the candidate describes reports on the Kona program's status and expansion."
+fiscal_note_20250801_090547_n25_rerank_k25.json,appropriations,2.0,"
+The candidate text is highly inaccurate and misleading. While it does contain the correct appropriation figures for the correct fiscal years, it buries this information within a confusing narrative. Critically, it begins by incorrectly stating the sums are ""unspecified"" and ends by incorrectly concluding that the ""exact total appropriations... are not explicitly stated."" These statements directly contradict the gold standard and the primary purpose of an appropriations summary. The inclusion of extraneous details about a different pilot project further confuses the reader."
+fiscal_note_20250801_090547_n25_rerank_k25.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to be describing a different fiscal analysis. It contradicts the gold standard by focusing on staffing costs (Psychologist, Social Worker) and citing numerous documents, whereas the gold standard's methodology is based on mirroring the ""Mohala Wahine"" program's costs for supplies, technology, and contractors, with a breakdown in ""Table 1"". The candidate text misses every key detail from the reference, including the program name (""Mohala Wahine""), the location (""Kona Division""), the specific cost categories, and the reference to Table 1."
+fiscal_note_20250801_090547_n25_rerank_k25.json,agency_impact,1.0,"
+The candidate text is completely incorrect and appears to describe the impact on a different agency (Department of Health) than the one specified in the gold standard (the Judiciary). It does not mention the Judiciary, the Big Island Drug Court, or any of the key details from the reference text. The two texts describe completely unrelated impacts."
+fiscal_note_20250801_090547_n25_rerank_k25.json,economic_impact,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference.
+
+The gold standard's primary economic impact argument is based on avoiding the specific $277,035 cost of incarceration for one individual. The candidate text completely omits this critical figure.
+
+Furthermore, the candidate text directly contradicts the gold standard by stating that ""quantifiable performance or participation statistics are currently unavailable."" The gold standard explicitly provides these statistics, including 83 referrals, 23 current participants, and 6 graduates. The candidate invents information about program budgets not present in the reference text."
+fiscal_note_20250801_090547_n25_rerank_k25.json,policy_impact,3.0,"
+The candidate text correctly identifies that a new pilot program is being established in Kona. However, it completely omits the other, more significant policy impact mentioned in the gold standard: making the existing First Circuit Women's Court permanent. This is a critical failure, as it misses half of the bill's purpose and the context for future expansion. The candidate text misrepresents the overall policy change by focusing only on the new pilot program."
+fiscal_note_20250801_090547_n25_rerank_k25.json,revenue_sources,5.0,"The candidate text correctly identifies the revenue source as State General Funds (""general revenues of the State of Hawaii""). However, it includes a large amount of extraneous information that does not belong in the ""revenue_sources"" field. Details about personnel costs, technology, training, and the nature of the budget request belong in the expenditures or purpose sections of a fiscal note. This mixing of information from different fields is a significant error."
+fiscal_note_20250801_090547_n25_rerank_k25.json,six_year_fiscal_implications,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard reference. The reference text creates a six-year forecast based on a clear set of assumptions: a phased statewide rollout modeled on the costs of the First Circuit's pilot and permanent programs ($695,236 and $705,416 respectively). In contrast, the candidate text claims a six-year forecast is impossible due to incomplete data. It cites entirely different and conflicting financial figures (e.g., $514,900, $801,802) and focuses on the program's temporary nature, completely missing the foundational assumptions and calculations that are the core of the gold standard's analysis."
+fiscal_note_20250801_090547_n25_rerank_k25.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090816_n30_rerank_k25.json,overview,4.0,"
+The candidate text contains a significant factual error, stating the Kona pilot program is for three years when the gold standard specifies it is a two-year program. Additionally, it completely omits a key component of the measure: the requirement to report on the need and costs for establishing a Women's Court in the Hilo, Second, and Fifth circuits. Instead, it vaguely and incorrectly states the reports are on the ""programs' status."" While it correctly identifies that the First Circuit program becomes permanent and that funds are appropriated with a sunset date, the factual error and the major omission of the reporting scope make it a low-quality summary."
+fiscal_note_20250801_090816_n30_rerank_k25.json,appropriations,1.0,"The candidate text is completely incorrect and appears to be summarizing information from a different bill or a collection of bills. It fails to mention the correct appropriation amounts of $514,900 for FY 2025-2026 and $557,000 for FY 2026-2027. Instead, it mentions a different figure ($801,802) and incorrectly states that another amount for the Judiciary is ""unspecified."" The candidate text is a summary of several unrelated bills and does not capture any of the specific, critical financial data from the gold standard."
+fiscal_note_20250801_090816_n30_rerank_k25.json,assumptions_and_methodology,2.0,"The candidate text correctly identifies the core methodology of using a First Circuit pilot program as a model for the Kona Division. However, it is factually incorrect on almost every other detail.
+
+It invents numerous specific details that are not in the gold standard, such as:
+- A focus on FTE costs for specific positions (Clinical Psychologist, Social Worker).
+- A total projected cost of over $1.5 million.
+- A three-year program duration.
+- Numerous specific document citations.
+
+It also omits the actual cost components mentioned in the reference text: supplies, workstations, and contractor costs. The addition of fabricated, specific financial data makes the candidate text highly inaccurate and misleading."
+fiscal_note_20250801_090816_n30_rerank_k25.json,agency_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard reference. It incorrectly identifies the impacted agency as the Department of Health (DOH), when the gold standard clearly states the impact is on the Judiciary. All details provided in the candidate text, including the budget amount and specific staff positions, are entirely different from the information in the reference text, which discusses supervision by the Big Island Drug Court. The two texts describe completely different scenarios."
+fiscal_note_20250801_090816_n30_rerank_k25.json,economic_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. It states that ""precise cost savings and participation statistics are not available,"" when the gold standard provides exactly that information. The gold standard includes the specific cost of incarceration ($277,035 per person), the program's goal of 20 women per year, and detailed participation statistics (83 referrals, 23 active participants, 6 graduates). The candidate text misses every single key data point and makes a factually incorrect claim about their availability."
+fiscal_note_20250801_090816_n30_rerank_k25.json,policy_impact,1.0,"
+The candidate text completely fails to capture the primary policy impacts described in the gold standard text.
+
+The gold standard's main points are:
+1.  Making the existing First Circuit Women's Court permanent (a change from its previous sunset date).
+2.  Establishing a *new* pilot program in the Third Circuit (Kona).
+3.  Stating the intent for a phased, statewide rollout of these courts.
+
+The candidate text only mentions the new Kona pilot program and then adds extraneous details about appropriations and staffing that are not in the gold standard text. It completely misses the most significant policy change: making the First Circuit program permanent."
+fiscal_note_20250801_090816_n30_rerank_k25.json,revenue_sources,6.0,"The candidate text correctly identifies the revenue source as ""general revenues"" (synonymous with ""State General Funds""). However, it includes a significant amount of additional information that is not present in the gold standard, such as the specific program name, bill number, fiscal years, and the intended use of the funds. While this extra information may be factually correct, it goes beyond the scope of the gold standard for this specific field, which is intended to be a concise statement of the funding source. The candidate fails to replicate the brevity of the reference text."
+fiscal_note_20250801_090816_n30_rerank_k25.json,six_year_fiscal_implications,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. The gold standard provides a detailed, assumption-based six-year fiscal projection, using the First Circuit Court as a model to estimate the costs of a phased, statewide rollout. The candidate text, in direct opposition, claims that a six-year outlook cannot be created due to insufficient information. Furthermore, the candidate text cites completely different monetary figures, locations (Kona vs. First, Second, Fifth, and Third Circuits), and program details, indicating it has extracted no relevant information from the source material and may be referencing a different program entirely."
+fiscal_note_20250801_090816_n30_rerank_k25.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090346_n15_rerank_k30.json,overview,3.0,"The candidate text is severely incomplete and contains a factual error.
+
+- It completely omits the primary purpose of the measure: to permanently establish the Women's Court Program in the First Circuit.
+- It omits the requirement for the legislature to receive reports on the need for similar courts in other circuits.
+- It incorrectly states that the Kona pilot program is for three years, while the gold standard specifies it is a two-year program.
+
+The candidate text only captures a single, secondary aspect of the bill (the Kona pilot program) and gets a key detail about it wrong."
+fiscal_note_20250801_090346_n15_rerank_k30.json,appropriations,4.0,"
+The candidate text correctly identifies the specific appropriation amounts for the correct fiscal years and names the correct program. However, it pollutes the summary with a significant amount of extraneous and irrelevant information about other programs in different circuits and entirely different types of appropriations (e.g., for elections). It also contains a direct contradiction by stating that ""actual appropriated amounts... are not explicitly stated"" immediately after listing them. Furthermore, it omits some of the specific purposes of the funds mentioned in the gold standard, such as ""training of program staff."" The inclusion of irrelevant data and the internal contradiction make the text highly confusing and inaccurate as a summary of the reference text."
+fiscal_note_20250801_090346_n15_rerank_k30.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to describe an entirely different fiscal analysis.
+
+- **Scope:** The candidate states the cost is extrapolated for ""all circuits,"" while the gold standard specifies it is only for the ""Kona Division."" This is a critical factual contradiction.
+- **Cost Components:** The candidate focuses on specific personnel costs (Clinical Psychologist, Social Worker), which are not mentioned in the gold standard. The gold standard lists supplies, technology, and contractor costs.
+- **Methodology:** The candidate text introduces details like a $1.5 million total cost and a three-year pilot program, none of which are present in the reference text.
+
+The candidate text does not capture any of the key information from the gold standard and instead provides contradictory and unrelated details."
+fiscal_note_20250801_090346_n15_rerank_k30.json,agency_impact,1.0,"
+The candidate text is completely incorrect and appears to be from an entirely different document. It discusses the Department of Health (DOH) and its Adult Mental Health Division, whereas the gold standard text correctly identifies the Judiciary as the impacted agency and the Women's Court Pilot Program as the subject. There is no overlap in factual information."
+fiscal_note_20250801_090346_n15_rerank_k30.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be from a different document or section entirely. It fails to mention any of the key data points from the gold standard, such as the cost of incarceration ($277,035), the program's specific participation statistics (referrals, current participants, graduates), or its primary goal of reducing corrections costs.
+
+Critically, the candidate text directly contradicts the gold standard by stating that a cost-benefit analysis, including potential reductions in incarceration costs, is ""unavailable,"" when the gold standard's central argument is built upon that very cost."
+fiscal_note_20250801_090346_n15_rerank_k30.json,policy_impact,1.0,"
+The candidate text is completely incorrect and describes a different aspect of the fiscal note. It focuses entirely on fiscal impacts, such as appropriation amounts and the creation of a temporary position. The gold standard text, on the other hand, correctly identifies the core policy impacts: making the First Circuit Women's Court permanent and establishing a new pilot program in the Third Circuit as part of a phased statewide rollout. The candidate misses every key point of the policy impact."
+fiscal_note_20250801_090346_n15_rerank_k30.json,revenue_sources,7.0,"The candidate text correctly identifies the core information from the gold standard: that the funding source is the State's general funds/revenues. However, it includes a significant amount of extraneous information about specific appropriation amounts and document details. This extra information is not present in the gold standard and belongs in other fields (like appropriations or expenditures), making the answer overly verbose and poorly scoped for the ""revenue_sources"" field."
+fiscal_note_20250801_090346_n15_rerank_k30.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard.
+
+The gold standard provides a detailed, assumption-based six-year projection for a statewide rollout of the program, using the First Circuit's costs as a model. It concludes that a projection is possible and provides specific cost figures ($695,236 for a pilot, $705,416 for a permanent program) and a timeline.
+
+In contrast, the candidate text's primary assertion is that there is ""insufficient data for a complete six-year fiscal projection."" It introduces numerous figures and details (e.g., $514,900 for Kona, specific psychologist positions) that are not present in the gold standard text at all. It completely fails to capture any of the key assumptions, cost models, or conclusions from the reference."
+fiscal_note_20250801_090346_n15_rerank_k30.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090158_n15_rerank_k10.json,overview,3.0,"
+The candidate text misses two of the three primary purposes of the measure as described in the gold standard: the permanent establishment of the Women's Court in the First Circuit and the requirement for reports to the legislature on other circuits. It also contains a factual error, stating the Kona pilot program is for three years, while the reference specifies it is a two-year program. The candidate focuses only on the Kona pilot program, making it a very incomplete and partially inaccurate summary."
+fiscal_note_20250801_090158_n15_rerank_k10.json,appropriations,1.0,"The candidate text is completely incorrect and appears to be summarizing different documents or sections. It fails to mention the specific appropriation amounts ($514,900 and $557,000), which is the most critical piece of information. It also incorrectly identifies the purpose of the funds as being for ""judicial clerk positions"" when the gold standard clearly states it is for ""mental health professionals,"" staff training, and contract vendors. The candidate text is full of irrelevant information and misses every key detail from the gold standard."
+fiscal_note_20250801_090158_n15_rerank_k10.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to describe a different analysis or document entirely. It directly contradicts the gold standard's core assumption by stating ""no comparable programs or historical budget data are referenced,"" when the gold standard explicitly says the approximations are calculated by ""mirroring the cost of the First Circuit Court pilot program ('Mohala Wahine')"".
+
+Furthermore, the cost components listed in the candidate text (personnel, training, program evaluation) do not match those in the gold standard (supplies, technological devices, contractor costs). The candidate misses all key information from the reference text."
+fiscal_note_20250801_090158_n15_rerank_k10.json,agency_impact,1.0,"
+The candidate text is completely incorrect and appears to be describing the impact on a different agency (Department of Health) for a different purpose than what is described in the gold standard text (The Judiciary). There is zero overlap in the information provided. The gold standard focuses on the Judiciary's establishment of the Women's Court Pilot Program, while the candidate discusses the DOH's Adult Mental Health Division."
+fiscal_note_20250801_090158_n15_rerank_k10.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be from a different section of the source document, possibly the ""expenditures"" section rather than the ""economic impact"" section.
+
+- It completely omits all key data points from the gold standard, including the cost of incarceration ($277,035), the program's goal of 20 women per year, and the specific numbers of referrals, participants, and graduates.
+- It introduces entirely new information about the program's projected costs ($514,900 and $557,000), which is not present in the gold standard text.
+- Most critically, it directly contradicts the gold standard by stating that ""precise figures regarding cost savings... are not available,"" when the gold standard provides the specific cost of incarceration as the basis for its economic impact claim."
+fiscal_note_20250801_090158_n15_rerank_k10.json,policy_impact,1.0,"
+The candidate text is completely incorrect and appears to be describing a different aspect of the bill, likely the fiscal or implementation impact, rather than the core policy change.
+
+It completely misses the two central policy impacts described in the gold standard:
+1.  Making the First Circuit Women's Court permanent.
+2.  Establishing a new pilot program for the Kona Division of the Third Circuit.
+
+Instead, the candidate introduces unrelated details about a specific temporary position, funding amounts, and the Department of Health, none of which are mentioned in the reference text for the policy impact."
+fiscal_note_20250801_090158_n15_rerank_k10.json,revenue_sources,5.0,"The candidate text correctly identifies the revenue source as the state's general revenues/funds. However, it includes a large amount of extraneous information about specific appropriation amounts and conditions. This information relates to expenditures, not the revenue source itself, and belongs in a different section of a fiscal note. The inclusion of irrelevant data makes the answer poorly focused and less useful for the specific field being evaluated."
+fiscal_note_20250801_090158_n15_rerank_k10.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard. The gold standard provides a detailed six-year projection based on the assumption of a statewide rollout modeled after the First Circuit's program, including specific cost figures for pilot and permanent programs. The candidate text, in direct opposition, claims that there is insufficient information to create a six-year outlook and presents a collection of unrelated budget figures that are not mentioned in the gold standard. It completely misses the core logic, assumptions, and fiscal details of the reference text."
+fiscal_note_20250801_090158_n15_rerank_k10.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090615_n25_rerank_k30.json,overview,1.0,"
+The candidate text is completely incorrect and fails to capture the most critical information from the reference text.
+
+- The candidate completely omits the primary and most significant part of the measure: the permanent establishment of the Women's Court Program in the First Circuit.
+- It contains a factual contradiction, stating the pilot program is for three years, while the gold standard specifies it is a two-year program.
+- It fails to mention the required reports on the need and costs for a Women's court in the Hilo, Second, and Fifth circuits.
+- The candidate introduces a large amount of specific fiscal and staffing data not present in the gold standard, failing its core task of summarizing the provided reference text."
+fiscal_note_20250801_090615_n25_rerank_k30.json,appropriations,3.0,"The candidate text correctly identifies the two specific appropriation amounts for the correct fiscal years. However, it is severely flawed. It introduces a significant amount of extraneous and contradictory information not present in the gold standard, such as a different appropriation for the Department of Health, costs for a probation supervisor, and mentions of redacted documents. This conflation of multiple sources makes the summary highly inaccurate and misleading as a representation of the gold standard text. It also misses key details from the reference, such as funding for ""training of program staff."""
+fiscal_note_20250801_090615_n25_rerank_k30.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to describe an entirely different methodology and set of costs.
+
+- The gold standard states the cost basis is mirroring the ""Mohala Wahine"" program for supplies, technology, and contractors, and applying it to the Kona Division.
+- The candidate text incorrectly states the basis is staffing requirements (Psychologist, Social Worker), includes specific salary and training costs not present in the reference, and claims the costs are extrapolated to ""other circuits"" rather than the specified Kona Division.
+
+The two texts are fundamentally contradictory."
+fiscal_note_20250801_090615_n25_rerank_k30.json,agency_impact,1.0,"The candidate text is completely incorrect and appears to describe the impact on a different agency (Department of Health) than the one mentioned in the gold standard (The Judiciary). It fails to mention the Judiciary, the Big Island Drug Court, the proposed budget process, or the responsible parties outlined in the reference. The information provided in the candidate is entirely unrelated to the gold standard text."
+fiscal_note_20250801_090615_n25_rerank_k30.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be from an entirely different document or section of a fiscal note. It does not contain any of the information present in the gold standard text.
+
+The gold standard focuses on the cost savings from avoiding incarceration ($277,035 per person) and provides specific program statistics (referrals, participants, graduates). The candidate text, in contrast, discusses program implementation costs (budget of $801,802, staffing) and incorrectly states that economic impacts like cost savings are ""not specified,"" which is a direct contradiction of the gold standard's core information."
+fiscal_note_20250801_090615_n25_rerank_k30.json,policy_impact,2.0,"The candidate text correctly identifies the establishment of a new Women's Court pilot program in Kona, which is one of the two key policy actions in the gold standard.
+
+However, it completely omits the other, more significant policy impact: making the existing First Circuit Women's Court permanent. It also misses the important context that this is part of a phased, statewide rollout. The candidate includes many details (appropriations, FTEs, report deadlines) that are not in the gold standard text, making it a very poor representation of the source information."
+fiscal_note_20250801_090615_n25_rerank_k30.json,revenue_sources,7.0,"The candidate text correctly identifies the revenue source as ""general revenues"" (equivalent to ""State General Funds"") and that the funding is through ""appropriations,"" which captures the core information of the gold standard. However, it includes a significant amount of extraneous information detailing what the funds will be used for (staff salaries, technology, etc.). This information, while potentially present in the source document, belongs in a different field (like ""Expenditures"") and is not part of the gold standard for ""Revenue Sources."" The response is factually correct but fails to adhere to the specific scope of the target field."
+fiscal_note_20250801_090615_n25_rerank_k30.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and appears to be based on different source documents. It contradicts the gold standard's central premise, which is to provide a six-year projection based on a specific set of assumptions about a statewide rollout.
+
+Key failures include:
+- The candidate claims a six-year projection is not possible due to incomplete data, while the gold standard provides a detailed projection.
+- The candidate introduces specific dollar amounts and document references that are not present in the gold standard.
+- The candidate fails to mention the core assumptions of the gold standard: using the First Circuit as a model, the phased rollout to other circuits, and the cost figures associated with the First Circuit program ($695,236 for pilot, $705,416 for permanent)."
+fiscal_note_20250801_090615_n25_rerank_k30.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090448_n25_rerank_k15.json,overview,2.0,"
+The candidate text is severely lacking and factually incorrect. It completely omits the primary purpose of the measure: to permanently establish the Women's Court in the First Circuit. It also omits the requirement for reports to the legislature. Furthermore, it incorrectly states the pilot program is for three years, while the gold standard specifies it is a two-year program. The only correct information is the location of the pilot program and the sunset date. The inclusion of specific funding details, which are not in the reference text, does not compensate for the critical missing and incorrect information."
+fiscal_note_20250801_090448_n25_rerank_k15.json,appropriations,1.0,"
+The candidate text is completely incorrect and appears to be from an entirely different fiscal note. It does not mention the correct appropriation amounts ($514,900 and $557,000), the correct fiscal years, or the purpose of the appropriation (the Women's Court Pilot Program). The information provided in the candidate text is entirely unrelated to the gold standard."
+fiscal_note_20250801_090448_n25_rerank_k15.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and describes a different methodology. The gold standard states the cost is based on mirroring the ""Mohala Wahine"" pilot program for supplies, technology, and contractors. The candidate text incorrectly claims the costs are based on Department of Health testimony regarding specific FTE staffing positions (e.g., Clinical Psychologist, Social Worker), which are not mentioned in the reference text. It misses every key point and introduces contradictory information."
+fiscal_note_20250801_090448_n25_rerank_k15.json,agency_impact,1.0,"The candidate text is completely incorrect and appears to be from a different fiscal note or a different agency's analysis entirely. The gold standard text clearly states the impact is on the Judiciary, which will supervise the pilot program and receive the funds. The candidate text incorrectly identifies the Department of Health (DOH) as the impacted agency and provides a completely different set of budget and staffing details. It contains no information from the gold standard text."
+fiscal_note_20250801_090448_n25_rerank_k15.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be sourced from a different section of a document, not the gold standard. It fails to mention any of the specific quantitative data from the reference text, which is the core of the economic impact argument.
+
+Key missing information includes:
+- The cost of incarceration per individual ($277,035).
+- The program's goal of accepting 20 women per year.
+- The specific numbers for referrals (83), current participants (23), and graduates (6).
+
+Furthermore, the candidate text incorrectly states that ""specific performance metrics are not provided,"" which directly contradicts the gold standard text that provides exactly those metrics. The candidate also introduces unrelated information about appropriations and a supervisor position."
+fiscal_note_20250801_090448_n25_rerank_k15.json,policy_impact,1.0,"
+The candidate text is completely incorrect and appears to be summarizing a different section of the fiscal note, likely the fiscal impact or appropriations section.
+
+It completely misses the two primary policy impacts described in the gold standard:
+1.  Making the First Circuit Women's Court permanent.
+2.  Establishing a new pilot program in the Third Circuit with the long-term goal of a statewide rollout.
+
+Instead, the candidate focuses on specific appropriation amounts and a temporary position, and it contradicts the gold standard by suggesting a sunset date, whereas the key policy change is making the original program permanent."
+fiscal_note_20250801_090448_n25_rerank_k15.json,revenue_sources,5.0,"The candidate text correctly identifies that the revenue source is the State General Fund (""general revenues""). However, it includes a significant amount of extraneous information that is not relevant to the ""revenue_sources"" field, such as a detailed list of what the funds will be spent on (equipment, services, positions). This information belongs in an expenditures field. The inclusion of this incorrectly categorized information makes the answer only partially correct for the field being evaluated."
+fiscal_note_20250801_090448_n25_rerank_k15.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and appears to be summarizing a different set of documents or a different bill entirely. It contradicts the gold standard by stating that a six-year projection is not possible due to incomplete data. The gold standard, in contrast, makes a clear set of assumptions (statewide rollout based on the First Circuit model) to provide a detailed six-year projection. The candidate text misses every key piece of information from the gold standard, including the foundational assumption, the model program, the specific cost figures ($695,236 and $705,416), and the projected timeline for creating new programs in other circuits. The figures cited in the candidate text are completely different from those in the gold standard."
+fiscal_note_20250801_090448_n25_rerank_k15.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090718_n30_rerank_k15.json,overview,5.0,"The candidate text correctly identifies the two main programmatic actions: making the Women's Court in the First Circuit permanent and establishing a temporary pilot program in the Kona division of the Third Circuit.
+
+However, it contains a significant factual error, stating the Kona pilot program is for three years when the reference text specifies two years. It also completely omits a key component mentioned in the gold standard: the requirement for reports to the legislature on the need for similar courts in other circuits. This omission leaves out a major purpose of the measure."
+fiscal_note_20250801_090718_n30_rerank_k15.json,appropriations,1.0,"The candidate text is completely incorrect and contradicts the gold standard on all key points.
+
+- **Appropriation Amounts:** The candidate provides a completely different figure ($801,802) for the first fiscal year and states the amounts are otherwise unspecified, while the gold standard provides specific amounts for two years ($514,900 for FY 2025-2026 and $557,000 for FY 2026-2027).
+- **Purpose of Funds:** The candidate is vague (""seven temporary positions,"" ""unspecified allocation""), failing to capture the specific purposes detailed in the gold standard (mental health professionals, staff training, contract vendors, technology).
+- **Source:** The candidate text appears to be summarizing different source documents entirely (""Document 12,"" ""Document 13""), leading to information that does not match the gold standard reference at all."
+fiscal_note_20250801_090718_n30_rerank_k15.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and describes a different methodology and set of assumptions than the gold standard.
+
+- **Methodology:** The gold standard's methodology is based on mirroring the costs of a prior pilot program (""Mohala Wahine""). The candidate text describes a methodology based on new staffing requests from the Department of Health.
+- **Cost Components:** The gold standard identifies costs for supplies, technology, and contractors. The candidate identifies costs for specific FTE positions, training, and program evaluation.
+- **Key Details:** The candidate text fails to mention the ""Mohala Wahine"" program or the ""Kona Division,"" which are the central elements of the gold standard's explanation. It appears to be describing the fiscal impact of an entirely different measure."
+fiscal_note_20250801_090718_n30_rerank_k15.json,agency_impact,1.0,The candidate text is completely incorrect and describes the impact on the wrong agency. The gold standard text specifies the impact is on the Judiciary and the Big Island Drug Court. The candidate text incorrectly discusses an impact on the Department of Health (DOH) and its Adult Mental Health Division. There is no overlap in information between the two texts.
+fiscal_note_20250801_090718_n30_rerank_k15.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be sourced from a different document. It fails to mention any of the key quantitative data from the gold standard, such as:
+- The $277,035 cost of incarceration for one individual.
+- The goal of accepting 20 women per year.
+- The specific participation and graduation statistics (83 referrals, 11 in phase one, 12 in phase two, 6 graduates).
+
+Crucially, the candidate text directly contradicts the gold standard by stating that ""participation statistics are not available,"" when the gold standard provides them in detail. The candidate contains information about funding and staffing that is not present in the gold standard, further indicating a complete mismatch."
+fiscal_note_20250801_090718_n30_rerank_k15.json,policy_impact,1.0,"The candidate text is completely incorrect and describes different information than the gold standard.
+
+- The gold standard states the measure makes the First Circuit Women's Court permanent and establishes a new pilot program in the Third Circuit (Kona).
+- The candidate text incorrectly states the measure establishes a single temporary position (a probation supervisor) with a specific sunset date.
+- The candidate also introduces information about funding and specific services, which are not present in the gold standard text.
+
+The candidate fails to capture any of the key policy impacts from the reference text."
+fiscal_note_20250801_090718_n30_rerank_k15.json,revenue_sources,10.0,"The candidate text correctly identifies that the appropriations come from the State's general funds (referred to as ""general revenues of the State of Hawaii,"" which is synonymous). It perfectly captures the core information from the gold standard and provides additional, non-contradictory context that adds to the quality of the answer."
+fiscal_note_20250801_090718_n30_rerank_k15.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard. It claims that a six-year fiscal outlook is impossible due to insufficient information. In contrast, the gold standard provides a detailed, assumption-based six-year projection by modeling a statewide, phased rollout based on the costs and experience of the First Circuit Court's program. The candidate text focuses on entirely different data (Kona Women's Court) and completely misses the core analysis, cost figures, and expansion plan detailed in the gold standard."
+fiscal_note_20250801_090718_n30_rerank_k15.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090420_n25_rerank_k10.json,overview,3.0,"
+The candidate text is highly incomplete and misses several critical components from the gold standard. Most importantly, it completely fails to mention the permanent establishment of the Women's Court in the First Circuit and the requirement for reports to the legislature on other circuits. These are two of the three main purposes of the measure.
+
+While it correctly captures the sunset date and the fact that a temporary program is being established, it focuses on granular details (specific dollar amounts and job titles) that are not present in the reference text, while omitting the bill's primary, high-level purposes."
+fiscal_note_20250801_090420_n25_rerank_k10.json,appropriations,1.0,"The candidate text is completely incorrect and appears to be summarizing a different document entirely. It does not mention the Women's Court Pilot Program, the specific appropriation amounts ($514,900 and $557,000), or the corresponding fiscal years. Instead, it discusses unrelated bills and incorrectly states that specific funding amounts are not provided, which directly contradicts the information in the gold standard."
+fiscal_note_20250801_090420_n25_rerank_k10.json,assumptions_and_methodology,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference.
+
+- **Methodology:** The gold standard explicitly states the methodology is ""mirroring the cost of the First Circuit Court pilot program ('Mohala Wahine')"". The candidate text directly contradicts this, claiming the figures ""do not explicitly reference comparable programs"".
+- **Cost Components:** The listed costs are entirely different. The gold standard mentions ""supplies, technological devices and workstations, as well as contractor costs"". The candidate lists ""personnel... training, technology, and program evaluation"".
+- **Extraneous Information:** The candidate includes specific dollar amounts and fiscal years that are not present in the gold standard text.
+- **Missing Information:** The candidate fails to mention the ""Mohala Wahine"" program, the ""Kona Division,"" or the reference to ""Table 1.""
+
+The candidate text describes a completely different set of assumptions and methodologies than the gold standard."
+fiscal_note_20250801_090420_n25_rerank_k10.json,agency_impact,1.0,"The candidate text is completely incorrect and contradicts the gold standard text on every key point. It incorrectly identifies the impacted agency as the Department of Health (DOH) instead of the Judiciary. Consequently, all the details provided, such as the funding amount, requested positions, and budget basis, are entirely different from the information in the gold standard, which specifies the program is under the Big Island Drug Court's supervision and the budget was developed by the Judiciary's Chief Court Administrator."
+fiscal_note_20250801_090420_n25_rerank_k10.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be summarizing a different section of the source document, likely the expenditures or appropriations section, rather than the economic impact. It misses every single data point from the gold standard text, including the cost of incarceration, the name of the program, and all participation/graduation statistics.
+
+Furthermore, it directly contradicts the gold standard by stating that ""specific performance metrics are not provided"" and that cost savings are ""not quantified,"" when the gold standard explicitly provides both (e.g., participant numbers and the $277,035 cost of incarceration per individual)."
+fiscal_note_20250801_090420_n25_rerank_k10.json,policy_impact,1.0,"The candidate text is completely incorrect and describes a different policy impact than the gold standard.
+
+The gold standard states the key policy impacts are making the First Circuit Women's Court permanent and establishing a new pilot program in the Third Circuit (Kona).
+
+The candidate text completely misses the most significant impact (making the First Circuit program permanent) and instead focuses on the creation of a single temporary position (a probation supervisor), which is not mentioned in the gold standard at all. It fundamentally misrepresents the core policy changes of the measure."
+fiscal_note_20250801_090420_n25_rerank_k10.json,revenue_sources,10.0,"The candidate text correctly identifies the revenue source as the state's general funds (""general revenues""). It also includes additional, accurate, and relevant context (the bill number and the explicit confirmation that no other sources were mentioned) that, while not in the gold standard, enhances the quality and completeness of the answer without introducing any contradictions."
+fiscal_note_20250801_090420_n25_rerank_k10.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference. The reference text provides a detailed six-year fiscal implication based on the assumption of a statewide rollout, using the First Circuit's pilot and permanent program costs ($695,236 and $705,416 respectively) as a model to project the creation of three new pilot programs over the period.
+
+In contrast, the candidate text incorrectly states that there is insufficient information to create a six-year outlook. It cites completely different and irrelevant monetary figures, fails to mention the core assumption of a phased rollout, and misses all the key details about modeling future programs on the First Circuit's experience."
+fiscal_note_20250801_090420_n25_rerank_k10.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090225_n15_rerank_k15.json,overview,1.0,"
+The candidate text contains critical factual errors and omits a primary component of the measure.
+- It directly contradicts the gold standard by stating the Judiciary is *not* required to submit a report, when the gold standard explicitly says reports *are* required.
+- It incorrectly identifies the temporary pilot program as being for three years, while the gold standard specifies it is a two-year program.
+- It completely omits the permanent establishment of the Women's Court Program in the First Circuit, which is a key purpose of the measure."
+fiscal_note_20250801_090225_n15_rerank_k15.json,appropriations,5.0,"The candidate text correctly identifies the appropriation amounts ($514,900 and $557,000) and the corresponding fiscal years. However, it contains significant inaccuracies and omissions regarding the purpose of the funds. It incorrectly states the funding is for a ""probation supervisor position"" when the gold standard specifies ""full-time mental health professionals."" It also omits key details about recruiting/retaining staff, staff training, and contracting with vendors. Lastly, it includes a large amount of irrelevant information about other documents and programs not mentioned in the gold standard text."
+fiscal_note_20250801_090225_n15_rerank_k15.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to be summarizing a different source document entirely. It fails to mention the key details from the gold standard, such as the application of costs to the ""Kona Division"" or that the approximations are for ""supplies...and contractor costs."" Instead, it introduces specific FTE positions, salaries, training costs, and a total program cost that are not present in the gold standard text. It completely misses the core methodology of mirroring the ""Mohala Wahine"" program costs as detailed in ""Table 1""."
+fiscal_note_20250801_090225_n15_rerank_k15.json,agency_impact,1.0,"
+The candidate text is completely incorrect and bears no resemblance to the gold standard text.
+- The gold standard identifies the **Judiciary** as the impacted agency, while the candidate text incorrectly refers to the **Department of Health (DOH)**.
+- The subject of the gold standard is the ""Women's Court Pilot Program,"" which is not mentioned at all in the candidate text.
+- All key details, such as the specific court division (Big Island Drug Court) and the individual involved (Robert D. S. Kim), are missing and replaced with unrelated information about the DOH's Adult Mental Health Division."
+fiscal_note_20250801_090225_n15_rerank_k15.json,economic_impact,1.0,"
+The candidate text is completely incorrect and fundamentally misrepresents the information in the gold standard. It fails to include any of the specific quantitative data provided in the reference, such as the $277,035 cost of incarceration, the program's goal of 20 participants per year, or the specific numbers for referrals, current participants, and graduates.
+
+Most significantly, the candidate text directly contradicts the gold standard by stating that ""the provided documents lack quantitative data on projected cost savings, participation statistics, or broader economic impacts,"" when the gold standard is composed entirely of this exact information. The candidate also introduces unrelated information about staffing costs ($801,802) that is not present in the reference text."
+fiscal_note_20250801_090225_n15_rerank_k15.json,policy_impact,1.0,"
+The candidate text is completely incorrect and fails to capture any of the key policy impacts described in the gold standard.
+
+The gold standard clearly states the two primary policy changes:
+1.  Making the First Circuit Women's Court permanent.
+2.  Establishing a new pilot program for the Kona Division of the Third Circuit.
+
+The candidate text misses both of these core points. Instead, it describes fiscal and administrative details (appropriations, temporary positions, Department of Health involvement), which are not mentioned in the gold standard for this field. It is describing a different aspect of the bill entirely and fails to capture the policy impact."
+fiscal_note_20250801_090225_n15_rerank_k15.json,revenue_sources,5.0,"The candidate text correctly identifies the revenue source as ""general revenues"" or ""State General Funds"".
+
+However, it includes a large amount of extraneous information about specific appropriation amounts, requests, and uses of the funds. This information belongs in other fiscal note fields (like appropriations or cost analysis), not in the `revenue_sources` field. Including appropriation amounts under the ""revenue sources"" category is a significant contextual error, as it conflates the source of money with the amount of money being spent."
+fiscal_note_20250801_090225_n15_rerank_k15.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradictory to the gold standard. The gold standard provides a detailed, assumption-based six-year projection, explaining how the program would be rolled out statewide in a phased manner and using the First Circuit's costs as a model for future appropriations ($695,236 for pilot, $705,416 for permanent).
+
+In contrast, the candidate text states that a six-year projection is ""impossible"" due to insufficient data and a program sunset date. It introduces entirely different and unrelated fiscal figures and concludes that no analysis can be done, which is the exact opposite of the gold standard's detailed forecast. It fails to capture any of the core assumptions, methodology, or financial estimates from the reference text."
+fiscal_note_20250801_090225_n15_rerank_k15.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090844_n30_rerank_k30.json,overview,3.0,"
+The candidate text contains a major factual error, stating the pilot program is for three years when the gold standard specifies two years. It also includes a significant amount of hallucinated information, such as specific dollar amounts for appropriations and details about what the funds will be used for, which are not present in the reference text. Furthermore, it misrepresents the nature of the required report, omitting the specific circuits to be studied (Hilo, Second, Fifth) and the focus on need and cost. While it correctly identifies the permanent establishment of the First Circuit program and the sunset date, the introduction of incorrect and unsubstantiated facts severely degrades its quality."
+fiscal_note_20250801_090844_n30_rerank_k30.json,appropriations,2.0,"The candidate text is highly inaccurate and misleading. It correctly identifies the program and eventually mentions the correct appropriation amounts, but it directly contradicts the gold standard by stating these amounts are ""not finalized"" and ""subject to change."" The gold standard is definitive, stating the bill ""includes and requires"" these specific amounts.
+
+Furthermore, the candidate text introduces a large amount of extraneous and confusing information not present in the reference text, such as specific salary breakdowns and details about the First Circuit, which detracts from the core facts of the appropriation for the Third Circuit's Kona Division."
+fiscal_note_20250801_090844_n30_rerank_k30.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to be based on a different source document. It introduces a vast amount of specific information (FTE positions, dollar amounts, document numbers, total budget) that is not present in the gold standard.
+
+Crucially, it misses every key piece of information from the reference text:
+- The name of the pilot program (""Mohala Wahine"").
+- The specific cost components mentioned (supplies, contractor costs).
+- The reference to ""Table 1"" for the cost breakdown.
+
+Because the candidate text contradicts the gold standard on the cost components and misses all of its key details, it receives the lowest possible score."
+fiscal_note_20250801_090844_n30_rerank_k30.json,agency_impact,1.0,"The candidate text is completely incorrect and describes the impact on the wrong agency.
+The gold standard text details the fiscal impact on the Judiciary, specifically the Big Island Drug Court.
+The candidate text, however, describes the impact on the Department of Health (DOH), including specific staffing and funding requests for that department. There is no overlap in factual information beyond the name of the pilot program."
+fiscal_note_20250801_090844_n30_rerank_k30.json,economic_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. It states that ""specific cost savings or reductions in related expenditures are not detailed"" and that ""quantifiable performance or participation statistics are currently unavailable.""
+
+This is in direct opposition to the gold standard, which provides the specific cost of incarceration ($277,035) as the basis for cost savings and gives multiple quantifiable statistics, including referral numbers, current participants, and graduates. The candidate text misses every single key piece of information from the reference text."
+fiscal_note_20250801_090844_n30_rerank_k30.json,policy_impact,2.0,"
+The candidate text is severely lacking and misses the most critical information from the gold standard. It correctly identifies the new pilot program in Kona but completely omits the primary policy impact: making the existing First Circuit Women's Court permanent. It also fails to provide the important context that this measure follows a previous Act and is part of an intended statewide ""phased rollout."" The information it does provide (specific appropriations, reporting requirements) is not present in the gold standard text."
+fiscal_note_20250801_090844_n30_rerank_k30.json,revenue_sources,10.0,"The candidate text correctly identifies that the revenue source is State General Funds (""general revenues of the State of Hawaii""). While it includes additional details about specific amounts and fiscal years not present in the concise gold standard, it perfectly and accurately captures the essential information from the reference text."
+fiscal_note_20250801_090844_n30_rerank_k30.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference. The reference text makes a clear set of assumptions to project a six-year fiscal plan, using the First Circuit's costs as a model for a phased, statewide rollout. In contrast, the candidate text claims it is ""impossible"" to make a six-year projection due to ""insufficient data."" It introduces completely different and unsubstantiated cost figures (e.g., $514,900, $801,802) that are not present in the gold standard. It fails to mention any of the key data points from the reference, such as the pilot program cost ($695,236), permanent program cost ($705,416), or the plan to expand to the Second, Fifth, and Third Circuits."
+fiscal_note_20250801_090844_n30_rerank_k30.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090648_n30_rerank_k10.json,overview,5.0,"The candidate text correctly identifies that the First Circuit program will be made permanent and a new pilot program will be established in the Kona division of the Third Circuit.
+
+However, it contains a factual error, stating the new pilot program is for three years instead of the correct two years.
+
+It also completely omits a key component of the measure mentioned in the gold standard: the requirement for reports to the legislature on the need for similar courts in the Hilo division, as well as the Second and Fifth Circuits."
+fiscal_note_20250801_090648_n30_rerank_k10.json,appropriations,1.0,"
+The candidate text is completely incorrect and bears no resemblance to the gold standard text. It fails to mention the specific appropriation amounts, the fiscal years, or the purpose of the funding (the Women's Court Pilot Program). Instead, it discusses completely unrelated bills and funding issues, and incorrectly states that specific dollar amounts are lacking. It is a total failure in capturing any of the required information."
+fiscal_note_20250801_090648_n30_rerank_k10.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. The core methodology in the gold standard is that the costs are approximated by ""mirroring the cost of the First Circuit Court pilot program ('Mohala Wahine')"". The candidate text explicitly and incorrectly states that the figures ""do not explicitly reference comparable programs."" It also introduces numerous details (specific dollar amounts, personnel costs, departmental requests) that are not present in the reference text, while failing to mention any of the actual cost components (supplies, contractor costs) or the reference to ""Table 1""."
+fiscal_note_20250801_090648_n30_rerank_k10.json,agency_impact,1.0,"
+The candidate text is completely incorrect. It misidentifies the primary agency involved, stating the Department of Health (DOH) is requesting funds when the gold standard clearly specifies the Judiciary is the agency receiving the appropriation and supervising the program. The candidate text introduces entirely new and contradictory details about specific funding amounts and staff positions for the DOH, while failing to capture any of the correct information from the gold standard, such as the Judiciary's role or the supervision by the Big Island Drug Court."
+fiscal_note_20250801_090648_n30_rerank_k10.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be from a different section of the fiscal note, likely the appropriations section. It does not contain any of the specific economic impact information from the gold standard text.
+
+Key omissions and contradictions include:
+- The candidate completely misses the core economic impact figure: the $277,035 cost of incarceration for a single individual.
+- It fails to mention any of the statistics regarding the program's capacity, referrals, participants, or graduates.
+- The candidate text incorrectly states that ""specific figures are not provided,"" which directly contradicts the gold standard.
+- The information provided in the candidate text (appropriation amounts, FTE position) is entirely absent from the gold standard text for this field."
+fiscal_note_20250801_090648_n30_rerank_k10.json,policy_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard reference. The primary action of the measure described in the gold standard is to make the First Circuit Women's Court *permanent* and establish a *new* pilot program elsewhere. The candidate text incorrectly states that the measure establishes a *temporary* program. It also misses all key details, such as the distinction between the permanent program in the First Circuit and the new pilot program in the Third Circuit. The candidate text appears to be describing a completely different policy impact, possibly from another section of the bill, and fails to capture any of the essential information from the gold standard text."
+fiscal_note_20250801_090648_n30_rerank_k10.json,revenue_sources,10.0,"The candidate text correctly identifies the revenue source as State General Funds (phrased as ""general revenues of the State of Hawaii""). It perfectly captures the core information from the gold standard and adds relevant, non-contradictory context about the specific appropriation and the exclusion of other funding types."
+fiscal_note_20250801_090648_n30_rerank_k10.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference. The reference text explicitly lays out a six-year fiscal plan based on the assumption of a statewide rollout, using the First Circuit's pilot and permanent program costs as a model. It provides specific figures ($695,236 for a pilot, $705,416 for a permanent program) and a timeline for creating three new programs over six years.
+
+In contrast, the candidate text claims it is impossible to create a six-year outlook due to ""insufficient information"" and that ""assumptions regarding program expansion or permanence... are entirely absent."" This is the exact opposite of what the gold standard provides. The candidate text misses every key point, figure, and assumption from the reference."
+fiscal_note_20250801_090648_n30_rerank_k10.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090252_n15_rerank_k20.json,overview,3.0,"
+The candidate text is severely lacking in critical information and contains a factual error.
+
+- **Missing Information:** It completely omits the two most significant components from the gold standard: 1) the permanent establishment of the Women's Court Program in the First Circuit, and 2) the requirement for reports to the legislature on the need for courts in other circuits.
+- **Factual Error:** It incorrectly states the pilot program is for three years, while the gold standard explicitly says it is a two-year program.
+- **Partially Correct:** It does correctly identify that a temporary pilot program is being established in Kona with a sunset date, but this represents only a fraction of the bill's full scope as described in the reference text."
+fiscal_note_20250801_090252_n15_rerank_k20.json,appropriations,5.0,"The candidate text correctly identifies the appropriation amounts of $514,900 for FY 2025-2026 and $557,000 for FY 2026-2027, and correctly associates them with the Women's Court Pilot Program in Kona.
+
+However, it incorrectly describes the purpose of the funds, listing different items (e.g., ""one full-time equivalent temporary probation supervisor position"") than the gold standard (e.g., ""training of program staff,"" ""contract vendors""). Furthermore, the candidate text includes a significant amount of extraneous and irrelevant information about other programs (First Circuit), other bills, and unspecified budget requests, which are not mentioned in the gold standard. This additional information makes the summary confusing and inaccurate as a representation of the source text."
+fiscal_note_20250801_090252_n15_rerank_k20.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard on several critical points.
+
+- **Scope:** The gold standard clearly states the cost approximations are applied to the ""Kona Division."" The candidate text incorrectly claims the costs are extrapolated to ""all circuits,"" which is a fundamentally different and much larger scope.
+- **Cost Components:** The gold standard identifies costs for ""supplies, technological devices and workstations, as well as contractor costs."" The candidate text invents completely different cost categories, including specific personnel positions (Clinical Psychologist, Social Worker) and large dollar amounts that are absent from the reference text.
+- **Source of Information:** The gold standard refers to a ""Table 1"" for a cost breakdown, while the candidate refers to multiple different ""Documents.""
+
+The candidate text appears to be describing an entirely different fiscal note, as it shares almost no factual information with the gold standard beyond the mention of a ""First Circuit pilot project."""
+fiscal_note_20250801_090252_n15_rerank_k20.json,agency_impact,1.0,"
+The candidate text is completely incorrect and does not contain any information from the gold standard. It references the wrong agency (Department of Health instead of the Judiciary), a different program (general DOH services instead of the Women's Court Pilot Program), and entirely different details. The candidate text is factually inaccurate and seems to be from a completely different document."
+fiscal_note_20250801_090252_n15_rerank_k20.json,economic_impact,1.0,"The candidate text is completely incorrect and appears to be summarizing a different section or a different document altogether. It fails to mention any of the key economic impact data from the gold standard, such as the cost of incarceration ($277,035), the program's goal of reducing prison populations, or any of the specific program statistics (referrals, participants, graduates). Furthermore, it directly contradicts the gold standard by stating that ""cost savings or reductions... are not specified,"" when the gold standard's entire premise is based on a specified cost saving."
+fiscal_note_20250801_090252_n15_rerank_k20.json,policy_impact,1.0,"
+The candidate text is completely incorrect and misses the two most critical policy impacts described in the gold standard.
+
+1.  **Omission of Key Information:** The candidate completely fails to mention the primary policy change: making the First Circuit Women's Court permanent. This is the most significant long-term impact described in the reference text.
+2.  **Mischaracterization of Information:** The candidate incorrectly frames the establishment of a new pilot program in the Third Circuit as simply the creation of a ""temporary...probation supervisor position."" The gold standard makes it clear that an entire pilot program is being established, not just a single position.
+3.  **Inclusion of Irrelevant Details:** The candidate text focuses on fiscal details (funding amounts for the Dept. of Health) and a specific bill number, none of which are present in or relevant to the policy impact description in the gold standard."
+fiscal_note_20250801_090252_n15_rerank_k20.json,revenue_sources,6.0,"The candidate text correctly identifies the revenue source as State General Funds (""general revenues of the State of Hawaii""). However, it includes a significant amount of additional information about specific appropriation amounts, which is not present in the concise gold standard text. This additional information, while potentially relevant to the overall fiscal note, is extraneous to the specific field of ""revenue_sources"" and makes the candidate text a poor representation of the focused gold standard."
+fiscal_note_20250801_090252_n15_rerank_k20.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard reference. The reference text provides a detailed, assumption-based six-year fiscal projection, outlining a phased, statewide rollout of the program. In contrast, the candidate text incorrectly claims there is ""insufficient data"" to make such a projection. It also cites completely different and conflicting cost figures and focuses on a short-term, two-year outlook, entirely missing the central premise of the six-year plan described in the gold standard."
+fiscal_note_20250801_090252_n15_rerank_k20.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250731_172559.json,overview,3.0,"
+The candidate text misses two of the three primary purposes outlined in the gold standard text. It completely omits the permanent establishment of the Women's Court in the First Circuit and the requirement for reports to the legislature on other circuits. While it correctly identifies the temporary pilot program and the sunset date, the omissions are critical and result in an incomplete and misleading summary of the measure's scope. Additionally, it mentions ""several temporary positions,"" which contradicts the ""a temporary position"" specified in the reference text."
+fiscal_note_20250731_172559.json,appropriations,1.0,"The candidate text is completely incorrect and appears to be summarizing a different document or a collection of unrelated documents. It fails to mention any of the key information from the gold standard, including the Women's Court Pilot Program, the specific appropriation amounts ($514,900 and $557,000), or the designated fiscal years. Furthermore, its central claim that ""specific dollar amounts"" are lacking is a direct contradiction of the gold standard text."
+fiscal_note_20250731_172559.json,assumptions_and_methodology,1.0,"The candidate text is completely incorrect and presents a methodology that directly contradicts the gold standard. The gold standard states the cost is based on mirroring a specific existing program (""Mohala Wahine"") and lists supplies, technology, and contractor costs as the components. The candidate text fabricates an entirely different methodology based on personnel costs (psychologist, clerk), claims no comparable programs were used for reference (a direct contradiction), and introduces information not present in the source, such as a ""$1 million"" cost figure. It misses all key details from the reference text."
+fiscal_note_20250731_172559.json,agency_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard reference. The gold standard identifies the Judiciary as the agency receiving funds and the Big Island Drug Court as the supervising body. The candidate text incorrectly identifies the Department of Health (DOH) as the requesting agency and provides specific funding and staffing details that are not present in the gold standard text. The two texts describe entirely different agency impacts."
+fiscal_note_20250731_172559.json,economic_impact,1.0,"
+The candidate text is completely incorrect and contradicts the gold standard. It falsely claims that ""Quantifiable cost savings and performance statistics are not available,"" when the gold standard provides the specific cost of incarceration ($277,035) and numerous program statistics (referral numbers, participant counts, graduates). The candidate text completely misses the core economic impact argument from the reference text, which is based on avoiding high incarceration costs. The financial information included in the candidate text appears to be from a different section of the source document entirely."
+fiscal_note_20250731_172559.json,policy_impact,2.0,"
+The candidate text is almost completely incorrect and misses all of the critical information from the gold standard. The gold standard's central points are that the bill makes the First Circuit Women's Court permanent and establishes a new pilot program in the Third Circuit (Kona).
+
+The candidate text fails to mention the permanence of the First Circuit program at all. Instead, it focuses on a single temporary position being created within the Kona pilot program and its associated funding, which are details not present in the gold standard. It completely misrepresents the core policy impact of the measure."
+fiscal_note_20250731_172559.json,revenue_sources,10.0,"The candidate text correctly identifies that the revenue source is the State General Funds (""general revenues of the State of Hawaii""). It successfully captures the essential information from the gold standard. The additional context and supporting details provided in the candidate text, while not present in the concise gold standard, do not contradict it but rather serve to substantiate the conclusion."
+fiscal_note_20250731_172559.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect. It claims that there is insufficient information to create a six-year fiscal outlook, which directly contradicts the gold standard text that provides a detailed projection based on specific assumptions and figures from the First Circuit Court. The candidate text introduces entirely different, irrelevant figures and programs (e.g., Kona drug court, $514,900) that are not mentioned in the gold standard. It misses every key point from the reference, including the phased rollout plan, the pilot program costs, the permanent program costs, and the projected creation of three new programs."
+fiscal_note_20250731_172559.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090518_n25_rerank_k20.json,overview,2.0,"
+The candidate text is significantly different from the gold standard and misses several critical points while introducing factual errors.
+- **Critical Omission:** The candidate completely fails to mention the primary purpose of the measure: permanently establishing the Women's Court Program in the First Circuit.
+- **Factual Error:** The candidate states the Kona pilot program is for three years, which contradicts the gold standard's statement of a temporary two-year pilot program.
+- **Inaccuracy:** The reporting requirement is misrepresented. The gold standard specifies reports on the *need and cost* for Hilo, the Second, and Fifth Circuits, whereas the candidate describes reports on *status and expansion recommendations* for ""other circuits"".
+
+While the candidate correctly identifies the Kona pilot location and the sunset date, the omissions and errors are substantial, making it a poor representation of the gold standard overview."
+fiscal_note_20250801_090518_n25_rerank_k20.json,appropriations,5.0,"The candidate text correctly identifies the core appropriation amounts ($514,900 for FY 2025-2026 and $557,000 for FY 2026-2027) and the program they are for (Women's Court Pilot Program).
+
+However, the candidate text is severely flawed because it introduces a large amount of irrelevant information from other bills and documents (HB 400, HB 370, Dept. of Health, Office of Elections), which is not present in the gold standard. It also includes inaccurate details about the use of funds, such as ""substance abuse treatment"" and a ""temporary probation supervisor position,"" while omitting key details from the reference like ""training of program staff"" and the specific location (Kona Division of the Third Circuit)."
+fiscal_note_20250801_090518_n25_rerank_k20.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and does not reflect the information provided in the gold standard.
+
+- **Contradiction:** The candidate text focuses on specific staffing positions and salaries as the basis for costs, which directly contradicts the gold standard's stated cost components of ""supplies, technological devices and workstations, as well as contractor costs.""
+- **Missing Critical Information:** The candidate text fails to mention that the cost approximations are being applied to the ""Kona Division,"" a key detail from the reference. It also misses the reference to ""Table 1"" for the cost breakdown.
+- **Extraneous Information:** The candidate text introduces a large amount of new information (specific salaries, total costs for two fiscal years, document citations) that is not present in the gold standard. It appears to be a summary of a different document entirely."
+fiscal_note_20250801_090518_n25_rerank_k20.json,agency_impact,1.0,"
+The candidate text is completely incorrect and appears to be from a different document or section entirely. It discusses the impact on the Department of Health (DOH), including specific funding requests and staffing needs, whereas the gold standard text explicitly details the impact on the Judiciary, the Big Island Drug Court, and the Chief Court Administrator. The two texts have no information in common and are mutually contradictory regarding the agency impacted."
+fiscal_note_20250801_090518_n25_rerank_k20.json,economic_impact,1.0,"The candidate text is completely incorrect and appears to describe a different aspect of the fiscal note. It completely misses the central economic impact detailed in the gold standard, which is the cost savings from avoiding incarceration ($277,035 per individual).
+
+Furthermore, the candidate text directly contradicts the gold standard by stating that ""specific cost savings or reductions in related expenditures are not detailed,"" when the reference text's primary purpose is to provide exactly that detail. It also fails to include any of the program's performance statistics (referrals, participants, graduates) that are present in the reference text."
+fiscal_note_20250801_090518_n25_rerank_k20.json,policy_impact,1.0,"
+The candidate text is completely incorrect and misses all of the key policy impacts described in the gold standard.
+
+- The candidate fails to mention the most significant policy change: making the First Circuit Women's Court permanent.
+- It incorrectly frames the entire measure as establishing a *temporary* program, which directly contradicts the primary purpose of making the First Circuit program permanent.
+- It does not specify that the new pilot program is for the Kona Division of the Third Circuit.
+- It completely misses the stated intent of a phased, statewide rollout of Women's Courts.
+- The candidate text includes fiscal details (appropriations, positions) that are not part of the policy impact."
+fiscal_note_20250801_090518_n25_rerank_k20.json,revenue_sources,5.0,"The candidate correctly identifies the revenue source as State General Funds (""general revenues of the State of Hawaii""). However, it includes a large amount of extraneous information about specific appropriation amounts and expenditures (what the money will be used for). This additional information does not belong in the `revenue_sources` field and makes the answer structurally incorrect for this specific data point, even if the core fact is correct."
+fiscal_note_20250801_090518_n25_rerank_k20.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and directly contradicts the gold standard. The gold standard provides a detailed six-year fiscal projection based on a clear set of assumptions about a phased, statewide rollout. In contrast, the candidate text incorrectly claims that there is ""insufficient data for a complete six-year fiscal outlook"" and that a projection cannot be made. Furthermore, the candidate text cites completely different and unrelated financial figures, indicating it was likely generated from different source material and failed entirely to capture the information present in the reference text."
+fiscal_note_20250801_090518_n25_rerank_k20.json,fiscal_implications_afer_6_years,0.0,Missing text
+fiscal_note_20250801_090318_n15_rerank_k25.json,overview,3.0,"The candidate text misses a primary purpose of the measure: to permanently establish the Women's Court Program in the First Circuit. It also contains a factual error, stating the pilot program is for three years, whereas the gold standard specifies it is a two-year program. Finally, it omits the specific circuits that are subjects of the required legislative reports. While it correctly identifies the sunset date and the existence of a pilot program in Kona, the major omissions and factual error significantly reduce its quality."
+fiscal_note_20250801_090318_n15_rerank_k25.json,appropriations,5.0,"The candidate text correctly identifies the core appropriation amounts and the corresponding fiscal years for the Kona Women's Court Pilot Program.
+
+However, it is only partially correct regarding the purpose of the funds, omitting key details like staff training and contract vendors, while adding information not present in the reference text (e.g., substance abuse treatment, a probation supervisor position).
+
+Crucially, the candidate text includes a significant amount of extraneous information about other documents, different programs, and other bills, which is completely outside the scope of the gold standard text, making it a confusing and inaccurate summary of the specific information it was supposed to represent."
+fiscal_note_20250801_090318_n15_rerank_k25.json,assumptions_and_methodology,1.0,"
+The candidate text is completely incorrect and appears to be summarizing a different source document.
+
+- It incorrectly states the cost model is extrapolated to ""other circuits,"" whereas the gold standard specifies it is applied only to the ""Kona Division.""
+- It lists entirely different cost components (Clinical Psychologist, Social Worker, training) instead of the ones specified in the gold standard (supplies, technological devices, contractor costs).
+- It introduces a total cost figure and references to multiple documents that are not mentioned in the gold standard text.
+
+The only shared detail is the reference to the First Circuit pilot program, but all other critical information is either missing or directly contradicted."
+fiscal_note_20250801_090318_n15_rerank_k25.json,agency_impact,1.0,"
+The candidate text is completely incorrect and appears to describe the impact on an entirely different agency and for a different purpose. The gold standard text identifies the impacted agency as the Judiciary, specifically the Big Island Drug Court. In contrast, the candidate text incorrectly identifies the Department of Health (DOH). The candidate text fails to mention the ""Women's Court Pilot Program"" and contains no factual information present in the gold standard."
+fiscal_note_20250801_090318_n15_rerank_k25.json,economic_impact,1.0,"
+The candidate text is completely incorrect and appears to be summarizing a different section of the source document or a different bill entirely. It misses every single key piece of information from the gold standard, including:
+- The specific cost of incarceration ($277,035 per individual).
+- The goal of accepting twenty women per year.
+- The specific program statistics (83 referrals, 11+12 participants, 6 graduates).
+
+Crucially, the candidate text makes a statement that is in direct contradiction to the gold standard: it claims that ""specific cost savings or community benefit quantifications are absent,"" when the gold standard's primary point is quantifying the potential savings based on the cost of incarceration."
+fiscal_note_20250801_090318_n15_rerank_k25.json,policy_impact,1.0,"
+The candidate text is completely incorrect and appears to be describing a different aspect of the bill, likely the fiscal or administrative impact, rather than the policy impact. It misses all the critical information from the gold standard, such as:
+- Making the First Circuit Women's Court permanent.
+- The original pilot program being established by Act 243, SLH 2022.
+- The intent to use this as a model for a phased, statewide rollout of Women's Courts.
+
+Instead, the candidate focuses on appropriations, temporary positions, and the role of the Department of Health, none of which are mentioned in the gold standard's description of the policy impact. The two texts have virtually no overlap in content."
+fiscal_note_20250801_090318_n15_rerank_k25.json,revenue_sources,6.0,"The candidate text correctly identifies that the funding will come from State General Funds (referred to as ""general revenues""). However, it includes a significant amount of additional, irrelevant information about specific appropriation amounts. This information about the *amount* of money is out of scope for the `revenue_sources` field and belongs in a field like `appropriations` or `expenditures`. The core information is correct, but the response is noisy and not well-scoped to the question."
+fiscal_note_20250801_090318_n15_rerank_k25.json,six_year_fiscal_implications,1.0,"The candidate text is completely incorrect and contradicts the gold standard.
+
+- The candidate claims there is insufficient data for a six-year projection, while the gold standard provides a detailed, assumption-based projection for a statewide rollout over six years.
+- The candidate cites specific fiscal figures ($514,900, $557,000) that are not mentioned in the gold standard text and directly conflict with the figures provided in the reference ($695,236 pilot cost, $705,416 permanent cost).
+- It completely misses the central premise of the gold standard: modeling future pilot programs on the First Circuit's transition from a pilot to a permanent program.
+- It fails to mention the planned rollout to the Second, Fifth, and Third Circuits, which is a core component of the gold standard's six-year outlook."
+fiscal_note_20250801_090318_n15_rerank_k25.json,fiscal_implications_afer_6_years,0.0,Missing text

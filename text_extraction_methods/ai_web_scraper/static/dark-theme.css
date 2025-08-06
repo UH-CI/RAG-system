@@ -1,0 +1,145 @@
+/* Dark Theme Styles for Fiscal Note Viewer */
+
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+/* Card and container styling */
+body.dark-mode .card {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .card-header {
+    background-color: #252525;
+    border-bottom-color: #333;
+}
+
+body.dark-mode .card-footer {
+    background-color: #252525;
+    border-top-color: #333;
+}
+
+body.dark-mode .list-group-item {
+    background-color: #1e1e1e;
+    border-color: #333;
+    color: #e0e0e0;
+}
+
+body.dark-mode .list-group-item:hover:not(.active) {
+    background-color: #252525;
+}
+
+body.dark-mode .list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+body.dark-mode .jumbotron {
+    background-color: #252525 !important;
+}
+
+/* Navbar styling */
+body.dark-mode .navbar-light {
+    background-color: #252525 !important;
+}
+
+body.dark-mode .navbar-light .navbar-brand,
+body.dark-mode .navbar-light .nav-link {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .navbar-toggler-icon {
+    filter: invert(1);
+}
+
+/* Table styling */
+body.dark-mode .table {
+    color: #e0e0e0;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+body.dark-mode .table td, 
+body.dark-mode .table th {
+    border-top-color: #333;
+}
+
+/* Tab styling */
+body.dark-mode .nav-tabs {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .nav-tabs .nav-link {
+    color: #e0e0e0;
+}
+
+body.dark-mode .nav-tabs .nav-link:hover:not(.active) {
+    border-color: #333;
+    background-color: #252525;
+}
+
+body.dark-mode .nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: #2b2b2b;
+    border-color: #333;
+}
+
+body.dark-mode .tab-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+/* Alert styling */
+body.dark-mode .alert-info {
+    background-color: #0c3251;
+    border-color: #0c5460;
+    color: #d1ecf1;
+}
+
+/* Button styling */
+body.dark-mode .btn-outline-secondary {
+    color: #e0e0e0;
+    border-color: #6c757d;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+/* Progress bar */
+body.dark-mode .progress {
+    background-color: #333;
+}
+
+body.dark-mode .confidence-score {
+    border-top-color: #333;
+}
+
+body.dark-mode .text-muted {
+    color: #aaa !important;
+}
+
+/* Scrollbar styling */
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #333;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #666;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* Footer styling */
+body.dark-mode .footer {
+    background-color: #252525 !important;
+    color: #e0e0e0;
+}
