@@ -6,7 +6,7 @@ services:
     build: 
       context: ./src
       dockerfile: Dockerfile
-    container_name: course-rag-api
+    container_name: rag-api
     ports:
       - "8200:8200"
     environment:
