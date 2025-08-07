@@ -12,7 +12,8 @@ A document search and question-answering system built with ChromaDB and Google A
 ### 1. Clone and Setup
 ```bash
 # Clone the repository
-git clone https://github.com/UH-CI/RAG-system/tree/financial_data
+git clone https://github.com/UH-CI/RAG-system.git
+git checkout financial_data
 cd RAG-system
 
 # Navigate to source directory and setup environment
