@@ -57,9 +57,10 @@ python-multipart==0.0.6
 pathlib==1.0.1
 typing-extensions>=4.9.0
 
-selenium 
+selenium
 webdriver-manager 
 beautifulsoup4
+undetected-chromedriver
 
 google-api-python-client
 google_auth

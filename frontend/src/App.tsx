@@ -4,10 +4,11 @@ import { MessageSquare, AlertCircle, Loader2, FileText } from 'lucide-react';
 import ChatInterface from './components/ChatInterface';
 import CreateGroupModal from './components/CreateGroupModal';
 import FiscalNoteGeneration from './components/FiscalNoteGeneration';
+import BillFiscalNote from './components/BillFiscalNote';
 import type { Collection, ChatMessage } from './types';
 import { getCollections, askQuestion } from './services/api';
 
-type AppView = 'chat' | 'fiscal-note';
+type AppView = 'chat' | 'fiscal-note' | 'bill-fiscal-note';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');
@@ -162,12 +163,16 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {currentView === 'chat' ? 'FinBot' : 'Fiscal Note Generation'}
+                  {currentView === 'chat' && 'FinBot'}
+                  {currentView === 'fiscal-note' && 'Fiscal Note Generation'}
+                  {currentView === 'bill-fiscal-note' && 'Bill Fiscal Note'}
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
                     ? `Ask questions about the state budget and the state of Hawaii. This interface has access to the <sappropriation bill 300, statutes, budget worksheets, and bills.`
-                    : 'Upload documents and analyze using selected collections'
+                    : currentView === 'fiscal-note'
+                    ? 'Upload documents and analyze using selected collections'
+                    : 'Generate a fiscal note for a specific bill'
                   }
                 </p>
               </div>
@@ -198,6 +203,17 @@ function App() {
                   <FileText className="w-4 h-4 inline mr-2" />
                   Fiscal Note
                 </button> */}
+                <button
+                  onClick={() => setCurrentView('bill-fiscal-note')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'bill-fiscal-note'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 inline mr-2" />
+                  Bill Fiscal Note
+                </button>
               </nav>
               
               {/* Status Indicator */}
@@ -231,6 +247,8 @@ function App() {
         <div className="flex-1 overflow-hidden">
           {currentView === 'fiscal-note' ? (
             <FiscalNoteGeneration onBack={() => setCurrentView('chat')} />
+          ) : currentView === 'bill-fiscal-note' ? (
+            <BillFiscalNote />
           ) : (
             collectionsLoading ? (
             <div className="flex items-center justify-center h-full">

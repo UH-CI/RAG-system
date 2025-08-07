@@ -1,5 +1,12 @@
 import axios from 'axios';
-import type { SearchResponse, QuestionResponse, ApiError, CollectionsResponse } from '../types';
+import type { 
+  SearchResponse, 
+  QuestionResponse, 
+  ApiError, 
+  CollectionsResponse,
+  Bill,
+  FiscalNote
+} from '../types';
 
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8200';
@@ -509,4 +516,53 @@ export const streamChatWithPDF = async (
   }
 };
 
-export default api; 
+export default api;
+
+
+// MOCKUP fiscal note data for hb400
+const MOCK_FISCAL_NOTE_HB400: FiscalNote = {
+  "overview": "HB400 appropriates funds for the Judiciary for fiscal biennium 2025-2027,  with varying proposed operating budget figures across different committee versions ranging from approximately $198 million to $216 million per fiscal year.  The bill also includes capital improvement appropriations, with proposed General Obligation Bond allocations fluctuating between $9.9 million and $12.9 million for FY 2025-2026, and no allocation for FY 2026-2027 across different versions.  Several amendments adjusted appropriation amounts, effective dates (ranging from July 1, 2025 to April 23, 2057), and included  additional funding for civil legal services and immigration-related legal aid within the Judiciary budget.",
+  "policy_impact": "HB400 modifies existing Judiciary appropriations by significantly increasing funding for the fiscal biennium 2025-2027, with varying versions proposing operating budgets between $198 million and $216 million annually.  Crucially,  amendments, such as those in SD1 (SSCR1253),  introduce  new policy directives by allocating additional funds specifically for civil legal services ($1 million) and immigration-related legal aid ($750,000), reflecting a legislative strategy to enhance access to justice for vulnerable populations.  This aligns with broader legislative efforts to address societal needs and potentially impacts state governance by influencing the Judiciary's capacity to handle increased caseloads and expand its service offerings.",
+  "appropriations": "HB400 allocates varying amounts for the Judiciary's operating budget across different legislative versions, ranging from $198,782,736 to $216,237,353 in FY 2026-2027.  Capital improvement appropriations, primarily funded through General Obligation Bonds, are proposed at $9.9 million for FY 2025-2026, with no allocation for the subsequent fiscal year in some versions.  Intended uses include staffing increases (e.g.,  additional District Court Judge and support staff in Kona,  permanent and temporary FTE increases),  technology upgrades (cybersecurity), and funding for programs like the Criminal Justice Research Institute and civil legal services.",
+  "assumptions_and_methodology": "The operating budget projections for the Judiciary in HB400 rely on existing expenditure data and anticipated inflationary pressures, adjusted for proposed staffing increases and program expansions detailed in the bill's various versions.  Capital improvement cost estimates, particularly the $12.9 million figure in some versions for FY 2025-2026, are based on project-specific cost analyses provided by the Judiciary,  potentially incorporating comparable past projects and  consultant estimates (specific details on these sources are not explicitly provided in the available documents).  The discrepancy between proposed General Obligation Bond allocations across different versions reflects ongoing legislative negotiations and adjustments to project scope.",
+  "agency_impact": "The Judiciary's operational impact will include managing increased workloads stemming from  new staffing (e.g., a Kona District Court Judge and support staff,  additional FTEs) and expanded programs like enhanced civil legal services and immigration legal aid,  as mandated by HB400.  Administrative adjustments will be necessary to accommodate these changes, including  revised budgeting,  staff training, and  resource allocation across existing departments.  Budgetary impacts are directly tied to the varying appropriation levels in HB400, ranging from approximately $198 million to $216 million annually for operating expenses, plus capital improvement allocations ranging from $9.9 million to $12.9 million in FY 2025-2026.",
+  "economic_impact": "HB400's funding for the Judiciary, ranging from approximately $198 million to $216 million annually in operating funds and up to $12.9 million in capital improvements for FY 2025-2026, is projected to improve access to justice, particularly through increased funding for civil legal services ($1 million annually) and immigration-related legal aid ($750,000 annually).  These investments should reduce backlogs and improve efficiency within the court system, indirectly benefiting the Hawaii community through more timely dispute resolution and enhanced access to legal representation for vulnerable populations.  However, a precise quantification of community benefits and cost savings requires further analysis beyond the provided documents.",
+  "revenue_sources": "The primary funding source for the Judiciary's operating budget in HB400 is General Funds, with varying proposed allocations across different legislative versions ranging from approximately $198 million to $216 million annually for fiscal years 2025-2027.  Capital improvement projects are proposed to be funded through General Obligation Bonds, with amounts fluctuating between $9.9 million and $12.9 million for FY 2025-2026, and no allocation for FY 2026-2027 in some versions.  No other significant revenue streams are explicitly identified in the provided documents.",
+  "six_year_fiscal_implications": "The provided documents offer insufficient data for a complete six-year fiscal outlook.  The available information focuses primarily on the 2025-2027 biennium.  While HB400 includes appropriations for this period, ranging from approximately $198 million to $216 million annually in operating funds and up to $12.9 million in capital improvements for FY 2025-2026 (with varying amounts across different versions),  no projections extend beyond FY 2026-2027.  The Judiciary's request for additional FTEs (17.0 permanent and 1.0 temporary in FY 2026) suggests potential ongoing staffing costs, but the long-term implications of these additions are not specified.  Similarly, the  $1 million annual allocation for civil legal services and $750,000 for immigration-related legal aid are presented as recurring expenses for the biennium, but their continuation beyond 2027 is uncertain.  Assumptions regarding program expansion or permanence are absent from the provided documents, hindering the creation of a reliable six-year projection.  To generate a comprehensive six-year fiscal outlook, additional data on projected workload increases, inflation rates, potential program modifications, and long-term staffing plans are needed.  Without this information, any six-year projection would be highly speculative and unreliable.",
+  "fiscal_implications_after_6_years": "The provided documents lack sufficient information to project ongoing fiscal obligations for the Judiciary beyond the 2025-2027 biennium.  While the recurring nature of operating expenses like civil legal services ($1 million annually) and immigration-related legal aid ($750,000 annually) suggests continued costs, their long-term funding is unaddressed.  Similarly, the number of program sites or units remains unspecified beyond the initial implementation period, preventing a reliable projection of future operational needs and associated costs.  Therefore, a detailed analysis of the fiscal implications after six years is impossible without additional data on program sustainability and future budgetary allocations.",
+  "operating_revenue_impact": "The provided documents detail appropriations for the Judiciary's operating budget, but do not describe any anticipated impacts on *operating revenues*.  The fiscal note focuses solely on expenditures and appropriations from General Funds and General Obligation Bonds, with no mention of revenue generation or changes to existing revenue streams resulting from HB400.  Therefore, there is no discernible impact on operating revenues to report.",
+  "capital_expenditure_impact": "HB400 proposes capital improvement appropriations for the Judiciary, primarily funded through General Obligation Bonds.  Different versions of the bill propose varying amounts, ranging from $9.9 million to $12.9 million for Fiscal Year 2025-2026, with no allocation proposed for FY 2026-2027 in some versions.  These funds are intended for projects such as chiller replacement at the Kauai Judiciary Complex and general alterations, upgrades, and improvements to Judiciary facilities statewide, as detailed in Part IV of the bill."
+};
+
+const MOCK_BILLS: Bill[] = [
+    { id: 'hb400', name: 'HB400' },
+    { id: 'sb500', name: 'SB500' },
+];
+
+/**
+ * MOCKUP: Get available bills
+ */
+export const getBills = async (): Promise<Bill[]> => {
+  console.log('Fetching mock bills...');
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(MOCK_BILLS);
+    }, 500);
+  });
+};
+
+/**
+ * MOCKUP: Get fiscal note for a specific bill
+ */
+export const getBillFiscalNote = async (billId: string): Promise<FiscalNote> => {
+    console.log(`Fetching mock fiscal note for ${billId}...`);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (billId === 'hb400') {
+                resolve(MOCK_FISCAL_NOTE_HB400);
+            } else {
+                reject(new Error(`No fiscal note found for bill ${billId}`));
+            }
+        }, 1000);
+    });
+}; 

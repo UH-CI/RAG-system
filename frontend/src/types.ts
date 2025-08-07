@@ -118,4 +118,23 @@ export interface UploadProgress {
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   error?: string;
+}
+
+export interface Bill {
+  id: string;
+  name: string;
+}
+
+export interface FiscalNote {
+  overview: string;
+  policy_impact: string;
+  appropriations: string;
+  assumptions_and_methodology: string;
+  agency_impact: string;
+  economic_impact: string;
+  revenue_sources: string;
+  six_year_fiscal_implications: string;
+  fiscal_implications_after_6_years: string;
+  operating_revenue_impact: string;
+  capital_expenditure_impact: string;
 } 

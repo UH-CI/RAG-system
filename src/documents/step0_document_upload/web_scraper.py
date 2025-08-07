@@ -291,3 +291,63 @@ Return ONLY a valid JSON array without any explanations, markdown formatting, or
     finally:
         # Always close the browser
         driver.quit()
+
+def scrape_bill_page_links(bill_name: str, year: str):
+    """
+    Scrapes the Hawaii Capitol website for a specific bill to extract all document links.
+    """
+    import os
+    import time
+    import tempfile
+    import shutil
+    from urllib.parse import urlparse, urljoin, parse_qs
+    from bs4 import BeautifulSoup
+    from selenium.webdriver.common.by import By
+    import undetected_chromedriver as uc
+
+    bill_type = ''.join(filter(str.isalpha, bill_name))
+    bill_number = ''.join(filter(str.isdigit, bill_name))
+
+    measure_url = f"https://www.capitol.hawaii.gov/session/measure_indiv.aspx?billtype={bill_type}&billnumber={bill_number}&year={year}"
+    
+    download_dir = tempfile.mkdtemp()
+    
+    options = uc.ChromeOptions()
+    options.add_experimental_option("prefs", {
+        "download.default_directory": download_dir,
+        "download.prompt_for_download": False,
+        "plugins.always_open_pdf_externally": True
+    })
+    driver = uc.Chrome(options=options)
+    
+    try:
+        driver.get(measure_url)
+        time.sleep(0.1)
+
+        main_content = driver.find_element(By.ID, "main-content")
+        a_tags = main_content.find_elements(By.XPATH, ".//a[@href]")
+        
+        base_url = measure_url
+        raw_links = [urljoin(base_url, a.get_attribute("href")) for a in a_tags]
+        
+        # Filter for .htm and .pdf links
+        filtered_links = [u for u in raw_links if u.lower().endswith((".htm", ".pdf"))]
+        
+        # Prioritize .htm over .pdf for the same document base name
+        unique_docs = {}
+        for link in filtered_links:
+            path = urlparse(link).path
+            base = os.path.splitext(os.path.basename(path))[0]
+            key = os.path.dirname(path) + "/" + base
+            ext = os.path.splitext(path)[1].lower()
+            
+            if ext == ".htm":
+                unique_docs[key] = link
+            elif ext == ".pdf" and key not in unique_docs:
+                unique_docs[key] = link
+                
+        return list(unique_docs.values())
+
+    finally:
+        driver.quit()
+        shutil.rmtree(download_dir)

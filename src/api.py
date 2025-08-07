@@ -12,7 +12,7 @@ from datetime import datetime
 from documents.step0_document_upload.web_scraper import ai_crawler
 from typing import Generator
 
-from src.types.requests import (
+from app_types.requests import (
     CollectionRequest, SearchRequest, QueryRequest,
     ChunkingRequest, DocumentResponse, CrawlRequest,
     UploadPDFRequest, ChatWithPDFRequest, DriveUploadRequest,
@@ -22,18 +22,13 @@ from src.types.requests import (
 from documents.step0_document_upload.google_upload import download_pdfs_from_drive
 from documents.step1_text_extraction.pdf_text_extractor import extract_pdf_text
 from documents.step2_chunking.chunker import chunk_document
+from documents.step0_document_upload.web_scraper import scrape_bill_page_links
 
-# Handle both relative and absolute imports
-try:
-    from .settings import Settings
-    from .documents.embeddings import ChromaDBManager
-    from .query_processor import QueryProcessor
-    from .langgraph_agent import LangGraphRAGAgent
-except ImportError:
-    from settings import Settings
-    from documents.embeddings import ChromaDBManager
-    from query_processor import QueryProcessor
-    from langgraph_agent import LangGraphRAGAgent
+
+from settings import Settings
+from documents.embeddings import DynamicChromeManager
+from query_processor import QueryProcessor
+from langgraph_agent import LangGraphRAGAgent
 
 # Load configuration
 def load_config() -> Dict[str, Any]:
@@ -60,157 +55,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
-class DynamicChromeManager(ChromaDBManager):
-    """Dynamic ChromaDB manager that works with any collection name"""
-    def __init__(self, collection_name: str):
-        self.collection_name = collection_name
-        
-        # Initialize the base class components first
-        self.client = None
-        self.collection = None
-        self.embedding_function = None
-        
-        # Initialize client and embedding function
-        self._initialize_client()
-        self._initialize_embedding_function()
-        
-        # Now create/get the specific collection
-        try:
-            # Try to get existing collection
-            self.collection = self.client.get_collection(
-                name=collection_name,
-                embedding_function=self.embedding_function
-            )
-            print(f"✅ Retrieved existing collection: {collection_name}")
-            
-        except Exception:
-            # Create new collection if it doesn't exist
-            self.collection = self.client.create_collection(
-                name=collection_name,
-                embedding_function=self.embedding_function,
-                metadata={"hnsw:space": "cosine"}
-            )
-            print(f"✅ Created new collection: {collection_name}")
-    
-    def add_document(self, document: dict, ingestion_config: dict) -> bool:
-        """Add a document to the collection using specified contents_to_embed"""
-        try:
-            # Extract content fields specified in ingestion config
-            contents_to_embed = ingestion_config.get("contents_to_embed", [])
-            
-            # Combine all specified content fields
-            content_parts = []
-            for field in contents_to_embed:
-                if field in document and document[field]:
-                    content_parts.append(str(document[field]))
-            
-            if not content_parts:
-                print(f"No content found in fields {contents_to_embed} for document")
-                return False
-            
-            # Join all content with newlines
-            combined_content = "\n\n".join(content_parts)
-            
-            # Generate unique ID
-            import time
-            import uuid
-            doc_id = f"{self.collection_name}_{uuid.uuid4().hex[:8]}_{int(time.time())}"
-            
-            # Use entire document as metadata, ensuring all values are JSON-serializable
-            metadata = {}
-            for key, value in document.items():
-                if value is not None:
-                    if isinstance(value, (str, int, float, bool)):
-                        metadata[key] = value
-                    else:
-                        metadata[key] = str(value)
-                else:
-                    metadata[key] = ""
-            
-            # Add system metadata
-            metadata["id"] = doc_id
-            metadata["collection"] = self.collection_name
-            metadata["embedded_fields"] = json.dumps(contents_to_embed)  # Convert list to JSON string
-            
-            self.collection.add(
-                documents=[combined_content],
-                metadatas=[metadata],
-                ids=[doc_id]
-            )
-            return True
-                        
-        except Exception as e:
-            print(f"Error adding document to {self.collection_name}: {e}")
-            return False
-    
-    def search_similar_chunks(self, query: str, num_results: int = 50) -> List[Dict[str, Any]]:
-        """Search for similar chunks in the collection"""
-        try:
-            # HACK: Increase results for budget collection to account for filtering
-            if self.collection_name == "budget":
-                # Request 4x for budget to ensure we get ~200 items after filtering
-                actual_num_results = min(num_results * 4, 800)  # Cap at 800 to avoid excessive queries
-            else:
-                actual_num_results = num_results
-            
-            results = self.collection.query(
-                query_texts=[query],
-                n_results=actual_num_results
-            )
-            
-            formatted_results = []
-            print("🔍 Number of results before filtering:", len(results["documents"][0]))
-            if results["documents"] and results["documents"][0]:
-                for i, doc in enumerate(results["documents"][0]):
-                    result = {
-                        "content": doc,
-                        "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                        "score": 1.0 - results["distances"][0][i] if results["distances"] else 1.0
-                    }
-                    
-                    # HACK: Filter out budget items with "unknown" values
-                    if self.collection_name == "budget":
-                        content_lower = doc.lower()
-                        metadata_str = str(result["metadata"]).lower()
-                        metadata = result["metadata"]
-                        
-                        # Check for "unknown" in specific metadata fields
-                        fiscal_2025_amount = str(metadata.get("fiscal_year_2025_2026_amount", "")).lower()
-                        fiscal_2026_amount = str(metadata.get("fiscal_year_2026_2027_amount", "")).lower()
-                        expending_agency = str(metadata.get("expending_agency", "")).lower()
-                        
-                        # Filter if "unknown" appears in key financial fields (original logic)
-                        should_filter_original = (
-                            "amount: unknown" in content_lower or
-                            "appropriation: unknown" in content_lower or
-                            "funding: unknown" in content_lower or
-                            "budget: unknown" in content_lower or
-                            "'amount': 'unknown'" in metadata_str or
-                            "'appropriation': 'unknown'" in metadata_str or
-                            "'funding': 'unknown'" in metadata_str or
-                            "'budget': 'unknown'" in metadata_str
-                        )
-                        
-                        # Filter if "unknown" appears in specific metadata fields (new logic)
-                        should_filter_metadata = (
-                            "unknown" in fiscal_2025_amount or
-                            "unknown" in fiscal_2026_amount or
-                            "unknown" in expending_agency
-                        )
-                        
-                        if should_filter_original or should_filter_metadata:
-                            continue  # Skip this item
-                    
-                    formatted_results.append(result)
-            print("🔍 Number of results after filtering:", len(formatted_results))
-            # Limit to original requested number after filtering
-            return formatted_results[:num_results]
-                            
-        except Exception as e:
-            print(f"Error searching in {self.collection_name}: {e}")
-            return []
 
 # Create collection managers dynamically from config
 collection_names = config["collections"]
@@ -1038,6 +882,17 @@ async def upload_pdf(
         "uploaded_files": uploaded_files,
         "total_files": len(uploaded_files)
     }
+
+@app.post("/extract-bill-links")
+async def extract_bill_links(bill_name: str = Form(...), year: str = Form(...)):
+    """
+    Extracts document links for a given bill and year from the Hawaii Capitol website.
+    """
+    try:
+        links = scrape_bill_page_links(bill_name, year)
+        return {"links": links}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @app.post("/reset")
 async def reset_collections(collections: Optional[List[str]] = None):
