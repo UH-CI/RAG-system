@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Fiscal Note - {{ filename }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Bill Title and Dropdown -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            {% set bill_number = filename.replace('fiscal_note_', '').replace('.json', '').split('_')[0] if '_' in filename else 'Bill' %}
+            {% set year = filename.replace('fiscal_note_', '').replace('.json', '').split('_')[1][:4] if '_' in filename and filename.replace('fiscal_note_', '').replace('.json', '').split('_')|length > 1 else '2025' %}
+            
+            {% if 'HB727' in fiscal_note.overview or 'HB 727' in fiscal_note.overview %}
+                <h1 class="mb-1">HB 727 HD1, SD2, CD1; {{ year }}</h1>
+                <h2 class="text-muted mb-0">HB 727 HD1 SD2 CD1: RELATING TO THE WOMEN'S COURT</h2>
+            {% elif 'HB400' in fiscal_note.overview or 'HB 400' in fiscal_note.overview %}
+                <h1 class="mb-1">HB 400 HD1, SD2, CD1; {{ year }}</h1>
+                <h2 class="text-muted mb-0">HB 400: RELATING TO THE JUDICIARY BUDGET</h2>
+            {% else %}
+                <h1 class="mb-1">{{ current_file.title if current_file else filename.replace('fiscal_note_', '').replace('.json', '').replace('_', ' ').title() }}</h1>
+                <h2 class="text-muted mb-0">Fiscal Note Analysis</h2>
+            {% endif %}
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="fiscalNoteDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Switch Fiscal Note
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="fiscalNoteDropdown">
+                {% for file in files %}
+                <li>
+                    <a class="dropdown-item{% if file.filename == filename %} active{% endif %}" 
+                       href="{{ url_for('view_fiscal_note', filename=file.filename, theme=theme) }}">
+                        {{ file.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <hr class="mb-4">
+
+    <!-- Fiscal Note Content -->
+    <div class="fiscal-note-content">
+        
+        <!-- Overview Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Overview:</h3>
+            <p class="mb-0">{{ fiscal_note.overview|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.overview %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.overview * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Appropriations Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Appropriations:</h3>
+            <p class="mb-0">{{ fiscal_note.appropriations|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.appropriations %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.appropriations * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Assumptions and Methodology Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Assumptions & Methodology:</h3>
+            <p class="mb-0">{{ fiscal_note.assumptions_and_methodology|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.assumptions_and_methodology %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.assumptions_and_methodology * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Policy Impact Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Policy Impact:</h3>
+            <p class="mb-0">{{ fiscal_note.policy_impact|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.policy_impact %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.policy_impact * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Agency Impact Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Agency Impact:</h3>
+            <p class="mb-0">{{ fiscal_note.agency_impact|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.agency_impact %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.agency_impact * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Economic Impact Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Economic Impact:</h3>
+            <p class="mb-0">{{ fiscal_note.economic_impact|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.economic_impact %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.economic_impact * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Revenue Sources Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Revenue Sources:</h3>
+            <p class="mb-0">{{ fiscal_note.revenue_sources|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.revenue_sources %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.revenue_sources * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Six Year Fiscal Implications Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Six Year Fiscal Implications:</h3>
+            <p class="mb-0">{{ fiscal_note.six_year_fiscal_implications|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.six_year_fiscal_implications %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.six_year_fiscal_implications * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Operating Revenue Impact Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Operating Revenue Impact:</h3>
+            <p class="mb-0">{{ fiscal_note.operating_revenue_impact|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.operating_revenue_impact %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.operating_revenue_impact * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Capital Expenditure Impact Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Capital Expenditure Impact:</h3>
+            <p class="mb-0">{{ fiscal_note.capital_expenditure_impact|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.capital_expenditure_impact %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.capital_expenditure_impact * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Fiscal Implications After 6 Years Section -->
+        <div class="fiscal-section">
+            <h3 class="fw-bold mb-2">Fiscal Implications After 6 Years:</h3>
+            <p class="mb-0">{{ fiscal_note.fiscal_implications_after_6_years|safe|replace('\n', '<br>') }}</p>
+            {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.fiscal_implications_after_6_years %}
+            <div class="mt-2">
+                <span class="badge bg-secondary">Confidence: {{ (fiscal_note.confidence_scores.fiscal_implications_after_6_years * 100)|int }}%</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Generated Info -->
+        <div class="mt-5 pt-3 border-top">
+            <small class="text-muted">
+                Generated: {{ fiscal_note.generated_at|replace('T', ' ')|replace('Z', '') }}
+                {% if fiscal_note.confidence_scores and fiscal_note.confidence_scores.overall %}
+                | Overall Confidence: {{ (fiscal_note.confidence_scores.overall * 100)|int }}%
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom styles for the simplified layout */
+.fiscal-note-content {
+    max-width: 800px;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.fiscal-note-content h3 {
+    color: #333;
+    font-size: 1.1rem;
+    margin-top: 2rem;
+}
+
+.fiscal-note-content h3:first-child {
+    margin-top: 0;
+}
+
+.fiscal-note-content p {
+    color: #555;
+    text-align: justify;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.dropdown-item.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* --- SIMPLIFIED PRINT STYLES --- */
+@media print {
+    /* 1. Hide UI elements and reset text for printing */
+    .dropdown, .badge {
+        display: none !important;
+    }
+    p {
+        text-align: left !important;
+    }
+
+    /* 2. Set up page and a safe font size */
+    @page {
+        margin: 0.75in;
+    }
+    body {
+        font-size: 11pt;
+        line-height: 1.4;
+    }
+
+    /* 3. Basic page break rules */
+    h1, h2, h3 {
+        page-break-after: avoid; /* Keep headers with their text */
+    }
+    p, h3 {
+        orphans: 3; /* Don't leave single lines alone */
+        widows: 3;
+    }
+    
+    /* 4. Reset all web-only styling */
+    * {
+        color: #000 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

@@ -22,3 +22,16 @@ src/chroma_db/
 
 /improve_rag
 
+/src/chroma_db_courses
+/src/chroma_db_financeV1
+/src/debug_queries/*
+/src/documents/step1_text_extraction/output/bills.json
+/src/documents/step2_chunking/output/bills_chunked.json
+/src/documents/step2_chunking/output/bills_chunked_metadata.json
+
+/text_extraction_methods/hawaii_chunked_content.json
+/text_extraction_methods/hawaii_complete_content.json
+/src/documents/bills_chunked.json
+/src/documents/storage_documents/*
+/src/documents/extracted_text/*
+/src/documents/chunked_text/*

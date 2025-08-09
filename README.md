@@ -1,6 +1,6 @@
-# Course RAG System
+# Financial RAG System
 
-A generalized document search and question-answering system built with ChromaDB and Google AI embeddings. This system demonstrates RAG (Retrieval-Augmented Generation) capabilities using university course data as an example, but can be adapted for any document collection.
+A document search and question-answering system built with ChromaDB and Google AI embeddings. This system demonstrates RAG (Retrieval-Augmented Generation) capabilities using university course data as an example, but can be adapted for any document collection.
 
 ## 🚀 How to Start
 
@@ -21,201 +21,25 @@ cp .env.example .env
 # Edit .env and paste in your Google API key
 ```
 
-### 2. Initial Deployment with Ingestion
+### 2. Setup chroma_db
+download the chroma_db.tar.zst file from https://koacloud.its.hawaii.edu/f/8581276
+place file in /src
+then run the following command
+```bash
+# in RAG-system/src
+zstd -cd chroma_db.tar.zst | tar -xf -
+```
+
+### 3. Start the frontend and backend
 ```bash
 # Return to project root and run deployment with ingestion
 cd ..
-./deploy.sh docker --ingest
+./GO --init # if your first time running the project, otherwise, omit the "--init" flag
 ```
-
-This will start the ingestion process. The documents in `/src/documents` will be ingested according to the configuration in `config.json`.
-
-### 3. Understanding Document Configuration
-
-The `config.json` file controls how documents are processed and ingested:
-
-```json
-{
-  "collections": ["courses", "programs", "combined_pathways"],
-  "ingestion_configs": [
-    {
-      "collection_name": "courses",
-      "source_file": "UH-Manoa_courses.json",
-      "contents_to_embed": ["course_id", "subject", "title", "description", "credits", "prerequisites", "program", "department", "institution"]
-    },
-    {
-      "collection_name": "programs", 
-      "source_file": "UH-Manoa-programs.json",
-      "contents_to_embed": ["name", "program", "department", "college", "institution", "course_count", "courses"]
-    }
-  ]
-}
-```
-
-**How it works:**
-- Each `ingestion_config` defines a collection to be created in ChromaDB
-- `source_file` points to JSON files in the `/src/documents` directory
-- `contents_to_embed` specifies which fields from each document will be embedded as searchable content
-- The system will look for these files relative to the `/src` directory during ingestion
-
-**Document Structure:**
-- Place your JSON data files in `/src/documents/`
-- Each file should contain an array of objects with the fields specified in `contents_to_embed`
-- The system currently includes example files: `UH-Manoa_courses.json`, `UH-Manoa-programs.json`, etc.
-
-### 4. Production Deployment
-Once ingestion is complete and you're satisfied with the setup:
-
-```bash
-./deploy.sh docker
-```
-
-This will bake the vectors into the ChromaDB database on the Docker image for production usage, creating a self-contained deployment ready for serving.
-
-**The deploy script automatically starts both:**
-- **API Server**: `course-rag-api` container on port 8200
-- **Web Interface**: `course-rag-test` container on port 8280 (serves `course_rag_interface.html` via `test_server.py`)
-
-### 5. Verify Deployment
-```bash
-# Check if the API is running
-curl http://localhost:8200/
-
-# Check database status and document counts
-curl http://localhost:8200/stats
-
-# Access web interface at: http://localhost:8280/course_rag_interface.html
-```
-
-**Web Interface Features:**
-- **Intelligent Query Tab**: Chat-based interface with preset queries for testing
-- **Collections Tab**: Direct vector search across all document collections
-- **Real-time Results**: Shows query processing time, document sources, and confidence scores
-- **Responsive Design**: Works on desktop and mobile devices
 
 **That's it! 🎉** Your API is running at `http://localhost:8200`
 
 ---
-
-## 🛠️ Development Setup
-
-**For developers who want to modify the code**
-
-### Prerequisites
-- Python 3.11+
-- Git
-- Google API key
-
-### 1. Clone Repository
-```bash
-git clone <your-repo-url>
-cd course-RAG
-```
-
-### 2. Install Dependencies
-```bash
-pip install -r src/requirements.txt
-```
-
-### 3. Configure Environment
-```bash
-cp src/.env.example .env
-# Edit .env with your Google API key
-```
-
-### 4. Run Locally
-```bash
-cd src
-python run_api.py
-```
-
-### 5. Run with Document Ingestion
-```bash
-cd src
-python run_api.py --ingest
-```
-
-### 6. Test the System
-```bash
-cd src
-python tests/api_client_example.py
-```
-
----
-
-## 📖 Using the API
-
-### Web Interface
-- **API Documentation**: http://localhost:8200/docs
-- **Interactive Testing**: http://localhost:8200/redoc
-- **Test Interface**: http://localhost:8280 (if deployed)
-
-### Search Courses
-```bash
-curl -X POST "http://localhost:8200/search" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "computer science programming courses", "n_results": 3}'
-```
-
-### Multi-Collection Search
-```bash
-curl -X POST "http://localhost:8200/search_multi" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "data science courses and programs", "collections": ["courses", "programs"], "n_results": 5}'
-```
-
-### Get Statistics
-```bash
-curl http://localhost:8200/stats
-```
-
-### Upload Custom Documents (if enabled)
-```bash
-curl -X POST "http://localhost:8200/upload" -F "files=@your-document.pdf"
-```
-
-## 📁 Project Structure
-
-```
-course-RAG/
-├── src/
-│   ├── api.py                    # Main FastAPI application
-│   ├── run_api.py               # Server startup script
-│   ├── settings.py              # Configuration
-│   ├── query_processor.py       # Query processing logic
-│   ├── config.json              # Collection configurations
-│   ├── documents/               # Document processing
-│   │   ├── document_processor.py
-│   │   ├── embeddings.py
-│   │   └── ingest_documents.py
-│   ├── chroma_db/              # Database setup
-│   ├── tests/                  # Testing utilities
-│   └── UH-Manoa_courses.json   # Example course data
-├── nginx.conf                  # Nginx configuration (optional)
-├── docker-compose.yml          # Docker compose setup
-├── deploy.sh                   # Deployment script
-└── README.md                   # This file
-```
-
-## 🔧 Development Commands
-
-### Ingest Documents
-```bash
-cd src
-python documents/ingest_documents.py --source UH-Manoa_courses.json
-```
-
-### Build Docker Image
-```bash
-cd src
-docker build -t course-rag .
-```
-
-### Deploy with Script
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
 
 ## 💡 Example Usage
 
@@ -224,76 +48,49 @@ This system demonstrates RAG capabilities using University of Hawaii course data
 1. **Start the server** (production or development)
 2. **Search for courses** via the web interface at http://localhost:8200/docs
 3. **Ask questions** like:
-   - "What computer science courses cover machine learning?"
-   - "Show me all courses with prerequisites in calculus"
-   - "Find programming courses for beginners"
-   - "What are the credit requirements for data science programs?"
+   - What does the budget for education look like?
 
-## 🔄 Collections
+---
 
-The system supports multiple document collections:
+## 🏛️ Project Architecture
 
-- **courses**: Individual course information (8,297 UH courses)
-- **programs**: Academic program details
-- **combined_pathways**: Integrated course and program pathways
+This project is a full-stack application designed to provide a retrieval-augmented generation (RAG) system for financial documents. It is composed of three main components: a React-based frontend, a Python FastAPI backend, and a ChromaDB vector database.
 
-Each collection can be searched independently or combined for comprehensive results.
+### Frontend
 
-## 🆘 Troubleshooting
+The frontend is a single-page application built with **React** and **TypeScript**. It provides a user-friendly interface for:
+- Uploading and managing document collections.
+- Interacting with the RAG system through a chat interface.
+- Viewing search results and generated responses.
 
-**Server won't start?**
-- Check that port 8200 is available: `lsof -i :8200`
-- Verify your Google API key is valid
-- For Docker: Check logs with `docker logs course-rag-api`
+The frontend is located in the `frontend/` directory and is set up to run with a Vite development server.
 
-**No search results?**
-- Make sure documents were ingested successfully
-- Check if collections exist: `curl http://localhost:8200/stats`
-- Verify the database has content (should show document_count > 0)
+### Backend
 
-**Ingestion stuck at 0%?**
-- Large datasets may take time due to Google API rate limiting
-- Consider running without `--ingest` first, then ingest in smaller batches
-- Monitor progress with `docker logs course-rag-api`
+The backend is a **Python** application built with the **FastAPI** framework. It serves as the core of the RAG system and is responsible for:
+- **API Server**: Exposing a RESTful API for the frontend to consume.
+- **Document Processing**: Handling the ingestion, text extraction, chunking, and embedding of documents.
+- **RAG Pipeline**: Orchestrating the retrieval of relevant document chunks from ChromaDB and generating responses using a large language model (LLM) via Google's Generative AI.
 
-**Docker issues?**
-- Ensure Docker is running: `docker info`
-- Check if image exists: `docker images | grep course-rag`
-- Restart container: `docker restart course-rag-api`
+The backend code is located in the `src/` directory and is containerized with Docker.
 
-**ChromaDB errors?**
-- Delete old database: `rm -rf src/chroma_db/data`
-- Restart with fresh ingestion: `docker run ... --ingest`
+### Database
 
-**Need help?**
-- Check the full API documentation at http://localhost:8200/docs
-- Run the test client: `python src/tests/api_client_example.py`
-- Use the web interface at http://localhost:8280
+The vector database is powered by **ChromaDB**. It is responsible for:
+- Storing the vector embeddings of the document chunks.
+- Providing efficient similarity search to find the most relevant document chunks for a given query.
 
-## 🔄 Updates
+ChromaDB is run as a service within the Docker Compose setup, and its data is persisted using a Docker volume.
 
-**Production:** Pull the latest image and restart
-```bash
-docker pull tabalbar/course-rag:latest
-docker stop course-rag-api && docker rm course-rag-api
-docker run -d -p 8200:8200 --env-file .env --name course-rag-api tabalbar/course-rag:latest
-```
+### How It Works
 
-**Development:** Pull latest code and restart
-```bash
-git pull origin main
-cd src
-python run_api.py
-```
-
-## 🎯 Adapting for Your Data
-
-This system can be easily adapted for other document types:
-
-1. **Replace data source**: Update `config.json` with your document collections
-2. **Modify embeddings**: Adjust embedding fields in the configuration
-3. **Update preprocessing**: Modify document processing logic in `documents/`
-4. **Customize API**: Add domain-specific endpoints in `api.py`
+1.  **Document Ingestion**: A user uploads financial documents (e.g., PDFs) through the frontend.
+2.  **Text Extraction & Chunking**: The backend extracts the text from these documents and splits it into smaller, manageable chunks.
+3.  **Embedding & Storage**: Each chunk is then converted into a vector embedding using Google's Generative AI and stored in ChromaDB.
+4.  **User Query**: A user asks a question through the chat interface.
+5.  **Retrieval**: The backend takes the user's query, converts it into an embedding, and uses it to search ChromaDB for the most relevant document chunks.
+6.  **Augmentation & Generation**: The retrieved chunks are then passed to a large language model, along with the original query, to generate a comprehensive and contextually-aware answer.
+7.  **Response**: The final answer is streamed back to the user through the frontend.
 
 ## 📄 License
 

@@ -1,26 +1,30 @@
 FROM python:3.11-slim
 
 # Set working directory
-WORKDIR /app
+WORKDIR /src
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    tesseract-ocr \
+    poppler-utils \
     build-essential \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code into a src subdirectory
 COPY . .
 
 # Note: ChromaDB data will be provided via volume mount in production
 # (chroma_db/ should be excluded via .dockerignore to avoid conflicts)
 
 # Set environment variables
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/src
 ENV PYTHONUNBUFFERED=1
 
 # Expose ports (8200 for API, 8280 for test interface)

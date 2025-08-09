@@ -55,7 +55,7 @@ Each collection has specific fields that will be embedded as specified in config
                        help='Append documents to existing collections without resetting (same as --no-reset)')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind server to')
     parser.add_argument('--port', type=int, default=8200, help='Port to bind server to')
-    parser.add_argument('--reload', action='store_true', help='Enable auto-reload for development')
+    parser.add_argument('--no-reload', action='store_true', help='Disable auto-reload (enabled by default for development)')
     parser.add_argument('--log-level', choices=['debug', 'info', 'warning', 'error'], default='info',
                        help='Log level')
     args = parser.parse_args()
@@ -134,10 +134,35 @@ Each collection has specific fields that will be embedded as specified in config
                     
                     documents = data
                     
-                    # Use default collection for ingestion
-                    target_collection = config.get("default_collection", config["collections"][0])
+                    # Determine target collection based on filename
+                    filename = os.path.basename(args.ingest_file)
+                    target_collection = None
+                    ingestion_config = None
+
+                    # Search through ingestion configs to find matching source file
+                    for ing_config in config.get("ingestion_configs", []):
+                        if ing_config.get("source_file") == filename:
+                            target_collection = ing_config.get("collection_name")
+                            ingestion_config = ing_config
+                            break
+
+                    # If no match found, try without .json extension
+                    if target_collection is None:
+                        filename_without_ext = filename.replace('.json', '')
+                        for ing_config in config.get("ingestion_configs", []):
+                            source_file_without_ext = ing_config.get("source_file", "").replace('.json', '')
+                            if source_file_without_ext == filename_without_ext:
+                                target_collection = ing_config.get("collection_name")
+                                ingestion_config = ing_config
+                                break
+
+                    # If still no match, error out
+                    if target_collection is None:
+                        available_files = [ing_config.get("source_file") for ing_config in config.get("ingestion_configs", [])]
+                        raise Exception(f"No collection configuration found for file '{filename}'. Available configured files: {available_files}")
+
+                    print(f"🎯 Auto-detected collection: '{target_collection}' for file: '{filename}'")
                     manager = get_collection_manager(target_collection)
-                    ingestion_config = get_ingestion_config(target_collection)
                     
                     # Ingest documents
                     ingested_count = 0
@@ -279,7 +304,7 @@ Each collection has specific fields that will be embedded as specified in config
             "api:app",
             host=args.host,
             port=args.port,
-            reload=args.reload,
+            reload=not args.no_reload,
             log_level=args.log_level,
             access_log=True
         )

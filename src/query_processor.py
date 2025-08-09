@@ -14,6 +14,8 @@ try:
 except ImportError:
     from settings import settings
 
+import time
+
 
 class QueryProcessor:
     """Advanced query processor with multi-step reasoning"""
@@ -24,7 +26,7 @@ class QueryProcessor:
         self.collection_names = config["collections"]
         
         # Initialize Gemini model
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def get_collection_sample(self, collection_name: str) -> Dict[str, Any]:
         """Get a sample document from a collection for context"""
@@ -85,7 +87,7 @@ class QueryProcessor:
         
         collection_context = self.get_collection_context()
         
-        reasoning_prompt = f"""You are an intelligent query analyzer for a university course and program database. 
+        reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. 
 
 CONTEXT:
 {collection_context}
@@ -94,23 +96,46 @@ USER QUERY: "{user_query}"
 
 Analyze the user's query and provide a structured response with:
 
-1. INTENT: What is the user trying to accomplish? (e.g., "find courses", "compare programs", "get requirements")
+1. INTENT: What is the user trying to accomplish? Examples:
+   - "find courses" (educational queries)
+   - "compare programs" (educational queries)
+   - "create fiscal note" (budget/financial analysis)
+   - "analyze budget impact" (budget/financial analysis)
+   - "search documents" (general information retrieval)
+   - "generate report" (document analysis/synthesis)
 
-2. TARGET_COLLECTIONS: Which collections should be searched? Choose from: {', '.join(self.collection_names)}
+2. QUERY_TYPE: Classify the query type:
+   - "educational" (courses, programs, requirements)
+   - "fiscal_analysis" (budget items, fiscal notes, financial impact)
+   - "document_search" (general information retrieval)
+   - "data_analysis" (analytical or comparative queries)
+   - "report_generation" (creating structured outputs)
 
-3. SEARCH_TERMS: Generate 3-5 specific search terms or phrases that would help find relevant documents. Think about:
+3. TARGET_COLLECTIONS: Which collections should be searched? Choose from: {', '.join(self.collection_names)}
+
+4. SEARCH_TERMS: Generate 3-5 specific search terms or phrases that would help find relevant documents. Think about:
    - Key concepts from the query
    - Synonyms and related terms
-   - Academic terminology that might appear in course/program descriptions
+   - Domain-specific terminology that might appear in documents
+   - For fiscal queries: budget items, appropriations, program IDs, dollar amounts
+   - For educational queries: course codes, program names, requirements
 
-4. SEARCH_STRATEGY: Brief explanation of how to approach this search
+5. SEARCH_STRATEGY: Brief explanation of how to approach this search
+
+6. OUTPUT_FORMAT: What type of response would be most helpful?
+   - "informational" (explanatory text)
+   - "structured_data" (tables, lists, formatted data)
+   - "analysis" (comparative analysis or synthesis)
+   - "template" (structured document like fiscal note)
 
 Respond in JSON format:
 {{
     "intent": "brief description of user intent",
+    "query_type": "one of: educational, fiscal_analysis, document_search, data_analysis, report_generation",
     "target_collections": ["collection1", "collection2"],
     "search_terms": ["term1", "term2", "term3"],
     "search_strategy": "explanation of search approach",
+    "output_format": "one of: informational, structured_data, analysis, template",
     "confidence": "high/medium/low"
 }}
 """
@@ -131,11 +156,8 @@ Respond in JSON format:
                 
                 reasoning_result["target_collections"] = valid_collections
                 
-                print(f"🧠 Reasoning Step Results:")
-                print(f"   Intent: {reasoning_result.get('intent', 'Unknown')}")
-                print(f"   Collections: {valid_collections}")
-                print(f"   Search terms: {reasoning_result.get('search_terms', [])}")
-                print(f"   Confidence: {reasoning_result.get('confidence', 'unknown')}")
+                print(f"🧠 Reasoning Step")
+
                 
                 return reasoning_result
                 
@@ -144,9 +166,11 @@ Respond in JSON format:
                 # Fallback
                 return {
                     "intent": "general search",
+                    "query_type": "document_search",
                     "target_collections": self.collection_names,
                     "search_terms": [user_query],
                     "search_strategy": "basic keyword search",
+                    "output_format": "informational",
                     "confidence": "low"
                 }
                 
@@ -155,13 +179,15 @@ Respond in JSON format:
             # Fallback
             return {
                 "intent": "general search",
+                "query_type": "document_search",
                 "target_collections": self.collection_names,
                 "search_terms": [user_query],
                 "search_strategy": "basic keyword search",
+                "output_format": "informational",
                 "confidence": "low"
             }
     
-    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float = 0.5) -> List[Dict[str, Any]]:
+    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float) -> List[Dict[str, Any]]:
         """Step 2: Execute searches based on reasoning results with similarity threshold filtering"""
         
         target_collections = reasoning_result.get("target_collections", self.collection_names)
@@ -176,7 +202,7 @@ Respond in JSON format:
         
         # Search with each term across target collections
         # Use a high num_results to get more candidates for threshold filtering
-        max_candidates = 50  # Get more results to filter by threshold
+        max_candidates = 150  # Get more results to filter by threshold
         
         for search_term in search_terms:
             for collection_name in target_collections:
@@ -233,11 +259,34 @@ Respond in JSON format:
                 "total_documents_found": 0
             }
         
+        # Analyze the intent to determine response type
+        query_type = reasoning_result.get("query_type", "document_search")
+        output_format = reasoning_result.get("output_format", "informational")
+        intent = reasoning_result.get("intent", "").lower()
+        
         # Prepare context from search results
         context_parts = []
         sources = []
         
+        # Categorize search results by content type for better analysis
+        budget_items = []
+        fiscal_guidance = []
+        educational_content = []
+        general_documents = []
+        
         for i, result in enumerate(search_results):
+            content = result['content'].lower()
+            
+            # Categorize based on content patterns
+            if any(indicator in content for indicator in ["$", "million", "thousand", "appropriation", "budget", "fy 20", "edn", "fiscal year"]):
+                budget_items.append(result)
+            elif any(indicator in content for indicator in ["fiscal note", "assumptions", "methodology", "estimate", "impact analysis"]):
+                fiscal_guidance.append(result)
+            elif any(indicator in content for indicator in ["course", "program", "credit", "degree", "curriculum", "semester"]):
+                educational_content.append(result)
+            else:
+                general_documents.append(result)
+            
             context_parts.append(f"Document {i+1}:")
             context_parts.append(f"Content: {result['content']}")
             context_parts.append(f"Collection: {result['metadata'].get('collection', 'unknown')}")
@@ -245,37 +294,132 @@ Respond in JSON format:
             
             # Prepare source info for response
             sources.append({
-                "content": result["content"][:300] + "..." if len(result["content"]) > 300 else result["content"],
+                "content": result["content"],
                 "metadata": {k: v for k, v in result["metadata"].items() 
-                           if k not in ['search_term', 'reasoning_intent']},  # Clean up metadata
+                           if k not in ['search_term', 'reasoning_intent']},
                 "score": result.get("score"),
                 "collection": result["metadata"].get("collection", "unknown")
             })
         
         context = "\n".join(context_parts)
-        
-        # Generate comprehensive answer
-        answer_prompt = f"""You are an expert advisor for university courses and programs. Based on the retrieved documents, provide a comprehensive and helpful answer to the user's query.
+        # Choose appropriate prompt based on query type and output format
+        if query_type == "fiscal_analysis" and output_format == "template" and budget_items:
+            answer_prompt = f"""You are a fiscal analyst creating actual fiscal notes from budget data. Based on the retrieved documents, create a specific fiscal note using the available budget items.
 
 USER QUERY: "{user_query}"
+QUERY TYPE: {query_type}
+OUTPUT FORMAT: {output_format}
 
-SEARCH INTENT: {reasoning_result.get('intent', 'Unknown')}
+DOCUMENT ANALYSIS:
+- Budget Items: {len(budget_items)} documents
+- Fiscal Guidance: {len(fiscal_guidance)} documents  
+- Educational Content: {len(educational_content)} documents
+- General Documents: {len(general_documents)} documents
 
 RETRIEVED DOCUMENTS:
 {context}
 
-Instructions:
+INSTRUCTIONS FOR FISCAL NOTE CREATION:
+1. **EXTRACT ACTUAL DATA**: Use specific dollar amounts, program IDs, and funding sources from the documents
+2. **CREATE FISCAL IMPACT TABLE**: Build a table with actual numbers showing:
+   - Program/Item Description
+   - Appropriation Amount  
+   - Fund Source (General, Federal, Other)
+   - Fiscal Year periods
+3. **APPLY METHODOLOGY**: Use guidance documents to structure the analysis
+4. **PROVIDE ACTIONABLE OUTPUT**: Create a usable fiscal note draft
+
+FORMAT AS:
+## Fiscal Note Draft
+
+### Summary
+[Brief fiscal impact description]
+
+### Assumptions  
+[Key assumptions from data]
+
+### Fiscal Impact Table
+| Program | Description | FY 2025-26 | FY 2026-27 | Fund Source | Notes |
+|---------|-------------|------------|------------|-------------|-------|
+[Fill with actual data]
+
+### Methodology
+[How estimates were derived]
+
+### Analysis
+[Detailed fiscal impact explanation]
+
+**Use ACTUAL data from the documents, not hypothetical examples.**
+"""
+        
+        elif query_type == "educational" and output_format == "structured_data":
+            answer_prompt = f"""You are an academic advisor providing structured information about courses and programs.
+
+USER QUERY: "{user_query}"
+QUERY TYPE: {query_type}
+OUTPUT FORMAT: {output_format}
+
+DOCUMENT ANALYSIS:
+- Educational Content: {len(educational_content)} documents
+- General Documents: {len(general_documents)} documents
+
+RETRIEVED DOCUMENTS:
+{context}
+
+INSTRUCTIONS:
+1. **EXTRACT SPECIFIC INFORMATION**: Pull out course codes, credit hours, prerequisites, program requirements
+2. **ORGANIZE STRUCTURALLY**: Present information in tables, lists, or structured format
+3. **PROVIDE ACTIONABLE DETAILS**: Include specific requirements, timelines, or steps
+4. **REFERENCE SOURCES**: Indicate which documents provided each piece of information
+
+FORMAT appropriately with tables, bullet points, and clear organization for easy reference.
+"""
+        
+        elif output_format == "analysis":
+            answer_prompt = f"""You are a research analyst providing comparative analysis and synthesis of document information.
+
+USER QUERY: "{user_query}"
+QUERY TYPE: {query_type}
+OUTPUT FORMAT: {output_format}
+
+RETRIEVED DOCUMENTS:
+{context}
+
+INSTRUCTIONS:
+1. **SYNTHESIZE INFORMATION**: Combine information across documents to provide comprehensive analysis
+2. **IDENTIFY PATTERNS**: Look for trends, similarities, differences, or relationships
+3. **PROVIDE INSIGHTS**: Offer analytical insights beyond just summarizing content
+4. **STRUCTURE COMPARATIVELY**: Organize information to highlight comparisons and contrasts
+5. **SUPPORT WITH EVIDENCE**: Reference specific documents and data points
+
+Provide a thorough analytical response that goes beyond simple information retrieval.
+"""
+        
+        else:
+            # Default informational response for general queries
+            answer_prompt = f"""You are a knowledgeable assistant providing helpful information based on retrieved documents.
+
+USER QUERY: "{user_query}"
+QUERY TYPE: {query_type}
+OUTPUT FORMAT: {output_format}
+
+RETRIEVED DOCUMENTS:
+{context}
+
+INSTRUCTIONS:
 1. Provide a direct, helpful answer to the user's question
 2. Reference specific information from the documents when possible
-3. If comparing options, organize the information clearly
-4. If the documents don't fully answer the question, mention what information is available and what might be missing
+3. Organize information clearly for readability
+4. If documents don't fully answer the question, explain what information is available
 5. Be conversational but informative
-6. Use bullet points or numbered lists when appropriate for readability
+6. Use appropriate formatting (bullet points, lists, etc.) for clarity
+7. Focus on actionable information rather than general explanations
 
 Answer:"""
         
         try:
-            response = self.model.generate_content(answer_prompt)
+            startTime = time.time()
+            response = self.model.generate_content(user_query)
             
             return {
                 "response": response.text,
@@ -284,7 +428,13 @@ Answer:"""
                     "intent": reasoning_result.get("intent"),
                     "search_terms": reasoning_result.get("search_terms"),
                     "collections_searched": reasoning_result.get("target_collections"),
-                    "confidence": reasoning_result.get("confidence")
+                    "confidence": reasoning_result.get("confidence"),
+                    "document_categories": {
+                        "budget_items": len(budget_items),
+                        "fiscal_guidance": len(fiscal_guidance), 
+                        "educational_content": len(educational_content),
+                        "general_documents": len(general_documents)
+                    }
                 },
                 "total_documents_found": len(search_results)
             }
@@ -298,20 +448,35 @@ Answer:"""
                 "total_documents_found": len(search_results)
             }
     
-    def process_query(self, user_query: str, threshold: float = 0.5) -> Dict[str, Any]:
+    def process_query(self, user_query: str, threshold: float) -> Dict[str, Any]:
         """Main method: Execute the complete query processing pipeline with threshold filtering"""
         
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
         
         try:
+
+            start_time = time.time()
+            print(f"🚀 Starting query processing at {start_time}")
             # Step 1: Reasoning
             reasoning_result = self.reasoning_step(user_query)
+            reasoning_time = time.time() - start_time
+            print(f"Reasoning time: {reasoning_time:.2f} seconds")
+            
+            start_time = time.time()
+            print(f"🚀 Starting search at {start_time}")
             
             # Step 2: Searching with threshold
             search_results = self.searching_step(reasoning_result, threshold)
+            search_time = time.time() - start_time
+            print(f"Search time: {search_time:.2f} seconds")
+            
+            start_time = time.time()
+            print(f"🚀 Starting answering at {start_time}")
             
             # Step 3: Answering
             final_result = self.answering_step(user_query, reasoning_result, search_results)
+            answering_time = time.time() - start_time
+            print(f"Answering time: {answering_time:.2f} seconds")
             
             print(f"✅ Query processing complete - {len(search_results)} documents above threshold")
             
