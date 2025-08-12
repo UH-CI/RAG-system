@@ -249,109 +249,117 @@ def chunk_document(
         data = json.load(f)
     
     # Assume the JSON structure is a list of pages/documents, each with various text extraction methods
-    pages_data = data if isinstance(data, list) else [data]
-    
-    # Extract source identifier from the first document using the specified identifier field
-    source_identifier = "unknown_source"
-    if pages_data and identifier in pages_data[0]:
-        source_identifier = pages_data[0][identifier]
-        # If it's a URL, extract a meaningful filename
-        if identifier == 'url' and isinstance(source_identifier, str):
-            source_identifier = source_identifier.split('/')[-1] or source_identifier.split('/')[-2] or source_identifier
-    
-    # Concatenate and clean all text from the chosen methods to get the full document text
-    full_text = "\n".join(
-        "\n".join(page.get(method, "") for method in chosen_methods)
-        for page in pages_data
-    )
-    full_text = clean_text(full_text)
-    
-    # Calculate text statistics for the full document
-    full_document_char_length = len(full_text)
-    full_document_token_length = count_tokens(full_text)
+    all_pages_data = data if isinstance(data, list) else [data]
     
     final_results = []
+    all_docs_full_text = ""
+    source_identifiers = []
 
-    if use_ai:
-        logger.info("Starting AI-powered chunking...")
-        effective_prompt = prompt_description
-        if rewrite_query:
-            logger.info("Rewriting user query with LLM...")
-            effective_prompt = _call_llm_for_rewriting(prompt_description)
-            logger.info(f"Using rewritten prompt: {effective_prompt}")
-        
-        for i, page in enumerate(pages_data):
-            # 1. Assemble context from previous pages
-            context_start_index = max(0, i - previous_pages_to_include)
-            context_pages = pages_data[context_start_index:i]
-            previous_pages_text = "\n".join(
-                "\n".join(p.get(method, "") for method in chosen_methods)
-                for p in context_pages if any(p.get(method) for method in chosen_methods)
-            )
+    # Group pages by identifier
+    docs = {}
+    if all_pages_data:
+        # Check for identifier in the first item to avoid errors with empty lists.
+        if identifier not in all_pages_data[0]:
+             raise ValueError(f"Identifier '{identifier}' not found in the first item of the input data.")
+        for page in all_pages_data:
+            source_id = page.get(identifier)
+            # Use the full URL as source identifier, don't shorten it
+            if source_id not in docs:
+                docs[source_id] = []
+            docs[source_id].append(page)
 
-            # 2. Assemble few-shot examples from previously extracted items
-            examples_start_index = max(0, len(final_results) - context_items_to_show)
-            few_shot_examples_json = json.dumps(final_results[examples_start_index:], indent=2)
+    for source_identifier, pages_data in docs.items():
+        source_identifiers.append(source_identifier)
+        # Concatenate and clean all text from the chosen methods to get the full document text
+        full_text = "\n".join(
+            "\n".join(page.get(method, "") for method in chosen_methods)
+            for page in pages_data
+        )
+        full_text = clean_text(full_text)
+        all_docs_full_text += full_text + "\n"
 
-            # 3. Get current page text
-            current_page_text = "\n".join(page.get(method, "") for method in chosen_methods)
-            if not current_page_text.strip():
-                logger.info(f"Skipping page {page.get('page_number')} as it has no text in chosen methods.")
-                continue
-
-            # Escape raw text to prevent breaking the prompt structure or subsequent JSON parsing.
-            # This handles backslashes and double quotes which can break JSON strings.
-            safe_previous_pages_text = previous_pages_text.replace('\\', r'\\').replace('"', r'\"')
-            safe_current_page_text = current_page_text.replace('\\', r'\\').replace('"', r'\"')
-
-            # 4. Construct the final prompt
-            summary_instruction = ""
-            # Removed generate_chunk_summary as it's no longer a parameter
+        if use_ai:
+            logger.info(f"Starting AI-powered chunking for {source_identifier}...")
+            effective_prompt = prompt_description
+            if rewrite_query:
+                logger.info("Rewriting user query with LLM...")
+                effective_prompt = _call_llm_for_rewriting(prompt_description)
+                logger.info(f"Using rewritten prompt: {effective_prompt}")
             
-            full_prompt = (
-                f"**Instructions:**\n{effective_prompt}\n{summary_instruction}\n\n"
-                f"**Format Examples (previously extracted items):**\n{few_shot_examples_json}\n\n"
-                f"**Context from Previous Pages:**\n{safe_previous_pages_text}\n\n"
-                f"---\n"
-                f"**Current Page Text to Process:**\n{safe_current_page_text}\n\n"
-                f"---\n"
-                f"Based on the instructions, extract items ONLY from the 'Current Page Text to Process'. "
-                f"Return the items as a JSON array of objects. If no items are found, return an empty array []."
-            )
+            doc_results = []
+            for i, page in enumerate(pages_data):
+                # 1. Assemble context from previous pages
+                context_start_index = max(0, i - previous_pages_to_include)
+                context_pages = pages_data[context_start_index:i]
+                previous_pages_text = "\n".join(
+                    "\n".join(p.get(method, "") for method in chosen_methods)
+                    for p in context_pages if any(p.get(method) for method in chosen_methods)
+                )
 
-            # 5. Call LLM and add metadata to results
-            extracted_items = _call_llm_for_extraction(full_prompt)
-            for item in extracted_items:
-                item['source_identifier'] = source_identifier
-                item['metadata'] = {
-                    'source_page': page.get('page_number', i),
-                    'chunking_method': 'ai_extraction',
-                    'source_extraction_methods': chosen_methods,
-                    'chunk_size_tokens': count_tokens(item.get('text', json.dumps(item)))
+                # 2. Assemble few-shot examples from previously extracted items in the same document
+                examples_start_index = max(0, len(doc_results) - context_items_to_show)
+                few_shot_examples_json = json.dumps(doc_results[examples_start_index:], indent=2)
+
+                # 3. Get current page text
+                current_page_text = "\n".join(page.get(method, "") for method in chosen_methods)
+                if not current_page_text.strip():
+                    logger.info(f"Skipping page {page.get('page_number')} as it has no text in chosen methods.")
+                    continue
+
+                # Escape raw text to prevent breaking the prompt structure or subsequent JSON parsing.
+                safe_previous_pages_text = previous_pages_text.replace('\\', r'\\').replace('"', r'\"')
+                safe_current_page_text = current_page_text.replace('\\', r'\\').replace('"', r'\"')
+
+                # 4. Construct the final prompt
+                summary_instruction = ""
+                full_prompt = (
+                    f"**Instructions:**\n{effective_prompt}\n{summary_instruction}\n\n"
+                    f"**Format Examples (previously extracted items):**\n{few_shot_examples_json}\n\n"
+                    f"**Context from Previous Pages:**\n{safe_previous_pages_text}\n\n"
+                    f"---\n"
+                    f"**Current Page Text to Process:**\n{safe_current_page_text}\n\n"
+                    f"---\n"
+                    f"Based on the instructions, extract items ONLY from the 'Current Page Text to Process'. "
+                    f"Return the items as a JSON array of objects. If no items are found, return an empty array []."
+                )
+
+                # 5. Call LLM and add metadata to results
+                extracted_items = _call_llm_for_extraction(full_prompt)
+                for item in extracted_items:
+                    item['source_identifier'] = source_identifier
+                    item['metadata'] = {
+                        'source_page': page.get('page_number', i),
+                        'chunking_method': 'ai_extraction',
+                        'source_extraction_methods': chosen_methods,
+                        'chunk_size_tokens': count_tokens(item.get('text', json.dumps(item)))
+                    }
+                    if preserve_document_in_metadata:
+                        item['metadata']['original_document'] = full_text
+                doc_results.extend(extracted_items)
+            final_results.extend(doc_results)
+
+        else:
+            logger.info(f"Starting simple sliding-window chunking for {source_identifier}...")
+            text_chunks = _simple_chunker(full_text, chunk_size, overlap, preserve_sentences, chunk_in_tokens, sentence_overlap)
+            
+            for chunk in text_chunks:
+                chunk_data = {
+                    "chunk_id": len(final_results),
+                    "text": chunk,
+                    "source_identifier": source_identifier,
+                    "metadata": {
+                        "chunking_method": "simple_sliding_window",
+                        "source_extraction_methods": chosen_methods,
+                        "chunk_size_tokens": count_tokens(chunk)
+                    }
                 }
                 if preserve_document_in_metadata:
-                    item['metadata']['original_document'] = full_text
-            final_results.extend(extracted_items)
+                    chunk_data['metadata']['original_document'] = full_text
+                final_results.append(chunk_data)
 
-    else:
-        logger.info("Starting simple sliding-window chunking...")
-        text_chunks = _simple_chunker(full_text, chunk_size, overlap, preserve_sentences, chunk_in_tokens, sentence_overlap)
-        
-        # 2. Structure the output
-        for i, chunk in enumerate(text_chunks):
-            chunk_data = {
-                "chunk_id": i,
-                "text": chunk,
-                "source_identifier": source_identifier,
-                "metadata": {
-                    "chunking_method": "simple_sliding_window",
-                    "source_extraction_methods": chosen_methods,
-                    "chunk_size_tokens": count_tokens(chunk)
-                }
-            }
-            if preserve_document_in_metadata:
-                chunk_data['metadata']['original_document'] = full_text
-            final_results.append(chunk_data)
+    # --- Calculate text statistics for the full document ---
+    full_document_char_length = len(all_docs_full_text)
+    full_document_token_length = count_tokens(all_docs_full_text)
 
     # --- Save Final Results ---
     with open(output_json_path, 'w', encoding='utf-8') as f:
@@ -379,8 +387,8 @@ def chunk_document(
         },
         "results": {
             "total_chunks": len(final_results),
-            "source_identifier": source_identifier,
-            "input_documents_count": len(pages_data),
+            "source_identifiers": source_identifiers,
+            "input_documents_count": len(all_pages_data),
             "chunked_file_size_bytes": chunked_file_size_bytes
         }
     }

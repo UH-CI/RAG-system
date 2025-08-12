@@ -102,11 +102,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center py-12">
             <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Fin Chatbot</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Policy Chatbot</h3>
             <p className="text-gray-600 mb-4">
-              Ask questions about the state budget and the state of Hawaii.
+              Ask questions about the policies for UH Manoa.
             </p>
-            <div className="max-w-md mx-auto">
+            {/* <div className="max-w-md mx-auto">
               <p className="text-sm text-gray-500 mb-3">Try asking:</p>
               <div className="space-y-2 text-sm">
                 <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
@@ -116,7 +116,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <p className="text-green-700">"Can you tell me about the appropriation bill for [highway, construction, etc..] and how much will it cost?"</p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
 
@@ -174,8 +174,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   )}
                 </div>
 
-                {/* Sources */}
-                {message.type === 'assistant' && message.sources && renderSources(message.sources)}
+                {/* Source Links */}
+                {message.type === 'assistant' && message.sources && message.sources.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <h4 className="text-xs font-medium text-gray-500 mb-2">Sources</h4>
+                    <div className="space-y-1">
+                      {(() => {
+                        // Debug: log the sources to see what's available
+                        console.log('Sources:', message.sources);
+                        
+                        const uniqueSources = message.sources
+                          .filter((source, index, self) => {
+                            const sourceId = source.source_identifier || source.metadata?.source_identifier;
+                            return sourceId && self.findIndex(s => 
+                              (s.source_identifier || s.metadata?.source_identifier) === sourceId
+                            ) === index;
+                          })
+                          .slice(0, 2);
+                        
+                        console.log('Filtered sources:', uniqueSources);
+                        
+                        return uniqueSources.map((source, index) => {
+                          const sourceId = source.source_identifier || source.metadata?.source_identifier;
+                          return (
+                            <div key={`link-${index}`}>
+                              <a 
+                                href={sourceId} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-xs underline break-all"
+                              >
+                                {sourceId}
+                              </a>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                )}
 
                 {/* Timestamp */}
                 <div className={`text-xs mt-2 ${

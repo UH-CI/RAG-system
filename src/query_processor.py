@@ -4,6 +4,7 @@ Implements reasoning -> searching -> answering pipeline
 """
 
 import json
+import re
 import google.generativeai as genai
 from typing import List, Dict, Any, Optional
 from pathlib import Path
@@ -15,6 +16,25 @@ except ImportError:
     from settings import settings
 
 import time
+
+
+def _extract_json_from_response(text: str) -> Optional[Dict[str, Any]]:
+    """Extracts a JSON object from a string, even if it's embedded in markdown."""
+    # Find the JSON block using a regex
+    match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"❌ Failed to parse extracted JSON: {e}")
+            return None
+    
+    # If no markdown block is found, try to parse the whole string
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
 
 
 class QueryProcessor:
@@ -87,55 +107,27 @@ class QueryProcessor:
         
         collection_context = self.get_collection_context()
         
-        reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. 
+        reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. Your task is to deconstruct a user's query into a structured search plan.
 
-CONTEXT:
+CONTEXT ON AVAILABLE DATA:
 {collection_context}
 
 USER QUERY: "{user_query}"
 
-Analyze the user's query and provide a structured response with:
+Based on the user's query and the available data, provide a structured response with the following components:
 
-1. INTENT: What is the user trying to accomplish? Examples:
-   - "find courses" (educational queries)
-   - "compare programs" (educational queries)
-   - "create fiscal note" (budget/financial analysis)
-   - "analyze budget impact" (budget/financial analysis)
-   - "search documents" (general information retrieval)
-   - "generate report" (document analysis/synthesis)
-
-2. QUERY_TYPE: Classify the query type:
-   - "educational" (courses, programs, requirements)
-   - "fiscal_analysis" (budget items, fiscal notes, financial impact)
-   - "document_search" (general information retrieval)
-   - "data_analysis" (analytical or comparative queries)
-   - "report_generation" (creating structured outputs)
-
-3. TARGET_COLLECTIONS: Which collections should be searched? Choose from: {', '.join(self.collection_names)}
-
-4. SEARCH_TERMS: Generate 3-5 specific search terms or phrases that would help find relevant documents. Think about:
-   - Key concepts from the query
-   - Synonyms and related terms
-   - Domain-specific terminology that might appear in documents
-   - For fiscal queries: budget items, appropriations, program IDs, dollar amounts
-   - For educational queries: course codes, program names, requirements
-
-5. SEARCH_STRATEGY: Brief explanation of how to approach this search
-
-6. OUTPUT_FORMAT: What type of response would be most helpful?
-   - "informational" (explanatory text)
-   - "structured_data" (tables, lists, formatted data)
-   - "analysis" (comparative analysis or synthesis)
-   - "template" (structured document like fiscal note)
+1.  **INTENT**: Briefly describe what the user is trying to accomplish.
+2.  **HYPOTHETICAL_ANSWER**: Generate a concise, hypothetical answer to the user's query. This answer should be a short paragraph that sounds like a plausible response, even if you don't know the exact details. This will be used to find semantically similar documents.
+3.  **KEYWORDS**: Provide exactly TWO specific keywords or key phrases for a keyword-based search. These should be distinct and likely to appear in relevant documents.
+4.  **TARGET_COLLECTIONS**: Identify the most relevant collections to search from this list: {', '.join(self.collection_names)}.
+5.  **CONFIDENCE**: Rate your confidence in this plan (high/medium/low).
 
 Respond in JSON format:
 {{
     "intent": "brief description of user intent",
-    "query_type": "one of: educational, fiscal_analysis, document_search, data_analysis, report_generation",
+    "hypothetical_answer": "A short, plausible answer to the user's query.",
+    "keywords": ["keyword1", "keyword2"],
     "target_collections": ["collection1", "collection2"],
-    "search_terms": ["term1", "term2", "term3"],
-    "search_strategy": "explanation of search approach",
-    "output_format": "one of: informational, structured_data, analysis, template",
     "confidence": "high/medium/low"
 }}
 """
@@ -144,9 +136,9 @@ Respond in JSON format:
             response = self.model.generate_content(reasoning_prompt)
             
             # Try to parse JSON response
-            try:
-                reasoning_result = json.loads(response.text)
-                
+            reasoning_result = _extract_json_from_response(response.text)
+
+            if reasoning_result:
                 # Validate collections exist
                 valid_collections = [c for c in reasoning_result.get("target_collections", []) 
                                    if c in self.collection_names]
@@ -157,11 +149,11 @@ Respond in JSON format:
                 reasoning_result["target_collections"] = valid_collections
                 
                 print(f"🧠 Reasoning Step")
-
+                # Add a print statement to display the generated reasoning
+                print(json.dumps(reasoning_result, indent=2))
                 
                 return reasoning_result
-                
-            except json.JSONDecodeError:
+            else:
                 print(f"❌ Failed to parse reasoning response as JSON: {response.text}")
                 # Fallback
                 return {
@@ -188,263 +180,137 @@ Respond in JSON format:
             }
     
     def searching_step(self, reasoning_result: Dict[str, Any], threshold: float, k: int) -> List[Dict[str, Any]]:
-        """Step 2: Execute searches based on reasoning results with similarity threshold filtering"""
-        
+        """
+        Step 2: Execute hybrid search based on reasoning results.
+        - 2/3 of k are retrieved via keyword search.
+        - 1/3 of k are retrieved via dense vector search.
+        """
         target_collections = reasoning_result.get("target_collections", self.collection_names)
-        search_terms = reasoning_result.get("search_terms", [])
+        keywords = reasoning_result.get("keywords", [])
+        hypothetical_answer = reasoning_result.get("hypothetical_answer", "")
+
+        print(f"🔍 Hybrid Searching Step:")
+        print(f"   Collections: {target_collections}")
+        print(f"   Keywords: {keywords}")
+        print(f"   Hypothetical Answer: {hypothetical_answer[:80]}...")
+        print(f"   Threshold: {threshold}, K: {k}")
+
+        # Allocate K between keyword and dense search
+        k_keyword = (k * 2) // 3
+        k_dense = k - k_keyword
         
         all_results = []
-        
-        print(f"🔍 Searching Step:")
-        print(f"   Collections: {target_collections}")
-        print(f"   Terms: {search_terms}")
-        print(f"   Threshold: {threshold}")
-        
-        # Search with each term across target collections
-        # Use a high num_results to get more candidates for threshold filtering
-        
-        for search_term in search_terms:
+
+        # --- Keyword Search (Sparse) ---
+        if keywords:
             for collection_name in target_collections:
                 try:
-                    if collection_name in self.collection_managers:
-                        manager = self.collection_managers[collection_name]
-                        results = manager.search_similar_chunks(search_term, k)
-                        
-                        # Filter results by threshold
-                        filtered_results = []
-                        for result in results:
-                            score = result.get("score", 0.0)
-                            if score >= threshold:
-                                # Add search context to each result
-                                result["metadata"]["collection"] = collection_name
-                                result["metadata"]["search_term"] = search_term
-                                result["metadata"]["reasoning_intent"] = reasoning_result.get("intent", "unknown")
-                                filtered_results.append(result)
-                        
-                        all_results.extend(filtered_results)
-                        print(f"   {collection_name} with '{search_term}': {len(results)} total, {len(filtered_results)} above threshold")
-                            
+                    manager = self.collection_managers.get(collection_name)
+                    if manager:
+                        keyword_results = manager.keyword_search(keywords, num_results=k_keyword)
+                        for res in keyword_results:
+                            res["metadata"]["search_method"] = "keyword"
+                        all_results.extend(keyword_results)
+                        print(f"   Keyword search in '{collection_name}' found {len(keyword_results)} results.")
                 except Exception as e:
-                    print(f"Error searching {collection_name} with term '{search_term}': {e}")
-                    continue
-        
-        # Remove duplicates based on document ID and sort by score
+                    print(f"   Error during keyword search in {collection_name}: {e}")
+
+        # --- Dense Search (Semantic) ---
+        if hypothetical_answer:
+            for collection_name in target_collections:
+                try:
+                    manager = self.collection_managers.get(collection_name)
+                    if manager:
+                        dense_results = manager.search_similar_chunks(hypothetical_answer, num_results=k_dense)
+                        # Filter by threshold
+                        for res in dense_results:
+                            if res.get("score", 0.0) >= threshold:
+                                res["metadata"]["search_method"] = "dense"
+                                all_results.append(res)
+                        print(f"   Dense search in '{collection_name}' found {len(dense_results)} results above threshold.")
+                except Exception as e:
+                    print(f"   Error during dense search in {collection_name}: {e}")
+
+        # --- Deduplicate and Sort ---
         seen_ids = set()
         unique_results = []
-        
         for result in all_results:
-            doc_id = result["metadata"].get("id", "")
-            if doc_id and doc_id not in seen_ids:
+            # Use a unique identifier from metadata if available, otherwise use content
+            doc_id = result["metadata"].get("id") or result.get("content")
+            if doc_id not in seen_ids:
                 seen_ids.add(doc_id)
                 unique_results.append(result)
         
-        # Sort by score (higher is better)
-        if unique_results and "score" in unique_results[0]:
-            unique_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        # Sort by score (higher is better). Keyword results have a baseline score.
+        unique_results.sort(key=lambda x: x.get("score", 0), reverse=True)
         
-        print(f"   Found {len(all_results)} total results, {len(unique_results)} unique above threshold")
+        print(f"   Found {len(all_results)} total results, {len(unique_results)} unique after deduplication.")
         
-        return unique_results
+        return unique_results[:k]
     
     def answering_step(self, user_query: str, reasoning_result: Dict[str, Any], 
                       search_results: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Step 3: Generate comprehensive answer based on retrieved documents"""
+        """Step 3: Generate a direct answer based on the retrieved documents."""
         
         if not search_results:
             return {
-                "response": "I couldn't find any relevant documents to answer your query. Please try rephrasing your question or being more specific.",
+                "response": "I'm sorry, but I couldn't find any relevant documents to answer your question. Please try asking the question differently or being more specific.",
                 "sources": [],
-                "reasoning": reasoning_result,
-                "total_documents_found": 0
+                "reasoning": reasoning_result
             }
-        
-        # Analyze the intent to determine response type
-        query_type = reasoning_result.get("query_type", "document_search")
-        output_format = reasoning_result.get("output_format", "informational")
-        intent = reasoning_result.get("intent", "").lower()
         
         # Prepare context from search results
         context_parts = []
         sources = []
-        
-        # Categorize search results by content type for better analysis
-        budget_items = []
-        fiscal_guidance = []
-        educational_content = []
-        general_documents = []
-        
         for i, result in enumerate(search_results):
-            content = result['content'].lower()
-            
-            # Categorize based on content patterns
-            if any(indicator in content for indicator in ["$", "million", "thousand", "appropriation", "budget", "fy 20", "edn", "fiscal year"]):
-                budget_items.append(result)
-            elif any(indicator in content for indicator in ["fiscal note", "assumptions", "methodology", "estimate", "impact analysis"]):
-                fiscal_guidance.append(result)
-            elif any(indicator in content for indicator in ["course", "program", "credit", "degree", "curriculum", "semester"]):
-                educational_content.append(result)
-            else:
-                general_documents.append(result)
-            
-            context_parts.append(f"Document {i+1}:")
-            context_parts.append(f"Content: {result['content']}")
-            context_parts.append(f"Collection: {result['metadata'].get('collection', 'unknown')}")
-            context_parts.append("---")
-            
-            # Prepare source info for response
+            context_parts.append(f"Document {i+1} (Source: {result['metadata'].get('collection', 'unknown')}, Relevance Score: {result.get('score', 0):.2f}):\n{result['content']}\n---")
             sources.append({
                 "content": result["content"],
-                "metadata": {k: v for k, v in result["metadata"].items() 
-                           if k not in ['search_term', 'reasoning_intent']},
+                "metadata": {k: v for k, v in result["metadata"].items() if k != 'search_method'},
                 "score": result.get("score"),
-                "collection": result["metadata"].get("collection", "unknown")
+                "collection": result["metadata"].get("collection", "unknown"),
+                "source_identifier": result["metadata"].get("source_identifier")
             })
         
         context = "\n".join(context_parts)
-        # Choose appropriate prompt based on query type and output format
-        if query_type == "fiscal_analysis" and output_format == "template" and budget_items:
-            answer_prompt = f"""You are a fiscal analyst creating actual fiscal notes from budget data. Based on the retrieved documents, create a specific fiscal note using the available budget items.
-
-USER QUERY: "{user_query}"
-QUERY TYPE: {query_type}
-OUTPUT FORMAT: {output_format}
-
-DOCUMENT ANALYSIS:
-- Budget Items: {len(budget_items)} documents
-- Fiscal Guidance: {len(fiscal_guidance)} documents  
-- Educational Content: {len(educational_content)} documents
-- General Documents: {len(general_documents)} documents
-
-RETRIEVED DOCUMENTS:
-{context}
-
-INSTRUCTIONS FOR FISCAL NOTE CREATION:
-1. **EXTRACT ACTUAL DATA**: Use specific dollar amounts, program IDs, and funding sources from the documents
-2. **CREATE FISCAL IMPACT TABLE**: Build a table with actual numbers showing:
-   - Program/Item Description
-   - Appropriation Amount  
-   - Fund Source (General, Federal, Other)
-   - Fiscal Year periods
-3. **APPLY METHODOLOGY**: Use guidance documents to structure the analysis
-4. **PROVIDE ACTIONABLE OUTPUT**: Create a usable fiscal note draft
-
-FORMAT AS:
-## Fiscal Note Draft
-
-### Summary
-[Brief fiscal impact description]
-
-### Assumptions  
-[Key assumptions from data]
-
-### Fiscal Impact Table
-| Program | Description | FY 2025-26 | FY 2026-27 | Fund Source | Notes |
-|---------|-------------|------------|------------|-------------|-------|
-[Fill with actual data]
-
-### Methodology
-[How estimates were derived]
-
-### Analysis
-[Detailed fiscal impact explanation]
-
-**Use ACTUAL data from the documents, not hypothetical examples.**
-"""
         
-        elif query_type == "educational" and output_format == "structured_data":
-            answer_prompt = f"""You are an academic advisor providing structured information about courses and programs.
+        answer_prompt = f"""You are a helpful assistant. Your task is to answer the user's question based *only* on the provided documents.
 
-USER QUERY: "{user_query}"
-QUERY TYPE: {query_type}
-OUTPUT FORMAT: {output_format}
-
-DOCUMENT ANALYSIS:
-- Educational Content: {len(educational_content)} documents
-- General Documents: {len(general_documents)} documents
+USER QUESTION:
+"{user_query}"
 
 RETRIEVED DOCUMENTS:
+---
 {context}
+---
 
 INSTRUCTIONS:
-1. **EXTRACT SPECIFIC INFORMATION**: Pull out course codes, credit hours, prerequisites, program requirements
-2. **ORGANIZE STRUCTURALLY**: Present information in tables, lists, or structured format
-3. **PROVIDE ACTIONABLE DETAILS**: Include specific requirements, timelines, or steps
-4. **REFERENCE SOURCES**: Indicate which documents provided each piece of information
-
-FORMAT appropriately with tables, bullet points, and clear organization for easy reference.
+1.  Carefully read the user's question and the retrieved documents.
+2.  Formulate a clear and concise answer using only the information found in the documents.
+3.  If the documents do not contain the information needed to answer the question, you MUST state that clearly. Do not use any outside knowledge.
+4.  If you cannot answer the question, still try to be informative as best as you can.
+5.  Be concise and to the point.
+Answer the question as if you are talking to the user.
+They do not know you have access to the documents -- and they don't need to know.
+Treat it as a real conversation.
+At maximum, use 1 paragraph to answer the question.
 """
-        
-        elif output_format == "analysis":
-            answer_prompt = f"""You are a research analyst providing comparative analysis and synthesis of document information.
-
-USER QUERY: "{user_query}"
-QUERY TYPE: {query_type}
-OUTPUT FORMAT: {output_format}
-
-RETRIEVED DOCUMENTS:
-{context}
-
-INSTRUCTIONS:
-1. **SYNTHESIZE INFORMATION**: Combine information across documents to provide comprehensive analysis
-2. **IDENTIFY PATTERNS**: Look for trends, similarities, differences, or relationships
-3. **PROVIDE INSIGHTS**: Offer analytical insights beyond just summarizing content
-4. **STRUCTURE COMPARATIVELY**: Organize information to highlight comparisons and contrasts
-5. **SUPPORT WITH EVIDENCE**: Reference specific documents and data points
-
-Provide a thorough analytical response that goes beyond simple information retrieval.
-"""
-        
-        else:
-            # Default informational response for general queries
-            answer_prompt = f"""You are a knowledgeable assistant providing helpful information based on retrieved documents.
-
-USER QUERY: "{user_query}"
-QUERY TYPE: {query_type}
-OUTPUT FORMAT: {output_format}
-
-RETRIEVED DOCUMENTS:
-{context}
-
-INSTRUCTIONS:
-1. Provide a direct, helpful answer to the user's question
-2. Reference specific information from the documents when possible
-3. Organize information clearly for readability
-4. If documents don't fully answer the question, explain what information is available
-5. Be conversational but informative
-6. Use appropriate formatting (bullet points, lists, etc.) for clarity
-7. Focus on actionable information rather than general explanations
-
-Answer:"""
         
         try:
-            startTime = time.time()
-            response = self.model.generate_content(user_query)
+            response = self.model.generate_content(answer_prompt)
             
             return {
                 "response": response.text,
                 "sources": sources,
-                "reasoning": {
-                    "intent": reasoning_result.get("intent"),
-                    "search_terms": reasoning_result.get("search_terms"),
-                    "collections_searched": reasoning_result.get("target_collections"),
-                    "confidence": reasoning_result.get("confidence"),
-                    "document_categories": {
-                        "budget_items": len(budget_items),
-                        "fiscal_guidance": len(fiscal_guidance), 
-                        "educational_content": len(educational_content),
-                        "general_documents": len(general_documents)
-                    }
-                },
-                "total_documents_found": len(search_results)
+                "reasoning": reasoning_result
             }
             
         except Exception as e:
             print(f"❌ Error generating answer: {e}")
             return {
-                "response": f"I found relevant documents but encountered an error generating the response: {str(e)}",
+                "response": f"I found relevant documents but encountered an error while generating the final response: {str(e)}",
                 "sources": sources,
-                "reasoning": reasoning_result,
-                "total_documents_found": len(search_results)
+                "reasoning": reasoning_result
             }
     
     def process_query(self, user_query: str, threshold: float, k: int) -> Dict[str, Any]:

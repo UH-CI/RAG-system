@@ -526,6 +526,51 @@ class DynamicChromeManager(ChromaDBManager):
                 logger.error(f"❌ Failed to re-establish collection object for '{self.collection_name}': {e_get}")
             return False
 
+    def keyword_search(self, keywords: List[str], num_results: int = 20) -> List[Dict[str, Any]]:
+        """
+        Performs a keyword search by filtering for documents containing any of the keywords.
+        This is a simple approximation of a sparse retrieval method like BM25.
+        """
+        if not keywords:
+            return []
+
+        all_keyword_results = []
+        try:
+            # Create a filter to find documents where the 'text' field contains any of the keywords.
+            # This is a simplified approach. For true BM25, a different system is needed.
+            # We'll retrieve a larger number of documents and filter them client-side.
+            
+            # Since ChromaDB's $contains is not standard and might not be supported,
+            # we retrieve documents and filter them manually.
+            # Let's retrieve a decent number to filter from.
+            retrieved_docs = self.collection.get(limit=num_results * 5) # Retrieve more to have a good pool
+            
+            matching_docs = []
+            seen_ids = set()
+
+            for i, doc_text in enumerate(retrieved_docs['documents']):
+                doc_id = retrieved_docs['ids'][i]
+                if doc_id in seen_ids:
+                    continue
+
+                for keyword in keywords:
+                    if keyword.lower() in doc_text.lower():
+                        matching_docs.append({
+                            "content": doc_text,
+                            "metadata": retrieved_docs['metadatas'][i],
+                            "score": 0.5 # Assign a baseline score for keyword match
+                        })
+                        seen_ids.add(doc_id)
+                        break # Move to the next document once a keyword is found
+            
+            # Limit the results to the requested number
+            all_keyword_results = matching_docs[:num_results]
+
+        except Exception as e:
+            logger.error(f"❌ Error during keyword search in '{self.collection_name}': {e}")
+
+        return all_keyword_results
+
     def search_similar_chunks(self, query: str, num_results: int = 50) -> List[Dict[str, Any]]:
         """Search for similar chunks in the collection"""
         try:

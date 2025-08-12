@@ -100,6 +100,7 @@ export const askQuestion = async (
     query: question,
     // Don't specify collections - let it search across all collections
     threshold: 0,  // Default threshold for similarity filtering
+    k: 30
   },{
     timeout: 300000, // 24 seconds
   });

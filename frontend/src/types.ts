@@ -3,6 +3,7 @@ export interface SearchResult {
   content: string;
   metadata: Record<string, any>;
   score: number;
+  source_identifier?: string;
 }
 
 export interface CollectionStats {

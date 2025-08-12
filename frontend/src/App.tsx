@@ -139,13 +139,13 @@ function App() {
   return (
     <div className="h-screen bg-gray-100 flex overflow-hidden">
       {/* Sidebar */}
-      <CollectionsSidebar
+      {/* <CollectionsSidebar
         collections={collections}
         loading={collectionsLoading}
         error={collectionsError}
         onRefresh={loadCollections}
         onCreateGroup={handleCreateGroup}
-      />
+      /> */}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -172,13 +172,13 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {currentView === 'chat' && 'FinBot'}
+                  {currentView === 'chat' && 'Policy Bot'}
                   {currentView === 'fiscal-note' && 'Fiscal Note Generation'}
                   {currentView === 'bill-fiscal-note' && 'Bill Fiscal Note'}
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? `Ask questions about the state budget and the state of Hawaii. This interface has access to the <sappropriation bill 300, statutes, budget worksheets, and bills.`
+                    ? `Ask questions about the policies for UH Manoa`
                     : currentView === 'fiscal-note'
                     ? 'Upload documents and analyze using selected collections'
                     : 'Generate a fiscal note for a specific bill'
@@ -212,7 +212,7 @@ function App() {
                   <FileText className="w-4 h-4 inline mr-2" />
                   Fiscal Note
                 </button> */}
-                <button
+                {/* <button
                   onClick={() => setCurrentView('bill-fiscal-note')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     currentView === 'bill-fiscal-note'
@@ -222,7 +222,7 @@ function App() {
                 >
                   <FileText className="w-4 h-4 inline mr-2" />
                   Bill Fiscal Note
-                </button>
+                </button> */}
               </nav>
               
               {/* Status Indicator */}
