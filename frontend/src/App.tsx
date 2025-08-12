@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, AlertCircle, Loader2, FileText } from 'lucide-react';
-// import CollectionsSidebar from './components/CollectionsSidebar';
+import CollectionsSidebar from './components/CollectionsSidebar';
 import ChatInterface from './components/ChatInterface';
 import CreateGroupModal from './components/CreateGroupModal';
 import FiscalNoteGeneration from './components/FiscalNoteGeneration';
@@ -114,29 +114,38 @@ function App() {
   // }, []); // This function is no longer needed
 
   // Handle create group modal
-  // const handleCreateGroup = useCallback(() => {
-  //   setIsCreateModalOpen(true);
-  // }, []);
+  const handleCreateGroup = useCallback(() => {
+    setIsCreateModalOpen(true);
+  }, []);
 
   const handleCreateModalClose = useCallback(() => {
     setIsCreateModalOpen(false);
   }, []);
 
-  const handleCreateSuccess = useCallback(() => {
-    // Refresh collections to include the new group
+  const handleCreateSuccess = useCallback((newCollection: any) => {
+    // Add the new collection to the state immediately
+    setCollections(prev => [...prev, {
+      name: newCollection.name,
+      num_documents: newCollection.num_documents || 0,
+      status: 'active',
+      path: newCollection.path
+    }]);
+    
+    // Also refresh collections to get updated data from backend
     loadCollections();
-  }, []);
+    setIsCreateModalOpen(false);
+  }, [loadCollections]);
 
   return (
     <div className="h-screen bg-gray-100 flex overflow-hidden">
       {/* Sidebar */}
-      {/* <CollectionsSidebar
+      <CollectionsSidebar
         collections={collections}
         loading={collectionsLoading}
         error={collectionsError}
         onRefresh={loadCollections}
         onCreateGroup={handleCreateGroup}
-      /> */}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

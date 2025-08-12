@@ -248,11 +248,19 @@ export const uploadFromGoogleDrive = async (
  */
 export const uploadFromWebUrl = async (
   url: string,
-  collection_path: string
+  collection_path: string,
+  extraction_prompt: string,
+  null_is_okay: boolean,
+  num_workers: number,
+  num_levels_deep: number
 ): Promise<any> => {
-  const response = await api.post('/web-crawler', {
+  const response = await api.post('/crawl-through-web', {
     url,
-    collection_path
+    collection_path,
+    extraction_prompt,
+    null_is_okay,
+    num_workers,
+    num_levels_deep
   });
   return response.data;
 };

@@ -89,6 +89,7 @@ def get_collection_manager(collection_name: str) -> DynamicChromeManager:
 def get_collection_stats(collection_manager: DynamicChromeManager) -> Dict[str, Any]:
     """Get statistics for a collection"""
     try:
+        from settings import settings
         count = collection_manager.collection.count()
         return {
             "collection_name": collection_manager.collection_name,
@@ -124,7 +125,7 @@ def get_default_collection_manager() -> DynamicChromeManager:
     return get_collection_manager(default_collection)
 
 def ingest_from_source_file(collection_name: str, source_file: str, ingestion_config: dict) -> dict:
-    """Ingest documents from a source file into a specific collection"""
+    """Ingest documents from a source file into a specific collection using batching"""
     try:
         from settings import settings
         import os
@@ -137,31 +138,29 @@ def ingest_from_source_file(collection_name: str, source_file: str, ingestion_co
         
         # Load and parse JSON file
         with open(file_path, 'r') as f:
-            data = json.load(f)
+            documents = json.load(f)
         
         # Expect JSON to be an array of documents
-        if not isinstance(data, list):
-            raise Exception(f"JSON file must contain an array of documents, got {type(data)}")
+        if not isinstance(documents, list):
+            raise Exception(f"JSON file must contain an array of documents, got {type(documents)}")
         
-        documents = data
         manager = get_collection_manager(collection_name)
         
-        # Ingest documents
-        ingested_count = 0
-        errors = []
+        # Prepare documents for ingestion
+        doc_ids = []
+        contents = []
+        metadatas = []
         
-        print(f"📥 Ingesting {len(documents)} documents from '{source_file}' into '{collection_name}'...")
-        print(f"🎯 Embedding fields: {ingestion_config.get('contents_to_embed', [])}")
-        
-        for i, doc in enumerate(tqdm(documents, desc=f"Processing {source_file}")):
-            try:
-                if manager.add_document(doc, ingestion_config):
-                    ingested_count += 1
-                else:
-                    errors.append(f"Document {i}: Failed to add to collection")
-            except Exception as e:
-                errors.append(f"Document {i}: {str(e)}")
-                continue
+        for doc in tqdm(documents, desc=f"Preparing docs from {source_file}"):
+            prepared_doc = manager.prepare_document_for_ingestion(doc, collection_name, ingestion_config)
+            if prepared_doc:
+                doc_ids.append(prepared_doc['doc_id'])
+                contents.append(prepared_doc['combined_content'])
+                metadatas.append(prepared_doc['metadata'])
+
+        # Ingest documents in batches
+        print(f"📥 Ingesting {len(contents)} documents from '{source_file}' into '{collection_name}'...")
+        ingested_count = manager.add_documents(doc_ids, contents, metadatas)
         
         return {
             "success": True,
@@ -170,7 +169,7 @@ def ingest_from_source_file(collection_name: str, source_file: str, ingestion_co
             "ingested_count": ingested_count,
             "total_documents": len(documents),
             "embedded_fields": ingestion_config.get('contents_to_embed', []),
-            "errors": errors[:10]
+            "errors": [] # Batch method handles errors internally for now
         }
         
     except Exception as e:
@@ -371,11 +370,9 @@ async def get_collections_statistics():
     # Gather stats for all collections
     collections_stats = []
     total_documents = 0
-    
     for collection_name, manager in collection_managers.items():
         stats = get_collection_stats(manager)
         collections_stats.append(CollectionStatistics(**stats))
-        
         # Update total document count
         total_documents += stats.get("document_count", 0)
     
@@ -441,7 +438,7 @@ async def query_documents(request: QueryRequest):
         # else:
         # Fallback to traditional multi-step query processor
         print(f"🔄 Using traditional QueryProcessor for query: '{request.query}'")
-        result = query_processor.process_query(request.query, threshold=request.threshold)
+        result = query_processor.process_query(request.query, threshold=request.threshold, k=request.k)
         
         # Add metadata about the request
         result["query"] = request.query
@@ -473,6 +470,8 @@ async def step2_chunking(payload: ChunkingRequest):
         previous_pages_to_include (int): Number of previous pages for context.
         context_items_to_show (int): Number of context items to show.
         rewrite_query (bool): Whether to rewrite the query.
+        chunk_size (int): Size of each chunk.
+        chunk_overlap (int): Overlap between chunks.
     """
     logging.info(f"Starting chunking for collection '{payload.collection_name}'")
     # Define paths
@@ -771,10 +770,12 @@ async def crawl_through_web(
     try:
         # Save to src/documents/storage_documents
         stats = ai_crawler(
-            start_url=  payload.start_url,
+            start_url= payload.start_url,
             extraction_prompt=payload.extraction_prompt,
             collection_name=payload.collection_name,
-            null_is_okay=payload.null_is_okay
+            null_is_okay=payload.null_is_okay,
+            num_workers=payload.num_workers,
+            num_levels_deep=payload.num_levels_deep
         )
         return {"message": f"Crawling completed successfully for {payload.collection_name} with {len(stats)} items created"}
     except Exception as e:

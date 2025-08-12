@@ -36,7 +36,7 @@ class GoogleDrivePDFDownloader:
         self.drive_service = None
         # Get the absolute path to the service account file relative to this script
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        self.SERVICE_ACCOUNT_FILE = os.path.join(current_dir, 'its-ai-house-finance-05c80c8c5425.json')
+        self.SERVICE_ACCOUNT_FILE = os.path.join(current_dir, 'service_key.json')
         self._initialize_service()
     
     def _initialize_service(self):

@@ -61,6 +61,8 @@ selenium
 webdriver-manager 
 beautifulsoup4
 undetected-chromedriver
+html2text
+pdfminer.six
 
 google-api-python-client
 google_auth

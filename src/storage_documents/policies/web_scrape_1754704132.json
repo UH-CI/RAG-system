@@ -1,0 +1,346 @@
+[
+  {
+    "title": "UH Systemwide Policies and Procedures Information System (PPIS)",
+    "content": "This is the repository for Policies and Procedures for the University of Hawaii and related information.  You may browse through the different sections: Board of Regent Policies, Executive Policies, Administrative Procedures. View all of the Policies and Procedures by title or number. Enter a Policy/Procedure by number: View Policy (e.g. EP1.100)",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "UH System Policies and Procedures",
+    "items": [
+      {
+        "name": "Board of Regents Policies",
+        "link": "index.php?action=home&policySection=rp"
+      },
+      {
+        "name": "Executive Policies",
+        "link": "index.php?action=home&policySection=ep"
+      },
+      {
+        "name": "Administrative Procedures",
+        "link": "index.php?action=home&policySection=ap"
+      }
+    ],
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "Creation, Maintenance and Abolishment",
+    "link": "index.php?action=cma",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "Frequently Asked Questions",
+    "link": "index.php?action=viewFaq&currentMenu=viewFaq",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "UH‐Related Laws and Rules",
+    "items": [
+      {
+        "name": "Hawaiʻi Revised Statutes (HRS) 304A",
+        "link": "http://www.capitol.hawaii.gov/hrscurrent/Vol05_Ch0261-0319/HRS0304A/"
+      },
+      {
+        "name": "Hawaiʻi Administrative Rules (HAR) Title 20",
+        "link": "http://www.hawaii.edu/offices/bor/adminrules/"
+      }
+    ],
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "UH System Offices",
+    "link": "index.php?action=systemInfo",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "Public Safety and Emergency Management Plans",
+    "link": "index.php?action=publicSafety&currentMenu=safety",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "section": "Login",
+    "link": "https://authn.hawaii.edu/cas/login?service=https://www.hawaii.edu/policy/login.php?action=&policySection=",
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "contact": {
+      "address": "2444 Dole Street\nHonolulu, HI 96822",
+      "email": "mailto:ppis@hawaii.edu"
+    },
+    "source_url": "https://www.hawaii.edu/policy/",
+    "extraction_timestamp": "2025-08-08 15:49:01"
+  },
+  {
+    "title": "UH Systemwide Policies and Procedures Information System (PPIS)",
+    "content": "This is the repository for Policies and Procedures for the University of Hawaii and related information.   \nYou may browse through the different sections: \n\nBoard of Regent Policies\nExecutive Policies\nAdministrative Procedures\n\nView all of the Policies and Procedures by title: \n\nBoard of Regent Policies by title\nExecutive Policies by title\nAdministrative Procedures by title\n\nView all of the Policies and Procedures by Number: \n\nBoard of Regent Policies by number\nExecutive Policies by number\nAdministrative Procedures by number\n\nEnter a Policy/Procedure by number:  View Policy (e.g. EP1.100)",
+    "source_url": "https://www.hawaii.edu/policy/#main_area",
+    "extraction_timestamp": "2025-08-08 15:49:07"
+  },
+  {
+    "footer": "2444 Dole Street\nHonolulu, HI 96822\nAn equal opportunity institution\nUse of this site implies consent with our Usage Policy\ncopyright © 2018 University of Hawaiʻi",
+    "source_url": "https://www.hawaii.edu/policy/#main_area",
+    "extraction_timestamp": "2025-08-08 15:49:07"
+  },
+  {
+    "title": "UH Systemwide Policies and Procedures Information System (PPIS)",
+    "sections": [
+      {
+        "title": "Board of Regents Policies",
+        "chapters": [
+          {
+            "number": "1",
+            "title": "General Provisions"
+          },
+          {
+            "number": "2",
+            "title": "Administration"
+          },
+          {
+            "number": "3",
+            "title": "Organization"
+          },
+          {
+            "number": "4",
+            "title": "Planning"
+          },
+          {
+            "number": "5",
+            "title": "Academic Affairs"
+          },
+          {
+            "number": "6",
+            "title": "Tuition, Financial Assistance, and Fees"
+          },
+          {
+            "number": "7",
+            "title": "Student Affairs"
+          },
+          {
+            "number": "8",
+            "title": "Business and Finance"
+          },
+          {
+            "number": "9",
+            "title": "Personnel"
+          },
+          {
+            "number": "10",
+            "title": "Land and Physical Facilities"
+          },
+          {
+            "number": "11",
+            "title": "Miscellaneous"
+          },
+          {
+            "number": "12",
+            "title": "Research"
+          }
+        ],
+        "archived": {
+          "post_2014": "Abolished Policies (Post Oct. 2014)",
+          "pre_2014": "Archived RP"
+        }
+      },
+      {
+        "title": "Executive Policies"
+      },
+      {
+        "title": "Administrative Procedures"
+      },
+      {
+        "title": "Creation, Maintenance and Abolishment"
+      },
+      {
+        "title": "Frequently Asked Questions"
+      },
+      {
+        "title": "UH‐Related Laws and Rules",
+        "items": [
+          {
+            "title": "Hawaiʻi Revised Statutes (HRS) 304A",
+            "url": "http://www.capitol.hawaii.gov/hrscurrent/Vol05_Ch0261-0319/HRS0304A/"
+          },
+          {
+            "title": "Hawaiʻi Administrative Rules (HAR) Title 20",
+            "url": "http://www.hawaii.edu/offices/bor/adminrules/"
+          }
+        ]
+      },
+      {
+        "title": "UH System Offices"
+      },
+      {
+        "title": "Public Safety and Emergency Management Plans"
+      }
+    ],
+    "source_url": "https://www.hawaii.edu/policy/index.php?action=home&policySection=rp",
+    "extraction_timestamp": "2025-08-08 15:49:09"
+  },
+  {
+    "title": "UH Faculty/Staff Directory",
+    "description": "Search directory by name, department, etc.",
+    "search_options": [
+      "Person",
+      "Department",
+      "full name",
+      "first name",
+      "last name",
+      "username",
+      "office location",
+      "email",
+      "phone",
+      "department"
+    ],
+    "examples": [
+      {
+        "search_term": "full name",
+        "example": "Faculty Testfaculty",
+        "link": "index.php?searchfield=Faculty%20Testfaculty&mykey=full&qtype=person"
+      },
+      {
+        "search_term": "first name",
+        "example": "Faculty",
+        "link": "index.php?searchfield=Faculty&mykey=first&qtype=person"
+      },
+      {
+        "search_term": "last name",
+        "example": "Testfaculty",
+        "link": "index.php?searchfield=Testfaculty&mykey=last&qtype=person"
+      },
+      {
+        "search_term": "username",
+        "example": "testfacu",
+        "link": "index.php?searchfield=testfacu&mykey=uid&qtype=person"
+      },
+      {
+        "search_term": "email",
+        "example": "test.faculty@hawaii.edu",
+        "link": "index.php?searchfield=test.faculty@hawaii.edu&mykey=email&qtype=person"
+      },
+      {
+        "search_term": "phone",
+        "example": "555-5555",
+        "link": "index.php?searchfield=555-5555&mykey=phone&qtype=person"
+      },
+      {
+        "search_term": "fax",
+        "example": "555-5557",
+        "link": "index.php?searchfield=555-5557&mykey=fax&qtype=person"
+      },
+      {
+        "search_term": "department",
+        "example": "English",
+        "link": "index.php?searchfield=English&mykey=dept&qtype=person"
+      }
+    ],
+    "help_link": "help.php",
+    "missing_info_contact": "department contact",
+    "contact_link": "https://www.hawaii.edu/contact/",
+    "usage_restrictions": "This directory is intended solely to provide contact information for individual members of the University community. Information obtained from this directory may not be used for the purpose of bulk communication of any kind to students, faculty and/or staff. This includes solicitations of any kind or informational announcements using paper, email, or phone calls. Violations may be addressed under all applicable policies, codes of conduct or law.",
+    "login_link": "https://www.hawaii.edu/directory/login.php",
+    "address": "2444 Dole Street\nHonolulu, HI 96822",
+    "equal_opportunity_link": "https://www.hawaii.edu/offices/eeo/policies/",
+    "usage_policy_link": "https://www.hawaii.edu/infotech/policies/itpolicy.html",
+    "copyright": "copyright © 2018 University of Hawaiʻi",
+    "social_media": [
+      {
+        "platform": "Twitter",
+        "link": "https://twitter.com/UHawaiiNews"
+      },
+      {
+        "platform": "Facebook",
+        "link": "https://www.facebook.com/universityofhawaii"
+      },
+      {
+        "platform": "Instagram",
+        "link": "https://www.instagram.com/uhawaiinews/"
+      },
+      {
+        "platform": "Flickr",
+        "link": "https://www.flickr.com/photos/uhawaii"
+      },
+      {
+        "platform": "Youtube",
+        "link": "https://www.youtube.com/user/uhmagazine"
+      }
+    ],
+    "alternative_format_info": "If required, information contained on this website can be made available in an alternative format upon request.",
+    "adobe_reader_link": "https://get.adobe.com/reader/",
+    "source_url": "https://www.hawaii.edu/directory/",
+    "extraction_timestamp": "2025-08-08 15:49:10"
+  },
+  {
+    "UH": "University of Hawaii",
+    "IX": "Roman numeral nine",
+    "CC": "Community College",
+    "source_url": "https://www.hawaii.edu/infotech/policies/itpolicy.html",
+    "extraction_timestamp": "2025-08-08 15:49:15"
+  },
+  {
+    "title": "University of Hawaiʻi EEO Policies",
+    "content": "The Office of EEO/TIX develops and maintains Executive, Systemwide and Mānoa policies and procedures. We promote the implementation of these policies by conducting workshops, providing online training, providing advice and resources on the disability accommodation process, and through the investigation and resolution of complaints.",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Nondiscrimination",
+    "content": "It is the policy of the university to provide equity of opportunity in higher education, both in the educational mission and as an employer. The university is committed to comply with all State and Federal statutes, rules, and regulations which prohibit discrimination. The university is committed to a policy of nondiscrimination on the basis of race, sex, gender identity and expression, age, religion, color, national origin (including shared ancestry and ethnic characteristics), ancestry, citizenship, disability, genetic information, marital status, breastfeeding, income assignment for child support, arrest and court record (except as permissible under State law), sexual orientation, national guard absence, or status as a covered veteran.",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Sex Discrimination & Sexual Harassment",
+    "content": "The policy defines prohibited discrimination and harassment and provides specific examples.",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Sexual Assault, Domestic Violence, Dating Violence, and Stalking",
+    "content": "The University of Hawaiʻi is committed to creating a community free from intimidation, harassment and violence. Sexual assault is prohibited by law and is a serious offense that violates the basic standards of behavior expected of members of the university community. The university will not tolerate acts of sexual assault. This includes domestic violence, dating violence, and stalking. The university will take appropriate action to prevent sexual assault and will correct and discipline behavior that is found to violate this policy.",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Consensual Relationships",
+    "content": "The University of Hawaiʻi is committed to ensuring a safe, civil, working environment in which the dignity of every individual is recognized and respected. All members of the University share equal responsibility in this regard. All relationships between University employees and its students adhere to principles of professionalism, integrity, mutual trust, and respect. The Policy on Consensual Relationships takes a best-practice approach in recognizing and managing consensual relationships, while also balancing the privacy interests of individuals and supporting the values, mission and goals of our university. In particular, this policy will help our campuses remain free from real or perceived conflicts when individuals in positions of unequal power are involved in consensual romantic, dating or sexual relationships. Power is unequal when one individual in a relationship has direct supervision, direction, instruction, oversight, evaluation, advisement or substantial influence over the employment or educational status of another.",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Disability Information",
+    "content": "All university programs and activities should be available to persons with disabilities. Title II of the Americans with Disabilities Act states: “A public entity shall furnish appropriate auxiliary aids and services where necessary to afford an individual with a disability an equal opportunity to participate in, and enjoy the benefits of, a service, program, or activity conducted by a public entity.”",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "title": "Recruitment and Hiring",
+    "content": "For guidelines on recruitment and EEO in the hiring process, see Administrative Procedure AP 9.540 – Recruitment and Selection Procedures for APT and Faculty",
+    "source_url": "https://www.hawaii.edu/offices/eeo/policies/",
+    "extraction_timestamp": "2025-08-08 15:49:21"
+  },
+  {
+    "page_title": "Emergency Information",
+    "content": "UH System » Emergency\n\nThere is no emergency at this time.  \n\nIn the event of an emergency, this page will provide information about the incident, how to remain safe and when status has returned to normal.\n\nWhen appropriate, the university will alert faculty, staff and students via email, text messaging and/or UH Alert. Information will also be provided through campus webpages and local news media.\n\nSign Up Now for UH Alerts\n\nAlerts by email and text messaging for faculty, staff and students.\n\nReporting an Emergency\n\nCall 911\nUse a campus emergency phone, if available\nContact campus security or the emergency number for your campus\n\nCampus Emergency Information and Contacts\n\nUH Mānoa\n\nEmergency Information\nEmergency Response Plan\nEmergency (Campus Security)   (808) 956-6911\nEmergency Status Line    (808) 956-0001\nHealth Services   (808) 956-8965\nCounseling Services    (808) 956-7927\nEnvironmental Health and Safety    (808) 956-8660\nUH Cancer Center, Kakaʻako\nSecurity    (808) 586-3015\nJohn A. Burns School of Medicine, Kakaʻako\nBiosciences Building Security    (808) 692-1911\nMedical Education Security    (808) 692-0911\n\nUH Hilo\n\nEmergency Information\nEmergency Response Plan (PDF)\nOperator   (808) 923-7000\nEmergency    (808) 947-7911\nCampus Security    (808) 932-7319\nHealth Services    (808) 932-7369\nCounseling Services    (808) 932-7464, (808) 932-7465\nEnvironmental Health and Safety    (808) 932-7638\n\nUH West Oʻahu\n\nEmergency Information\nOperator   (808) 689-2800\nEmergency    (808) 689-2911\nCounseling Services    (808) 689-2678\n\nHawaiʻi Community College\n\nEmergency Information\nEmergency Response Plan (PDF)\nOperator   (808) 974-7611\nEmergency    (808) 854-1420\nHealth Services    (808) 934-2760\n\nHonolulu Community College\n\nEmergency Response Plan (PDF )\nOperator   (808) 845-9211\nEmergency    (808) 284-1270\n\nKapiʻolani Community College\n\nEmergency Information\nEmergency Response Plan (PDF)\nOperator   (808) 734-9000\nEmergency    (808) 734-9900\n\nKauaʻi Community College\n\nEmergency Information\nOperator   (808) 245-8311\nEmergency    (808) 245-8230\nHealth Services    (808) 245-8310\n\nLeeward Community College\n\nEmergency Information\nEmergency Response Plan\nOperator   (808) 455-0011\nEmergency    (808) 455-0611\nHealth Services    (808) 455-0515\nCounseling Services  (808) 455-0233\n\nUH Maui College\n\nEmergency Information\nEmergency Response Plan (PDF)\nOperator   (808) 984-3500\nEmergency    (808) 984-3255\nHealth Services    (808) 984-3493\nCounseling Services  (808) 984-3306\n\nWindward Community College\n\nEmergency Information\nEmergency Response Plan (PDF)\nOperator   (808) 235-7400\nEmergency    (808) 235-7355\nHealth Services    (808) 235-7413\n\nUH System\n\nEmergency Response Plan (PDF)\n\nLinks to Emergency Services\n\nThe links below provide more information about health, civil, Natural and other types of emergencies.\n\nIf there is a link that should be added, please let us know.\n\nAgencies and Organizations\n\nHawaiʻi\n\nHawaiʻi Emergency Management Agency\nOʻahu Emergency Management\nMaui Emergency Management\nKauaʻi Emergency Management\nHawaiʻi County Civil Defense\nNatural Hazards Hawaiʻi County\nDepartment of Health\nDepartment of Transportation\nAirports Division-DOT\nTsunami Information Center\nCentral Pacific Hurricane Center\nPacific Disaster Center\nU.S. Geological Survey Hawaiian Volcano Observatory\nAmerican Red Cross-Hawaiʻi State Chapter\nHawaiʻi Sex Offenders Website\n\nNational\n\nHomeland Security\nPreparedness Information\nFederal Emergency Management Agency\nCenters for Disease Control and Prevention\nEnvironmental Protection Agency\nDepartment of Health and Human Services\nU.S. Department of State\n\nInternational\n\nWorld Health Organization\n\nSupport and Intervention\n\nEveryone’s struggle is different. If you or someone you know are experiencing distress or a painful emotion and need support, here is a list of contacts:\n\nNational Suicide Prevention Lifeline (NSPL) – 24/7 crisis line 1-800-273-TALK (8255)\nCrisis Text Line – 24/7 crisis line text “Aloha” or “Start” to 741741\nHawaii CARES (formerly Crisis Line of Hawaiʻi) – On Oʻahu (808) 832-3100; Toll free for neighbor islands 1-800-753-6879\n\nPreparing for an Emergency\n\nDownload Homeowner’s Handbook to Prepare for Natural Hazards, a UH Sea Grant College Program book\nEmergency information, from putting together a supply kit to a list of evacuation shelters, can be found on the Hawaiʻi Emergency Management Agency website.\n\nNovel Coronavirus\n\nNovel Coronavirus Information\n\nContact Us\n\nFor corrections or updates to the contents of this page, please email ur@hawaii.edu.\n\nLast modified: July 30, 2025",
+    "source_url": "https://www.hawaii.edu/emergency/",
+    "extraction_timestamp": "2025-08-08 15:49:31"
+  },
+  {
+    "title": "University of Hawai'i System",
+    "content": "Skip to content\n\n  * [Home](https://www.hawaii.edu)\n  * [Directory](https://www.hawaii.edu/directory/)\n  * [MyUH](https://myuh.hawaii.edu)\n  * [Work at UH](https://www.governmentjobs.com/careers/hawaiiedu)\n  * [Apply](https://apply.hawaii.edu/)\n  * [Support UH](https://www.uhfoundation.org/give)\n\n\n\n  * [Twitter](https://twitter.com/UHawaiiNews)\n  * [Facebook](https://www.facebook.com/universityofhawaii)\n  * [Instagram](https://instagram.com/uhawaiinews)\n  * [YouTube](https://www.youtube.com/user/uhmagazine)\n  * [LinkedIn](https://www.linkedin.com/school/uhawaiinews/)\n  * [Flickr](https://www.flickr.com/photos/uhawaii)\n  * [RSS](http://feeds.feedburner.com/UHawaiiNews)\n\n\n[](https://www.hawaii.edu/)\n\n  * [Campuses  __dropdown menu ](https://www.hawaii.edu/#menu-1-campuses)\n    * column 1\n      * [Overviews](https://www.hawaii.edu/#ten-campuses)\n      * Universities\n      * [Mānoa](https://manoa.hawaii.edu/)\n      * [Hilo](https://hilo.hawaii.edu/)\n      * [West Oʻahu](https://www.uhwo.hawaii.edu/)\n    * column 2\n      * Community Colleges\n      * [Hawaiʻi](https://www.hawaii.hawaii.edu/)\n      * [Honolulu](https://www.honolulu.hawaii.edu/)\n      * [Kapiʻolani](https://www.kapiolani.hawaii.edu/)\n      * [Kauaʻi](https://kauai.hawaii.edu/)\n      * [Leeward](https://www.leeward.hawaii.edu/)\n      * [Maui](https://maui.hawaii.edu/)\n      * [Windward](https://windward.hawaii.edu/)\n    * column 3\n      * [Distance Learning](https://www.hawaii.edu/campuses/learning-centers/#distance-learning)\n      * [UH Education Centers](https://www.hawaii.edu/campuses/learning-centers/#ed-centers)\n      * [Continuing Education](https://www.hawaii.edu/campuses/learning-centers/#continuing-ed)\n      * [Community Colleges](http://uhcc.hawaii.edu/)\n  * [Attend __dropdown menu ](https://www.hawaii.edu/#menu-2-admissions)\n    * column 1\n      * [Overview](https://www.hawaii.edu/admissions/)\n      * [Degrees and Programs](https://www.hawaii.edu/degrees-and-programs/)\n      * [Health Clearance](https://www.hawaii.edu/health-clearance/)\n    * column 2\n      * [Financial Aid](https://www.hawaii.edu/tuition/financial-aid/)\n      * [Scholarships](https://www.hawaii.edu/tuition/scholarships)\n      * [Tuition](https://www.hawaii.edu/tuition/)\n  * [UH System  __dropdown menu ](https://www.hawaii.edu/#menu-3-system)\n    * column 1\n      * [About UH](https://www.hawaii.edu/about-uh/)\n      * [Strategic Plan](https://www.hawaii.edu/strategic-plan/)\n      * [Policies and Procedures](https://www.hawaii.edu/policy/)\n      * [Title IX](http://www.hawaii.edu/titleix/)\n    * column 2\n      * [Leadership](https://www.hawaii.edu/leadership/)\n      * [Board of Regents](http://www.hawaii.edu/offices/bor/)\n      * [System Offices A-Z](https://www.hawaii.edu/offices/)\n    * column 3\n      * [Federal Policy Updates](https://www.hawaii.edu/federal-updates/)\n      * [UH News](https://www.hawaii.edu/news/)\n      * [Emergency](https://www.hawaii.edu/emergency/)\n    * column 4\n      * Support UH\n      * [UH Foundation](http://www.uhfoundation.org/)\n      * [UH Alumni Relations](https://www.hawaii.edu/alumni)\n      * [Make a Gift](https://giving.uhfoundation.org)\n  * [Strategic Plan](https://www.hawaii.edu/strategic-plan/)\n\n\nOpen mobile menuClose mobile menu\n\n____\n\nEasy Transfer Across UH's 10 Campuses new transfer student website \n\n# Our 10 Campuses Across the Hawaiian Islands\n\n## [Programs of Study](http://www.hawaii.edu/degrees-and-programs/)\n\nDiscover the program that is right for you\n\n## [How to Apply](http://apply.hawaii.edu/)\n\nEnroll in one of our dynamic and diverse campuses\n\n## [Paying for College](http://www.hawaii.edu/tuition/financial-aid/)\n\nFind financial aid and scholarship opportunities\n\n[](https://www.hawaii.edu/federal-updates/)\n\n## [UH News](https://www.hawaii.edu/news/)\n\n### [UH sets extramural funding record for 4th consecutive year, $734M in FY 2025](https://www.hawaii.edu/news/2025/08/06/extramural-funding-record-fy25/)\n\nExtramural funding includes investments from external agencies such as the federal government, industry and nonprofit organizations.\n\n### [Chancellor Benham to step down from UH West Oʻahu](https://www.hawaii.edu/news/2025/08/04/chancellor-benham-to-step-down-from-uhwo/)\n\nBenham steps down after nearly a decade of anchoring the campus in a culture of engaged scholarship and service rooted in Native Hawaiian values.\n\n## More News\n\n### [](http://www.hawaii.edu/news/newsfeeds.php?f=1) [University of Hawaiʻi System News](https://www.hawaii.edu/news)\n\n  * [Crowds go ‘lulu’ for lululemon at UH Mānoa bookstore](https://www.hawaii.edu/news/2025/08/08/lululemon-uh-manoa-bookstore/)\n  * [UH Hilo anthropologist: Marshallese wayfaring and brain science](https://www.hawaii.edu/news/2025/08/08/uh-hilo-marshallese-wayfaring-and-brain-science/)\n  * [New Maui home expands UH medical student rotations](https://www.hawaii.edu/news/2025/08/08/jabsom-maui-house-blessing/)\n  * [Hawaiʻi Sea Grant specialist brings coral reef science to global stage](https://www.hawaii.edu/news/2025/08/08/mariana-rocha-de-souza/)\n  * [Seals use ocean currents to ‘fast-track’ migration](https://www.hawaii.edu/news/2025/08/08/seals-ocean-currents/)\n\n\n[](https://www.uhfoundation.org/give/)\n\n[Give today](https://www.uhfoundation.org/give)\n\n## Our 10 campuses\n\nFounded in 1907, the University of Hawaiʻi System includes 3 universities, 7 [community colleges](http://uhcc.hawaii.edu/) and [community-based learning centers](http://www.hawaii.edu/campuses/learning-centers/) across Hawaiʻi. As the state’s public system of higher education, UH offers opportunities as unique and diverse as our island home.\n\n[](https://www.hawaii.edu/campuses/manoa/)\n\nMānoa\n\n[](https://www.hawaii.edu/campuses/hilo/)\n\nHilo\n\n[](https://www.hawaii.edu/campuses/westoahu/)\n\nWest Oʻahu\n\n[](https://www.hawaii.edu/campuses/hawaii/)\n\nHawaiʻi\n\n[](https://www.hawaii.edu/campuses/honolulu/)\n\nHonolulu\n\n[](https://www.hawaii.edu/campuses/kapiolani/)\n\nKapiʻolani\n\n[](https://www.hawaii.edu/campuses/kauai/)\n\nKauaʻi\n\n[](https://www.hawaii.edu/campuses/leeward/)\n\nLeeward\n\n[](https://www.hawaii.edu/campuses/maui/)\n\nMaui\n\n[](https://www.hawaii.edu/campuses/windward/)\n\nWindward\n\n## Like no place on Earth\n\n[ Research ](https://www.hawaii.edu/research/)\n\n[ Sustainability ](http://www.hawaii.edu/sustainability/)\n\n[ Hawaiian Place of Learning ](https://www.hawaii.edu/hawaiipapaokeao/)\n\nLast modified: August 6, 2025\n\nChanging lives through higher education.\n\n[Apply Now](https://apply.hawaii.edu/)\n\n### Universities\n\n  * [Mānoa](https://manoa.hawaii.edu/)\n  * [Hilo](https://hilo.hawaii.edu/)\n  * [West Oʻahu](https://westoahu.hawaii.edu/)\n\n\n\n### Community Colleges\n\n  * [Hawaiʻi](https://hawaii.hawaii.edu/ \"Go to Hawaii CC site\")\n  * [Honolulu](https://www.honolulu.hawaii.edu/ \"Go to Honolulu CC site\")\n  * [Kapiʻolani](https://www.kapiolani.hawaii.edu/ \"Go to Kapiolani CC site\")\n  * [Kauaʻi](https://kauai.hawaii.edu/ \"Go to Kauai CC site\")\n  * [Leeward](https://www.leeward.hawaii.edu/ \"Go to Leeward CC site\")\n  * [Maui](https://maui.hawaii.edu/ \"Go to Maui College site\")\n  * [Windward](https://windward.hawaii.edu/ \"Go to Windward CC site\")\n\n\n\n### UH Athletics\n\n  * [  \nUH Mānoa](http://www.hawaiiathletics.com/index.aspx)\n  * [  \nHilo Vulcans](http://hiloathletics.com)\n\n\n\n### Support UH\n\n  * [UH Alumni Relations](https://uhalumni.org/)\n  * [UH Foundation](http://www.uhfoundation.org/)\n\n\n\n### Our Ten Campuses\n\n[](https://www.hawaii.edu/wp/wp-content/uploads/2024/08/Hawaiian-Islands-lrg4homepage-5.png)\n\n[UH Mānoa](https://www.hawaii.edu/campuses/manoa), [UH Hilo](https://www.hawaii.edu/campuses/hilo), [UH West Oʻahu](https://www.hawaii.edu/campuses/westoahu), [Hawaiʻi CC](https://www.hawaii.edu/campuses/hawaii), [Honolulu CC](https://www.hawaii.edu/campuses/honolulu), [Kapiʻolani CC](http://www.hawaii.edu/campuses/kapiolani), [Kauaʻi CC](https://www.hawaii.edu/campuses/kauai), [Leeward CC](http://www.hawaii.edu/campuses/leeward), [Maui College](http://www.hawaii.edu/campuses/maui), [Windward CC](https://www.hawaii.edu/campuses/windward) and selected [education centers](https://www.hawaii.edu/campuses/learning-centers/#ed-centers) are located across the Hawaiian Islands. Choose from the list to get more information on each campus. Click on map to enlarge.\n\n[](http://www.hawaii.edu)  \n2444 Dole Street  \nHonolulu, HI 96822 \n\nAn [equal opportunity institution](https://www.hawaii.edu/offices/eeo/policies/)  \nUse of this site implies consent  \nwith our [Usage Policy](https://www.hawaii.edu/infotech/policies/itpolicy.html)  \ncopyright © 2025  \n[University of Hawaiʻi](https://www.hawaii.edu \"UH System home\")  \n  \n[Accessibility at UH](https://www.hawaii.edu/access/)\n\n[X](https://twitter.com/UHawaiiNews) [Facebook](https://www.facebook.com/universityofhawaii) [Instagram](https://instagram.com/uhawaiinews) [YouTube](https://www.youtube.com/user/uhmagazine) [LinkedIn](https://www.linkedin.com/school/uhawaiinews/) [Flickr](https://www.flickr.com/photos/uhawaii/albums) [RSS](http://feeds.feedburner.com/UHawaiiNews)   \n\n\n[Contact UH](/contact)\n\nIf required, information contained on  \nthis website can be made available in  \nan alternative format upon request.  \n  \n[Get Adobe Acrobat Reader](https://get.adobe.com/reader/)\n\n  * [Calendar](https://www.hawaii.edu/calendar)\n  * [COVID-19 Updates](https://www.hawaii.edu/covid19/)\n  * [Directory](https://www.hawaii.edu/directory)\n  * [Emergency Information](https://www.hawaii.edu/emergency)\n  * [MyUH](https://myuh.hawaii.edu)\n  * [Privacy Statement](https://www.hawaii.edu/privacy)\n  * [Work at UH](https://www.governmentjobs.com/careers/hawaiiedu)\n\n\n\n[English](https://docs.google.com/forms/d/e/1FAIpQLSfSnMk8idA89NkyRsDU1NCwCvMdU2GEKHtZgr3mM3cPb7sEqA/viewform)\n\n[Gagana Samoa](https://forms.gle/4aYsHbupLPDdUHZx6)\n\n[Kapasen Chuuk](https://forms.gle/LA4PYNN8JEJK72rT7)\n\n[Lea faka-Tonga - Tongan](https://docs.google.com/forms/d/e/1FAIpQLScueAEFsbkHW0kOngVJfKcNkniQyhBU2kZMJLqzyPgF5rYiJA/viewform)\n\n[Tiếng Việt](https://forms.gle/T6hGSaQfKs1Ner2u6)\n\n[ภาษาไทย](https://forms.gle/gpqqQ6ar8KSuzeDk7)\n\n[Ilokano](https://forms.gle/N2woHbhFDo6DEfVR7)\n\n[Tagalog](https://forms.gle/VALL9LCawBB4xQVt7)\n\n[Cebuano](https://forms.gle/Frf9qDhzNERzFcpW8)\n\n[Kajin Majôl](https://forms.gle/DnRMQ4w2m89muGkv9)\n\n[简体中文](https://forms.gle/DMytNWbMRuesyc6B8)\n\n[繁體中文](https://forms.gle/MBRdutXBXeKJemQ17)\n\n[日本語](https://forms.gle/SNyGGZ6TvyMFAhNp7)\n\n[한국어](https://forms.gle/JJsfXi98CH9S8crF6)\n\n[Español](https://forms.gle/Ee5sgabh5QyRzdsE8)\n\n[ʻŌlelo Hawaiʻi](https://forms.gle/LkWFEhqoY8Ly5ySHA)\n\n  * [About UH](https://www.hawaii.edu/about-uh/)\n  * [Attend](https://www.hawaii.edu/admissions/)\n  * [Campuses](https://www.hawaii.edu/#ten-campuses)\n  * [Degrees and Programs](https://www.hawaii.edu/degrees-and-programs/)\n  * [Leadership](https://www.hawaii.edu/leadership/)\n  * [Offices](https://www.hawaii.edu/offices/)\n\n\nBack To Top\n\n\n\nSubmit\n  *[UH]: University of Hawaii\n  *[IX]: Roman numeral nine\n  *[CC]: Community College\n",
+    "source_url": "https://www.hawaii.edu/",
+    "extraction_timestamp": "2025-08-08 15:49:33"
+  },
+  {
+    "title": "Privacy Statement",
+    "text": "The University of Hawaiʻi (the “University”) is committed to protecting the privacy and accuracy of confidential information to the extent possible, subject to provisions of state and federal law.\n\nThis Privacy Statement discloses the privacy practices for [www.hawaii.edu](https://www.hawaii.edu/), the main University of Hawaiʻi System website (this “Website”). By using this Website, you are consenting to our collection and use of information in accordance with this Privacy Statement. If you do not agree with this Privacy Statement, please do not use this website.\n\nPlease note that websites for schools, centers, departments and other units within the University of Hawaiʻi system may have their own privacy statements. You should review the privacy statement posted on other University of Hawaiʻi websites when you visit them.\n\n## What personal information do we collect?\n\nThis Website may collect usage information including the following:\n\n  * Internet Protocol (IP) address of computer being used or other unique identifier for your computer, mobile device, or other technology used to access the Website;\n  * Web pages requested\n  * Referring web page\n  * Browser used\n  * Operating system used\n  * Date and time\n  * Length of visit\n  * Websites you visited immediately prior to this Website.\n\n\nThe usage information and device identifiers are used to update and refresh University websites, and identify repeat users, to enhance your online experience and tailor content to your interests. Such usage information is typically non-identifying; and, if such usage information becomes identifying, it is treated as personally identifiable information (“PII”).\n\nThis Website may also collect PII that you provide to us including the following:\n\n  * First and Last name\n  * Email address\n  * Phone number\n\n\n## How do we collect information?\n\n### Cookies\n\nThis Website uses “cookies” in order to deliver web content specific to individual users’ interests, to understand and save your preferences for future visits, or to keep track of online purchasing transactions. Cookies are small files that are stored on a user’s computer. Cookies are used to recall your specific information on subsequent website visits, simplifying the process of recording your information, allowing you to use customized features, and serving as a convenience feature to save you time.\n\nCookie settings can be adjusted in your browser and users can instruct their browsers to refuse all cookies entirely. If you choose to decline cookies, you may not be able to fully experience the interactive features of Website as there may be certain features that are only available through the use of cookies.\n\n### Google Analytics\n\nThis Website uses a tool called Google Analytics to collect information about the use of this site. For information on how Google Analytics handles user data, see Google’s privacy policy: <https://policies.google.com/technologies/partner-sites>. You can prevent Google Analytics from recognizing you on return visits to this site by disabling cookies on your browser.\n\n### Web forms\n\nThis Website may collect information through the use of web forms. These forms may require you to provide information such as contact information when completing the form.\n\n## How do we use the collected information?\n\n**Communication.** The University may use information collected from this Website for the purpose of communication back to individuals who contact us via the site.\n\n**Improving This Website.** The University may use browser-IP-address information and anonymous-browser history to report information about site accesses and for profiling purposes. This information is used to improve Web presentation and utilization. IP address information may also be used for troubleshooting purposes.\n\n**Providing a Service.** The University may use the information you provide us for the performance of a service you have requested.\n\n## How is collected information shared with others?\n\n  * The University will not sell personal information collected by this Website to third-party organizations.\n  * The University will not disclose, without your consent, personal information collected about you by this Website, except for certain explicit circumstances in which disclosure is required by law.\n  * The University may share information that does not personally identify you without restriction.\n\n\n## What if you are located in the European Economic Area?\n\nIf you are located in the European Economic Area, please visit <https://www.hawaii.edu/uhdatagov/GDPR_Privacy_Notice_10.4.18_Accessible.pdf> for additional information about ways that the University of Hawaiʻi, including this website, may process your personal data and your rights regarding your personal data under the General Data Protection Regulation (“GDPR”).\n\n## What happens if the privacy statement changes?\n\nThis Privacy Statement was last revised in May 2022. We may change this Privacy Statement at any time and for any reason. We encourage you to review this Privacy Statement each time you visit the website.\n\n## What about privacy on other websites?\n\nThis website may contain links to other websites. Some of those websites may be operated by third parties. We provide the links for your convenience, but we do not review, control, or monitor the privacy practices of websites operated by others.\n\nWe are not responsible for the performance of websites operated by third parties or for your business dealings with them. You are solely responsible for reviewing the privacy statements for any linked external websites to understand how those websites may collect, use, and share your information. Therefore, whenever you leave this website we recommend that you review each website’s privacy practices and make your own conclusions regarding the adequacy of these practices.\n\n## How to contact us?\n\nIf you have questions or comments about this Privacy Statement, please contact us by visiting this page on our website: <https://www.hawaii.edu/contact/>\n\nLast modified: May 20, 2022\n\nChanging lives through higher education.",
+    "source_url": "https://www.hawaii.edu/privacy/",
+    "extraction_timestamp": "2025-08-08 15:49:36"
+  }
+]

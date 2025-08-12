@@ -49,7 +49,7 @@ const GroupNameStep: React.FC<GroupNameStepProps> = ({ groupData, onUpdate }) =>
             onChange={(e) => onUpdate({ description: e.target.value })}
             placeholder="Describe the purpose or content of this group..."
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outli`ne`-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             maxLength={500}
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -58,20 +58,6 @@ const GroupNameStep: React.FC<GroupNameStepProps> = ({ groupData, onUpdate }) =>
         </div>
       </div>
 
-      {groupData.name.trim() && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-800 mb-1">Preview</h4>
-          <p className="text-green-700">
-            <span className="font-medium">{groupData.name}</span>
-            {groupData.description && (
-              <>
-                <br />
-                <span className="text-sm">{groupData.description}</span>
-              </>
-            )}
-          </p>
-        </div>
-      )}
     </div>
   );
 };

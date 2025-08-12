@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import chromadb
 from chromadb.config import Settings
 import google.generativeai as genai
+import json
 
 # Handle both relative and absolute imports
 try:
@@ -17,6 +18,7 @@ except ImportError:
     from settings import settings, validate_settings
 
 import logging
+from tqdm import tqdm
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -184,7 +186,7 @@ class ChromaDBManager:
                 logger.info(f"Added batch {i//batch_size + 1}/{(len(documents) + batch_size - 1)//batch_size}")
                 
                 # Small delay between batches
-                time.sleep(0.5)
+                time.sleep(0.1)
             
             logger.info("Successfully added all documents")
             return True
@@ -426,57 +428,104 @@ class DynamicChromeManager(ChromaDBManager):
             )
             print(f"✅ Created new collection: {collection_name}")
     
-    def add_document(self, document: dict, ingestion_config: dict) -> bool:
-        """Add a document to the collection using specified contents_to_embed"""
-        try:
-            # Extract content fields specified in ingestion config
-            contents_to_embed = ingestion_config.get("contents_to_embed", [])
-            
-            # Combine all specified content fields
-            content_parts = []
-            for field in contents_to_embed:
-                if field in document and document[field]:
-                    content_parts.append(str(document[field]))
-            
-            if not content_parts:
-                print(f"No content found in fields {contents_to_embed} for document")
-                return False
-            
-            # Join all content with newlines
-            combined_content = "\n\n".join(content_parts)
-            
-            # Generate unique ID
-            import time
-            import uuid
-            doc_id = f"{self.collection_name}_{uuid.uuid4().hex[:8]}_{int(time.time())}"
-            
-            # Use entire document as metadata, ensuring all values are JSON-serializable
-            metadata = {}
-            for key, value in document.items():
-                if value is not None:
-                    if isinstance(value, (str, int, float, bool)):
-                        metadata[key] = value
-                    else:
-                        metadata[key] = str(value)
-                else:
-                    metadata[key] = ""
-            
-            # Add system metadata
-            metadata["id"] = doc_id
-            metadata["collection"] = self.collection_name
-            metadata["embedded_fields"] = json.dumps(contents_to_embed)  # Convert list to JSON string
-            
-            self.collection.add(
-                documents=[combined_content],
-                metadatas=[metadata],
-                ids=[doc_id]
-            )
-            return True
-                        
-        except Exception as e:
-            print(f"Error adding document to {self.collection_name}: {e}")
-            return False
+    def add_documents(self, doc_ids: List[str], contents: List[str], metadatas: List[Dict[str, Any]]) -> int:
+        """Add a list of documents to the collection in batches with a progress bar"""
+        if not contents:
+            return 0
+
+        batch_size = 500  # Or make this configurable
+        ingested_count = 0
+
+        with tqdm(total=len(contents), desc=f"Ingesting into {self.collection_name}", unit="doc") as pbar:
+            for i in range(0, len(contents), batch_size):
+                batch_ids = doc_ids[i:i + batch_size]
+                batch_contents = contents[i:i + batch_size]
+                batch_metadatas = metadatas[i:i + batch_size]
+
+                if batch_contents:
+                    try:
+                        self.collection.add(
+                            documents=batch_contents,
+                            metadatas=batch_metadatas,
+                            ids=batch_ids
+                        )
+                        ingested_count += len(batch_contents)
+                        logger.info(f"Successfully ingested batch of {len(batch_contents)} documents.")
+                    except Exception as e:
+                        print(f"Error adding batch to collection: {e}")
+                
+                pbar.update(len(batch_contents))
+        
+        return ingested_count
     
+    def add_document(self, document: dict, ingestion_config: dict) -> bool:
+        """Add a single document to the collection"""
+        prepared_doc = self.prepare_document_for_ingestion(document, self.collection_name, ingestion_config)
+        if prepared_doc:
+            return self.add_documents([prepared_doc['doc_id']], [prepared_doc['combined_content']], [prepared_doc['metadata']]) > 0
+        return False
+    
+    def prepare_document_for_ingestion(self, doc: dict, collection_name: str, ingestion_config: dict):
+        """Prepare a single document for ingestion by creating its content, metadata, and ID."""
+        contents_to_embed = ingestion_config.get("contents_to_embed", [])
+        
+        content_parts = []
+        for field in contents_to_embed:
+            if field in doc and doc[field]:
+                content_parts.append(str(doc[field]))
+        
+        if not content_parts:
+            return None
+        
+        combined_content = "\n\n".join(content_parts)
+        
+        import time
+        import uuid
+        doc_id = f"{collection_name}_{uuid.uuid4().hex[:8]}_{int(time.time())}"
+        
+        metadata = {}
+        for key, value in doc.items():
+            if value is not None:
+                if isinstance(value, (str, int, float, bool)):
+                    metadata[key] = value
+                else:
+                    metadata[key] = str(value)
+            else:
+                metadata[key] = ""
+                
+        metadata["id"] = doc_id
+        metadata["collection"] = collection_name
+        metadata["embedded_fields"] = json.dumps(contents_to_embed)
+        
+        return {"doc_id": doc_id, "combined_content": combined_content, "metadata": metadata}
+    
+    def reset_collection(self) -> bool:
+        """
+        Resets the specific collection managed by this instance.
+        """
+        try:
+            self.client.delete_collection(name=self.collection_name)
+            
+            # Re-create the collection immediately after deletion
+            self.collection = self.client.create_collection(
+                name=self.collection_name,
+                embedding_function=self.embedding_function,
+                metadata={"hnsw:space": "cosine"}
+            )
+            logger.info(f"✅ Collection '{self.collection_name}' has been reset successfully.")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to reset collection '{self.collection_name}': {e}")
+            # Attempt to re-establish the collection object even if deletion failed
+            try:
+                self.collection = self.client.get_or_create_collection(
+                    name=self.collection_name,
+                    embedding_function=self.embedding_function
+                )
+            except Exception as e_get:
+                logger.error(f"❌ Failed to re-establish collection object for '{self.collection_name}': {e_get}")
+            return False
+
     def search_similar_chunks(self, query: str, num_results: int = 50) -> List[Dict[str, Any]]:
         """Search for similar chunks in the collection"""
         try:

@@ -9,6 +9,7 @@ import os
 import uvicorn
 import argparse
 from pathlib import Path
+import json
 
 def setup_python_path():
     """Setup Python path for proper module imports"""
@@ -110,9 +111,7 @@ Each collection has specific fields that will be embedded as specified in config
                         print("🔄 Reinitializing collection managers...")
                         from api import DynamicChromeManager, collection_names
                         import api
-                        api.collection_managers = {}
-                        for collection_name in collection_names:
-                            api.collection_managers[collection_name] = DynamicChromeManager(collection_name)
+                        api.collection_managers = {name: DynamicChromeManager(name) for name in collection_names}
                         print("✅ Collection managers reinitialized")
                     else:
                         print("📊 Using existing collections (no reset)")
@@ -164,28 +163,21 @@ Each collection has specific fields that will be embedded as specified in config
                     print(f"🎯 Auto-detected collection: '{target_collection}' for file: '{filename}'")
                     manager = get_collection_manager(target_collection)
                     
-                    # Ingest documents
                     ingested_count = 0
                     errors = []
                     
+                    # Prepare data for batch ingestion
+                    doc_ids = [f"{target_collection}_{i}" for i in range(len(documents))]
+                    contents = [json.dumps(doc) for doc in documents]
+                    metadatas = [doc.get('metadata', {}) for doc in documents] # Create empty metadata for each doc
+
                     print(f"📥 Ingesting {len(documents)} documents into '{target_collection}'...")
                     print(f"🎯 Embedding fields: {ingestion_config.get('contents_to_embed', [])}")
-                    
-                    for i, doc in enumerate(tqdm(documents, desc=f"Processing documents")):
-                        try:
-                            # Add the document with its ingestion config
-                            if manager.add_document(doc, ingestion_config):
-                                ingested_count += 1
-                            else:
-                                errors.append(f"Document {i}: Failed to add to collection")
-                            
-                        except Exception as e:
-                            errors.append(f"Document {i}: {str(e)}")
-                            continue
-                    
+
+                    ingested_count = manager.add_documents(doc_ids, contents, metadatas)
+
                     end_time = time.time()
                     processing_time = end_time - start_time
-                    items_per_second = ingested_count / processing_time if processing_time > 0 else 0
                     
                     # Create result summary
                     result = {
@@ -195,7 +187,7 @@ Each collection has specific fields that will be embedded as specified in config
                         "target_collection": target_collection,
                         "embedded_fields": ingestion_config.get('contents_to_embed', []),
                         "processing_time_seconds": processing_time,
-                        "items_per_second": items_per_second,
+                        "items_per_second": ingested_count / processing_time if processing_time > 0 else 0,
                         "errors": errors[:10]  # Limit error messages
                     }
                     
@@ -205,7 +197,7 @@ Each collection has specific fields that will be embedded as specified in config
                     print(f"   - Target collection: {target_collection}")
                     print(f"   - Embedded fields: {ingestion_config.get('contents_to_embed', [])}")
                     print(f"   - Processing time: {processing_time:.2f} seconds")
-                    print(f"   - Rate: {items_per_second:.1f} items/second")
+                    print(f"   - Rate: {result['items_per_second']:.1f} items/second")
                     
                     if errors:
                         print(f"   - Errors: {len(errors)} (showing first 10)")
@@ -232,9 +224,7 @@ Each collection has specific fields that will be embedded as specified in config
                         print("🔄 Reinitializing collection managers...")
                         from api import DynamicChromeManager, collection_names
                         import api
-                        api.collection_managers = {}
-                        for collection_name in collection_names:
-                            api.collection_managers[collection_name] = DynamicChromeManager(collection_name)
+                        api.collection_managers = {name: DynamicChromeManager(name) for name in collection_names}
                         print("✅ Collection managers reinitialized")
                     else:
                         print("📊 Using existing collections (no reset)")

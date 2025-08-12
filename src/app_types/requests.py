@@ -23,6 +23,7 @@ class QueryRequest(BaseModel):
     query: str = Field(..., description="User query")
     collections: Optional[List[str]] = Field(default=None, description="Collections to search in")
     threshold: float = Field(default=0.0, ge=0.0, le=1.0, description="Similarity threshold (0.0 to 1.0) - only return documents with similarity scores above this threshold")
+    k: int = Field(default=10, description="Number of results to return")
 
 class DocumentResponse(BaseModel):
     content: str
@@ -52,6 +53,8 @@ class CrawlRequest(BaseModel):
     extraction_prompt: str
     collection_name: str
     null_is_okay: bool = True
+    num_workers: int
+    num_levels_deep: int
 
 class UploadPDFRequest(BaseModel):
     collection_name: str

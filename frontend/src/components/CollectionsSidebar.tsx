@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, RefreshCw, Plus, X, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, X, CheckCircle, Clock, AlertTriangle, Database, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import type { Collection } from '../types';
-import { getCollections } from '../services/api';
 
 interface CollectionsSidebarProps {
   collections: Collection[];
@@ -28,6 +27,7 @@ interface Document {
 }
 
 const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
+  collections,
   loading,
   error,
   onRefresh,
@@ -35,30 +35,19 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
 }) => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
 
-  // Dummy collection data
-  const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
-
-  // const toggleCollection = (collectionId: string) => {
-  //   // setCollectionsData(prev => 
-  //   //   prev.map(collection => 
-  //   //     collection.id === collectionId 
-  //   //       ? { ...collection, isExpanded: !collection.isExpanded }
-  //   //       : collection
-  //   //   )
-  //   // );
-  // };
-
-  useEffect(() => {
-    getCollections().then((data) => {
-      setCollectionsData(data.collections);
+  const toggleCollection = (collectionName: string) => {
+    setExpandedCollections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(collectionName)) {
+        newSet.delete(collectionName);
+      } else {
+        newSet.add(collectionName);
+      }
+      return newSet;
     });
-  }, []);
-
-  // const openDocumentModal = (document: Document) => {
-  //   setSelectedDocument(document);
-  //   setIsModalOpen(true);
-  // };
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -146,59 +135,103 @@ const CollectionsSidebar: React.FC<CollectionsSidebarProps> = ({
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && collections.length === 0 && (
+          <div className="p-6 text-center">
+            <Database className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Collections</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              Create your first collection to get started with document analysis.
+            </p>
+            <button
+              onClick={onCreateGroup}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Collection</span>
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && collections.length > 0 && (
           <div className="p-4">
-            {collectionsData.map((collection) => (
-              <div key={collection.name} className="mb-4">
-                {/* Collection Header */}
-                {/* <button
-                  onClick={() => toggleCollection(collection.name)}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center space-x-2 w-48 overflow-hidden">
-                    {collection.isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    )}
-                    <Database className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                    <span className="text-xs font-medium text-gray-900 truncate">{collection.name}</span>
-                  </div>
+            <div className="space-y-2">
+              {collections.map((collection) => (
+                <div key={collection.name} className="border border-gray-200 rounded-lg">
+                  {/* Collection Header */}
+                  <button
+                    onClick={() => toggleCollection(collection.name)}
+                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      {expandedCollections.has(collection.name) ? (
+                        <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                      )}
+                      <Database className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {collection.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {collection.num_documents} documents
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      collection.status === 'active' ? 'bg-green-100 text-green-800' :
+                      collection.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {collection.status || 'active'}
+                    </div>
+                  </button>
 
-                  <span className="text-sm text-gray-500">
-                    {collection.num_documents} docs
-                  </span>
-                </button> */}
-
-                {/* Documents List */}
-                {/* {collection.isExpanded && (
-                  <div className="mt-2 ml-4 space-y-1">
-                    {collection.documents.map((document) => (
-                      <button
-                        key={document.id}
-                        onClick={() => openDocumentModal(document)}
-                        className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 flex-1 min-w-0">
-                            <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <span className="text-sm font-medium text-gray-900 truncate">
-                              {document.filename}
-                            </span>
+                  {/* Expanded Content */}
+                  {expandedCollections.has(collection.name) && (
+                    <div className="px-3 pb-3 border-t border-gray-100">
+                      <div className="mt-3 space-y-2">
+                        <div className="text-xs text-gray-500">
+                          <div className="flex justify-between">
+                            <span>Documents:</span>
+                            <span>{collection.num_documents}</span>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(document.steps[document.steps.length - 1]?.status || 'pending')}
+                          {collection.last_updated && (
+                            <div className="flex justify-between mt-1">
+                              <span>Last updated:</span>
+                              <span>{new Date(collection.last_updated).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          {collection.total_size && (
+                            <div className="flex justify-between mt-1">
+                              <span>Size:</span>
+                              <span>{Math.round(collection.total_size / 1024 / 1024)} MB</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {collection.num_documents > 0 && (
+                          <div className="mt-3">
+                            <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle className="w-4 h-4 text-blue-600" />
+                                <span className="text-xs text-blue-800 font-medium">
+                                  Ready for queries
+                                </span>
+                              </div>
+                              <p className="text-xs text-blue-700 mt-1">
+                                This collection is available for chat and analysis.
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          {document.size} • {document.uploadDate}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )} */}
-              </div>
-            ))}
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

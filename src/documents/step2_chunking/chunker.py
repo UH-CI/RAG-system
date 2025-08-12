@@ -8,6 +8,8 @@ import logging
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+import tiktoken
+import re
 
 # --- Set up logger ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,29 +44,153 @@ def _call_llm_for_extraction(prompt: str) -> List[Dict[str, Any]]:
         {"extracted_item": "Statute 101.6", "text": "Another law...", "notes": "This demonstrates few-shot learning context."}
     ]
     # In a real scenario, you'd handle potential parsing errors.
+    if "summary" in prompt.lower():
+        for item in mock_response:
+            item["summary"] = f"This is a mock summary for {item.get('extracted_item', 'an item')}."
     return mock_response
+
+def clean_text(text: str) -> str:
+    """
+    Removes markdown, escaped newlines, and other unwanted characters from a text string.
+    """
+    # Remove markdown links and images
+    text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
+    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
+    
+    # Remove markdown headers, bold, italics, etc.
+    text = re.sub(r'#+\s*', '', text)
+    text = re.sub(r'(\*\*|__)(.*?)(\1)', r'\2', text)
+    text = re.sub(r'(\*|_)(.*?)(\1)', r'\2', text)
+    
+    # Replace escaped newlines with a space
+    text = text.replace('\\n', ' ')
+    
+    # Remove any remaining markdown-like characters
+    text = text.replace('`', '').replace('>', '').replace('<', '')
+    
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+def _call_llm_for_summary(text_to_summarize: str) -> str:
+    """
+    Placeholder for calling an LLM to summarize a text chunk.
+    """
+    logger.info("Calling placeholder LLM to summarize text chunk...")
+    # This function should call an LLM with a prompt like:
+    # "Summarize the following text in one sentence:"
+    cleaned_text = clean_text(text_to_summarize)
+    summary = f"SUMMARY: {cleaned_text[:70]}..."
+    return summary
 
 # --- End LLM Placeholders ---
 
+# --- Tokenizer setup ---
+try:
+    # Use the cl100k_base encoding, which is standard for GPT-3.5 and GPT-4
+    tokenizer = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    # Fallback to a different tokenizer if the primary one isn't available
+    tokenizer = tiktoken.get_encoding("gpt2")
 
-def _simple_chunker(text: str, chunk_size: int, overlap: int) -> List[str]:
+def count_tokens(text: str) -> int:
+    """Counts the number of tokens in a text string using tiktoken."""
+    return len(tokenizer.encode(text))
+
+# --- End Tokenizer setup ---
+
+
+def _simple_chunker(text: str, chunk_size: int, overlap: int, preserve_sentences: bool, chunk_in_tokens: bool, sentence_overlap: int) -> List[str]:
     """
-    Splits a text into overlapping chunks using a sliding window.
+    Splits a text into chunks.
+    If preserve_sentences is True, it splits by sentences and groups them to near chunk_size.
+    In this mode, `overlap` is ignored, and `sentence_overlap` is used for sentence-based overlap.
+    Otherwise, it uses a sliding window with character/token `overlap`.
     """
     if not text:
         return []
-    if len(text) <= chunk_size:
-        return [text]
+
+    if preserve_sentences:
+        # Split text into sentences
+        sentence_enders = re.compile(r'(?<=[.?!])\s+')
+        sentences = sentence_enders.split(text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+
+        if not sentences:
+            return []
+
+        chunks = []
+        start_index = 0
+        
+        def get_size(items):
+            content = " ".join(items)
+            return count_tokens(content) if chunk_in_tokens else len(content)
+
+        while start_index < len(sentences):
+            # Greedily add sentences to build a chunk
+            end_index = start_index
+            current_chunk_sentences = []
+            while end_index < len(sentences):
+                sentence_to_add = sentences[end_index]
+                # If the chunk is empty, add the first sentence even if it's too big.
+                if not current_chunk_sentences:
+                    current_chunk_sentences.append(sentence_to_add)
+                    end_index += 1
+                    continue
+                
+                if get_size(current_chunk_sentences + [sentence_to_add]) > chunk_size:
+                    break
+                
+                current_chunk_sentences.append(sentence_to_add)
+                end_index += 1
+            
+            chunks.append(" ".join(current_chunk_sentences))
+
+            if end_index >= len(sentences):
+                break
+
+            # Determine the start of the next chunk based on sentence_overlap
+            num_sentences_in_chunk = end_index - start_index
+            if sentence_overlap > 0 and num_sentences_in_chunk > sentence_overlap:
+                start_index = end_index - sentence_overlap
+            else:
+                start_index = end_index
+        return chunks
+
+    # --- Original sliding window logic (if preserve_sentences is False) ---
+    if chunk_in_tokens:
+        tokens = tokenizer.encode(text)
+        if len(tokens) <= chunk_size:
+            return [text]
+        
+        chunks = []
+        start = 0
+        while start < len(tokens):
+            end = start + chunk_size
+            chunks.append(tokenizer.decode(tokens[start:end]))
+            
+            if end >= len(tokens):
+                break
+            
+            start += (chunk_size - overlap)
+        return chunks
     
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        if end >= len(text):
-            break
-        start += (chunk_size - overlap)
-    return chunks
+    else: # character-based sliding window
+        if len(text) <= chunk_size:
+            return [text]
+        
+        chunks = []
+        start = 0
+        while start < len(text):
+            end = start + chunk_size
+            chunks.append(text[start:end])
+            
+            if end >= len(text):
+                break
+            
+            start += (chunk_size - overlap)
+        return chunks
 
 
 def chunk_document(
@@ -73,14 +199,18 @@ def chunk_document(
     chosen_methods: List[str],  # Required: list of property names to extract text from
     identifier: str,            # Required: property name to use as source identifier
     use_ai: bool = False,
+    preserve_sentences: bool = False,
+    preserve_document_in_metadata: bool = False,
+    chunk_in_tokens: bool = False,
     # AI-related parameters
     prompt_description: Optional[str] = None,
-    previous_pages_to_include: int = 1, # N: Number of previous pages for context
-    context_items_to_show: int = 2,     # J: Number of extracted items for few-shot examples
+    previous_pages_to_include: int = 1,
+    context_items_to_show: int = 2,
     rewrite_query: bool = False,
     # Non-AI (simple chunking) parameters
-    chunk_size: int = 1000, # N: Character count for simple chunking
-    overlap: int = 100,     # J: Character overlap for simple chunking
+    chunk_size: int = 1000,
+    overlap: int = 100,
+    sentence_overlap: int = 0, # Number of sentences to overlap when preserve_sentences is True
 ):
     """
     Chunks a document from an extracted text JSON using either simple or AI-powered methods.
@@ -91,6 +221,9 @@ def chunk_document(
         chosen_methods: List of property names to extract text from (e.g., ['text'], ['pymupdf_extraction_text']).
         identifier: Property name to use as source identifier (e.g., 'url', 'filename').
         use_ai: If True, uses the AI-powered extraction method. Otherwise, uses the simple chunker.
+        preserve_sentences: If True, tries to preserve whole sentences during simple chunking.
+        preserve_document_in_metadata: If True, stores the entire document text in each chunk's metadata.
+        chunk_in_tokens: If True, chunk_size and overlap are treated as token counts.
 
         -- AI Parameters --
         prompt_description: The prompt explaining to the LLM how to extract items.
@@ -99,8 +232,9 @@ def chunk_document(
         rewrite_query: If True, a preliminary LLM call is made to refine the prompt_description.
 
         -- Simple Chunker Parameters --
-        chunk_size: Size of each chunk in characters.
-        overlap: Number of characters to overlap between chunks.
+        chunk_size: Size of each chunk in characters or tokens (see chunk_in_tokens).
+        overlap: Character/token overlap for sliding window. Ignored if preserve_sentences is True.
+        sentence_overlap: Sentence overlap for sentence chunker. Ignored if preserve_sentences is False.
     """
     # --- Parameter Validation ---
     if use_ai:
@@ -124,6 +258,18 @@ def chunk_document(
         # If it's a URL, extract a meaningful filename
         if identifier == 'url' and isinstance(source_identifier, str):
             source_identifier = source_identifier.split('/')[-1] or source_identifier.split('/')[-2] or source_identifier
+    
+    # Concatenate and clean all text from the chosen methods to get the full document text
+    full_text = "\n".join(
+        "\n".join(page.get(method, "") for method in chosen_methods)
+        for page in pages_data
+    )
+    full_text = clean_text(full_text)
+    
+    # Calculate text statistics for the full document
+    full_document_char_length = len(full_text)
+    full_document_token_length = count_tokens(full_text)
+    
     final_results = []
 
     if use_ai:
@@ -159,8 +305,11 @@ def chunk_document(
             safe_current_page_text = current_page_text.replace('\\', r'\\').replace('"', r'\"')
 
             # 4. Construct the final prompt
+            summary_instruction = ""
+            # Removed generate_chunk_summary as it's no longer a parameter
+            
             full_prompt = (
-                f"**Instructions:**\n{effective_prompt}\n\n"
+                f"**Instructions:**\n{effective_prompt}\n{summary_instruction}\n\n"
                 f"**Format Examples (previously extracted items):**\n{few_shot_examples_json}\n\n"
                 f"**Context from Previous Pages:**\n{safe_previous_pages_text}\n\n"
                 f"---\n"
@@ -174,34 +323,43 @@ def chunk_document(
             extracted_items = _call_llm_for_extraction(full_prompt)
             for item in extracted_items:
                 item['source_identifier'] = source_identifier
-                item['source_page'] = page.get('page_number', i)
+                item['metadata'] = {
+                    'source_page': page.get('page_number', i),
+                    'chunking_method': 'ai_extraction',
+                    'source_extraction_methods': chosen_methods,
+                    'chunk_size_tokens': count_tokens(item.get('text', json.dumps(item)))
+                }
+                if preserve_document_in_metadata:
+                    item['metadata']['original_document'] = full_text
             final_results.extend(extracted_items)
 
     else:
         logger.info("Starting simple sliding-window chunking...")
-        # 1. Concatenate all text from the chosen methods
-        full_text = "\n".join(
-            "\n".join(page.get(method, "") for method in chosen_methods)
-            for page in pages_data
-        )
+        text_chunks = _simple_chunker(full_text, chunk_size, overlap, preserve_sentences, chunk_in_tokens, sentence_overlap)
         
-        # 2. Chunk the combined text
-        text_chunks = _simple_chunker(full_text, chunk_size, overlap)
-        
-        # 3. Structure the output
+        # 2. Structure the output
         for i, chunk in enumerate(text_chunks):
-            final_results.append({
+            chunk_data = {
                 "chunk_id": i,
                 "text": chunk,
                 "source_identifier": source_identifier,
-                "chunking_method": "simple_sliding_window",
-                "source_extraction_methods": chosen_methods
-            })
+                "metadata": {
+                    "chunking_method": "simple_sliding_window",
+                    "source_extraction_methods": chosen_methods,
+                    "chunk_size_tokens": count_tokens(chunk)
+                }
+            }
+            if preserve_document_in_metadata:
+                chunk_data['metadata']['original_document'] = full_text
+            final_results.append(chunk_data)
 
     # --- Save Final Results ---
     with open(output_json_path, 'w', encoding='utf-8') as f:
         json.dump(final_results, f, indent=2, ensure_ascii=False)
     
+    # Get the size of the output file
+    chunked_file_size_bytes = os.path.getsize(output_json_path)
+
     # --- Create Metadata File ---
     metadata_path = output_json_path.replace('.json', '_metadata.json')
     metadata = {
@@ -213,12 +371,17 @@ def chunk_document(
             "identifier": identifier,
             "use_ai": use_ai,
             "chunk_size": chunk_size,
-            "overlap": overlap
+            "overlap": overlap,
+            "preserve_sentences": preserve_sentences,
+            "preserve_document_in_metadata": preserve_document_in_metadata,
+            "chunk_in_tokens": chunk_in_tokens,
+            "sentence_overlap": sentence_overlap
         },
         "results": {
             "total_chunks": len(final_results),
             "source_identifier": source_identifier,
-            "input_documents_count": len(pages_data)
+            "input_documents_count": len(pages_data),
+            "chunked_file_size_bytes": chunked_file_size_bytes
         }
     }
     
@@ -234,14 +397,27 @@ def chunk_document(
     else:
         metadata["results"]["chunking_method"] = "simple_sliding_window"
         
-        # Calculate text statistics for simple chunking
-        if final_results:
-            chunk_lengths = [len(chunk["text"]) for chunk in final_results]
+    # Calculate text and token statistics
+    if final_results:
+        # Assuming 'text' key exists in chunk dictionaries for both methods
+        if "text" in final_results[0]:
+            chunk_texts = [chunk["text"] for chunk in final_results]
+            chunk_char_lengths = [len(text) for text in chunk_texts]
+            chunk_token_lengths = [count_tokens(text) for text in chunk_texts]
+
             metadata["results"]["text_statistics"] = {
-                "min_chunk_length": min(chunk_lengths),
-                "max_chunk_length": max(chunk_lengths),
-                "avg_chunk_length": sum(chunk_lengths) / len(chunk_lengths),
-                "total_characters": sum(chunk_lengths)
+                "full_document_char_length": full_document_char_length,
+                "min_chunk_char_length": min(chunk_char_lengths),
+                "max_chunk_char_length": max(chunk_char_lengths),
+                "avg_chunk_char_length": sum(chunk_char_lengths) / len(chunk_char_lengths),
+                "total_chars_in_chunks": sum(chunk_char_lengths)
+            }
+            metadata["results"]["token_statistics"] = {
+                "full_document_token_length": full_document_token_length,
+                "min_chunk_token_length": min(chunk_token_lengths),
+                "max_chunk_token_length": max(chunk_token_lengths),
+                "avg_chunk_token_length": sum(chunk_token_lengths) / len(chunk_token_lengths),
+                "total_tokens_in_chunks": sum(chunk_token_lengths)
             }
     
     with open(metadata_path, 'w', encoding='utf-8') as f:
@@ -261,19 +437,24 @@ if __name__ == '__main__':
     # The logger is already configured at the top level, so no need to reconfigure here.
     
     # Create a dummy input file for testing
-    input_path = "../step1_text_extraction/output/bills.json"
-    output_path = "../step2_chunking/output/bills_chunked.json"
+    input_path = "../extracted_text/policies/policies.json"
+    output_path = "../chunked_text/policies/policies.json"
 
     # --- Example 1: Simple Chunker ---
     logger.info("--- Running Simple Chunker Example ---")
     chunk_document(
         input_json_path=input_path,
         output_json_path=output_path,
-        chosen_methods=['text'],  # Use 'text' field from your JSON
+        chosen_methods=['extracted'],  # Use 'text' field from your JSON
         identifier='url',         # Use 'url' field as source identifier
         use_ai=False,
-        chunk_size=1000,
-        overlap=200
+        chunk_size=500,
+        overlap=0, # Overlap is ignored when preserve_sentences is True
+        sentence_overlap=2, # Number of sentences to overlap
+        preserve_sentences=True,
+        preserve_document_in_metadata=False,
+        chunk_in_tokens=True, # Set to True for token-based chunking
+        # Removed generate_chunk_summary as it's no longer a parameter
     )
     print(f"Simple chunking output saved to {output_path}")
 

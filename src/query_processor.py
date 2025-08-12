@@ -187,7 +187,7 @@ Respond in JSON format:
                 "confidence": "low"
             }
     
-    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float) -> List[Dict[str, Any]]:
+    def searching_step(self, reasoning_result: Dict[str, Any], threshold: float, k: int) -> List[Dict[str, Any]]:
         """Step 2: Execute searches based on reasoning results with similarity threshold filtering"""
         
         target_collections = reasoning_result.get("target_collections", self.collection_names)
@@ -202,14 +202,13 @@ Respond in JSON format:
         
         # Search with each term across target collections
         # Use a high num_results to get more candidates for threshold filtering
-        max_candidates = 150  # Get more results to filter by threshold
         
         for search_term in search_terms:
             for collection_name in target_collections:
                 try:
                     if collection_name in self.collection_managers:
                         manager = self.collection_managers[collection_name]
-                        results = manager.search_similar_chunks(search_term, max_candidates)
+                        results = manager.search_similar_chunks(search_term, k)
                         
                         # Filter results by threshold
                         filtered_results = []
@@ -448,7 +447,7 @@ Answer:"""
                 "total_documents_found": len(search_results)
             }
     
-    def process_query(self, user_query: str, threshold: float) -> Dict[str, Any]:
+    def process_query(self, user_query: str, threshold: float, k: int) -> Dict[str, Any]:
         """Main method: Execute the complete query processing pipeline with threshold filtering"""
         
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
@@ -466,7 +465,7 @@ Answer:"""
             print(f"🚀 Starting search at {start_time}")
             
             # Step 2: Searching with threshold
-            search_results = self.searching_step(reasoning_result, threshold)
+            search_results = self.searching_step(reasoning_result, threshold, k)
             search_time = time.time() - start_time
             print(f"Search time: {search_time:.2f} seconds")
             
