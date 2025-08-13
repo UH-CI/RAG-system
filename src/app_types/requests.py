@@ -24,6 +24,7 @@ class QueryRequest(BaseModel):
     collections: Optional[List[str]] = Field(default=None, description="Collections to search in")
     threshold: float = Field(default=0.0, ge=0.0, le=1.0, description="Similarity threshold (0.0 to 1.0) - only return documents with similarity scores above this threshold")
     k: int = Field(default=10, description="Number of results to return")
+    conversation_history: Optional[List[str]] = Field(default=[], description="Previous messages in the conversation for context")
 
 class DocumentResponse(BaseModel):
     content: str

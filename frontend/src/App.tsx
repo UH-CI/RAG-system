@@ -76,7 +76,14 @@ function App() {
     setMessages(prev => [...prev, loadingMessage]);
 
     try {
-      const response = await askQuestion(messageText);
+      // Get conversation history (last few messages, excluding the current loading message)
+      const conversationHistory = messages
+        .filter(msg => msg.id !== loadingMessage.id) // Exclude the loading message
+        .slice(-6) // Get last 6 messages (3 user + 3 assistant pairs)
+        .map(msg => `${msg.type}: ${msg.content}`)
+        .filter(msg => !msg.includes('undefined')); // Filter out any undefined content
+      
+      const response = await askQuestion(messageText, conversationHistory);
       
       // Remove loading message and add real response
       setMessages(prev => {

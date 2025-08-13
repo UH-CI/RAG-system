@@ -102,17 +102,27 @@ class QueryProcessor:
         
         return "\n".join(context_parts)
     
-    def reasoning_step(self, user_query: str) -> Dict[str, Any]:
+    def reasoning_step(self, user_query: str, conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
         """Step 1: Analyze user query and determine search strategy"""
         
         collection_context = self.get_collection_context()
+        
+        # Add conversation context if available
+        conversation_context = ""
+        if conversation_history and len(conversation_history) > 0:
+            recent_history = conversation_history[-4:]  # Only use last 4 messages to keep context manageable
+            conversation_context = f"""
+CONVERSATION HISTORY (for context):
+{chr(10).join(f"- {msg}" for msg in recent_history)}
+
+"""
         
         reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. Your task is to deconstruct a user's query into a structured search plan.
 
 CONTEXT ON AVAILABLE DATA:
 {collection_context}
 
-USER QUERY: "{user_query}"
+{conversation_context}USER QUERY: "{user_query}"
 
 Based on the user's query and the available data, provide a structured response with the following components:
 
@@ -249,7 +259,7 @@ Respond in JSON format:
         return unique_results[:k]
     
     def answering_step(self, user_query: str, reasoning_result: Dict[str, Any], 
-                      search_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+                      search_results: List[Dict[str, Any]],conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
         """Step 3: Generate a direct answer based on the retrieved documents."""
         
         if not search_results:
@@ -273,8 +283,18 @@ Respond in JSON format:
             })
         
         context = "\n".join(context_parts)
-        
+                # Add conversation context if available
+        conversation_context = ""
+        if conversation_history and len(conversation_history) > 0:
+            recent_history = conversation_history[-4:]  # Only use last 4 messages to keep context manageable
+            conversation_context = f"""
+CONVERSATION HISTORY (for context):
+{chr(10).join(f"- {msg}" for msg in recent_history)}
+
+"""
         answer_prompt = f"""You are a helpful assistant. Your task is to answer the user's question based *only* on the provided documents.
+
+{conversation_context}
 
 USER QUESTION:
 "{user_query}"
@@ -313,7 +333,7 @@ At maximum, use 1 paragraph to answer the question.
                 "reasoning": reasoning_result
             }
     
-    def process_query(self, user_query: str, threshold: float, k: int) -> Dict[str, Any]:
+    def process_query(self, user_query: str, threshold: float, k: int, conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
         """Main method: Execute the complete query processing pipeline with threshold filtering"""
         
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
@@ -323,7 +343,7 @@ At maximum, use 1 paragraph to answer the question.
             start_time = time.time()
             print(f"🚀 Starting query processing at {start_time}")
             # Step 1: Reasoning
-            reasoning_result = self.reasoning_step(user_query)
+            reasoning_result = self.reasoning_step(user_query, conversation_history)
             reasoning_time = time.time() - start_time
             print(f"Reasoning time: {reasoning_time:.2f} seconds")
             
@@ -339,7 +359,7 @@ At maximum, use 1 paragraph to answer the question.
             print(f"🚀 Starting answering at {start_time}")
             
             # Step 3: Answering
-            final_result = self.answering_step(user_query, reasoning_result, search_results)
+            final_result = self.answering_step(user_query, reasoning_result, search_results, conversation_history)
             answering_time = time.time() - start_time
             print(f"Answering time: {answering_time:.2f} seconds")
             

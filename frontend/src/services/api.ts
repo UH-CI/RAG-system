@@ -94,13 +94,15 @@ export const searchDocuments = async (
  * Ask a question and get an AI-generated answer across all collections
  */
 export const askQuestion = async (
-  question: string
+  question: string,
+  conversationHistory?: string[]
 ): Promise<QuestionResponse> => {
   const response = await api.post('/query', {
     query: question,
     // Don't specify collections - let it search across all collections
-    threshold: 0,  // Default threshold for similarity filtering
-    k: 30
+    threshold: 0.75,  // Default threshold for similarity filtering
+    k: 30,
+    conversation_history: conversationHistory || []
   },{
     timeout: 300000, // 24 seconds
   });

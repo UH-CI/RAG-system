@@ -472,7 +472,7 @@ async def query_documents(request: QueryRequest):
         # else:
         # Fallback to traditional multi-step query processor
         print(f"🔄 Using traditional QueryProcessor for query: '{request.query}'")
-        result = query_processor.process_query(request.query, threshold=request.threshold, k=request.k)
+        result = query_processor.process_query(request.query, threshold=request.threshold, k=request.k, conversation_history=request.conversation_history)
         
         # Add metadata about the request
         result["query"] = request.query
