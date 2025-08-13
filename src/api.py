@@ -337,22 +337,56 @@ async def get_documents():
 async def get_collections():
     """Get list of collections stored in documents/storage_documents folder, 
     AKA, list of directories in documents/storage_documents folder"""
+    # Debug: Print current working directory and absolute path
+    current_dir = os.getcwd()
     base_path = "documents/storage_documents"
+    abs_base_path = os.path.abspath(base_path)
+    print(f"Current working directory: {current_dir}")
+    print(f"Looking for collections in: {abs_base_path}")
+    
     collections = []
 
-    for entry in os.listdir(base_path):
-        full_path = os.path.join(base_path, entry)
-        if os.path.isdir(full_path):
-            num_documents = len(os.listdir(full_path))
-        else:
-            # Skip files like .DS_Store
-            continue
-        if os.path.isdir(full_path):
-            print(f"Found collection: {entry}")
-            collections.append({
-                "name": entry,
-                "num_documents": num_documents
-            })
+    try:
+        # Check if the base directory exists
+        if not os.path.exists(base_path):
+            print(f"Warning: Base path '{base_path}' does not exist. Creating it...")
+            os.makedirs(base_path, exist_ok=True)
+            return {
+                "collections": collections,
+                "total_collections": 0
+            }
+
+        for entry in os.listdir(base_path):
+            full_path = os.path.join(base_path, entry)
+            if os.path.isdir(full_path):
+                try:
+                    num_documents = len(os.listdir(full_path))
+                    print(f"Found collection: {entry}")
+                    collections.append({
+                        "name": entry,
+                        "num_documents": num_documents
+                    })
+                except PermissionError:
+                    print(f"Permission denied accessing collection: {entry}")
+                    continue
+                except Exception as e:
+                    print(f"Error processing collection {entry}: {e}")
+                    continue
+            else:
+                # Skip files like .DS_Store
+                continue
+
+    except PermissionError:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Permission denied accessing collections directory: {base_path}"
+        )
+    except Exception as e:
+        print(f"Error accessing collections: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error accessing collections directory: {str(e)}"
+        )
 
     return {
         "collections": collections,

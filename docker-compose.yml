@@ -20,7 +20,4 @@ services:
       retries: 3
     volumes:
       - ./src/.env:/src/.env:ro  # Mount environment file
-      - chroma_data:/src/chroma_db
-
-volumes:
-  chroma_data:
+      - ./src/chroma_db:/src/chroma_db
