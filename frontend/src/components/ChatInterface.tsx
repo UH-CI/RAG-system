@@ -181,7 +181,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <div className="space-y-1">
                       {(() => {
                         // Debug: log the sources to see what's available
-                        console.log('Sources:', message.sources);
                         
                         const uniqueSources = message.sources
                           .filter((source, index, self) => {
@@ -192,7 +191,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           })
                           .slice(0, 2);
                         
-                        console.log('Filtered sources:', uniqueSources);
                         
                         return uniqueSources.map((source, index) => {
                           const sourceId = source.source_identifier || source.metadata?.source_identifier;
