@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Check, CheckCircle, Clock, AlertTriangle, Upload, Play, Pause } from "lucide-react";
+import { X, Check, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { createCollection, uploadPDFToCollection, uploadFromGoogleDrive, uploadFromWebUrl, extractText, chunkText } from "../services/api";
 import GroupNameStep from "./CreateGroupModal/GroupNameStep";
 import DocumentUploadStep from "./CreateGroupModal/DocumentUploadStep";
-import ParsingTypeStep from "./CreateGroupModal/ParsingTypeStep";
-import type { CreateGroupData, DocumentParsingType } from "../types";
+import type { CreateGroupData } from "../types";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -44,30 +43,6 @@ const PROCESSING_STEPS = [
   { id: 'extract', name: 'Extract Text', description: 'Processing documents and extracting content' },
   { id: 'chunk', name: 'Chunk Text', description: 'Breaking content into searchable segments' }
 ];
-
-const PARSING_TYPES: DocumentParsingType[] = [
-  {
-    id: 'text',
-    label: 'Text Only',
-    description: 'Extract and process text content from documents'
-  },
-  {
-    id: 'image_text',
-    label: 'Text + Images with Text',
-    description: 'Extract text and process images that contain text (OCR)'
-  },
-  {
-    id: 'image_nontext',
-    label: 'All Content',
-    description: 'Process all content including images without text'
-  },
-  {
-    id: 'custom',
-    label: 'Custom Processing',
-    description: 'Define custom extraction and processing rules'
-  }
-];
-
 // Global state for tracking collections being processed
 let globalCollectionProgress: CollectionProgress | null = null;
 

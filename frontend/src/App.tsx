@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, AlertCircle, Loader2, FileText } from 'lucide-react';
-import CollectionsSidebar from './components/CollectionsSidebar';
 import ChatInterface from './components/ChatInterface';
 import CreateGroupModal from './components/CreateGroupModal';
 import FiscalNoteGeneration from './components/FiscalNoteGeneration';
@@ -120,10 +119,6 @@ function App() {
   //   // Don't clear messages when switching collections since chat works across all collections
   // }, []); // This function is no longer needed
 
-  // Handle create group modal
-  const handleCreateGroup = useCallback(() => {
-    setIsCreateModalOpen(true);
-  }, []);
 
   const handleCreateModalClose = useCallback(() => {
     setIsCreateModalOpen(false);

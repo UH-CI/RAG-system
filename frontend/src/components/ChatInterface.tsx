@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, Copy, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { ChatMessage, SearchResult } from '../types';
+import type { ChatMessage } from '../types';
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -52,47 +52,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const formatTimestamp = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const renderSources = (sources: SearchResult[]) => {
-    if (!sources || sources.length === 0) return null;
-
-    return (
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        <h4 className="text-xs font-medium text-gray-500 mb-2">Sources</h4>
-        <div className="space-y-2">
-          {sources.slice(0, 3).map((source, index) => {
-            // Handle different source structures from multi-step reasoning
-            const content = source.content || 'No content available';
-            const collection = source.metadata?.collection || 'Unknown';
-            const score = source.score || 0;
-            const sourceKey = source.id || `source-${index}`;
-            
-            return (
-              <div key={sourceKey} className="bg-gray-50 rounded p-2 text-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-gray-700">Source {index + 1}</span>
-                  {score > 0 && (
-                    <span className="text-gray-500">{(score * 100).toFixed(1)}% match</span>
-                  )}
-                </div>
-                <p className="text-gray-600 line-clamp-2">
-                  {typeof content === 'string' ? content.substring(0, 100) : String(content).substring(0, 100)}...
-                </p>
-                {collection && (
-                  <span className="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                    {collection}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-          {sources.length > 3 && (
-            <p className="text-xs text-gray-500">+ {sources.length - 3} more sources</p>
-          )}
-        </div>
-      </div>
-    );
   };
 
   return (

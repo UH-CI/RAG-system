@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, RefreshCw, Plus, X, CheckCircle, Clock, AlertTriangle, Database, ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertCircle, RefreshCw, Plus, X, CheckCircle, Clock, AlertTriangle, Database, ChevronRight, ChevronDown } from 'lucide-react';
 import type { Collection } from '../types';
 
 interface CollectionsSidebarProps {
