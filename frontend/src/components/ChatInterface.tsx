@@ -63,7 +63,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Policy Chatbot</h3>
             <p className="text-gray-600 mb-4">
-              Ask questions about the policies for UH Manoa.
+              Ask questions about the policies for the University of Hawaii systemwide.
             </p>
             {/* <div className="max-w-md mx-auto">
               <p className="text-sm text-gray-500 mb-3">Try asking:</p>

@@ -180,7 +180,7 @@ function App() {
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? `Ask questions about the policies for UH Manoa`
+                    ? `Ask questions about the policies for the University of Hawaii systemwide`
                     : currentView === 'fiscal-note'
                     ? 'Upload documents and analyze using selected collections'
                     : 'Generate a fiscal note for a specific bill'
