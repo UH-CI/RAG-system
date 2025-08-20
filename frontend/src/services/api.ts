@@ -100,8 +100,8 @@ export const askQuestion = async (
   const response = await api.post('/query', {
     query: question,
     // Don't specify collections - let it search across all collections
-    threshold: 0.75,  // Default threshold for similarity filtering
-    k: 30,
+    threshold: 0.6,  // Default threshold for similarity filtering
+    k: 5,
     conversation_history: conversationHistory || []
   },{
     timeout: 300000, // 24 seconds
@@ -109,12 +109,11 @@ export const askQuestion = async (
 
   // Transform the backend response to match our frontend types
   const backendData = response.data;
-  
   return {
     answer: backendData.response || 'No answer available',
     sources: (backendData.sources || []).map((source: any) => ({
       id: source.metadata?.id || `source_${Math.random()}`,
-      content: source.content,
+      content: `https://sciencegateways.org/resources/${source.metadata?.original_id}`,
       metadata: source.metadata || {},
       score: source.score || 0,
     })),

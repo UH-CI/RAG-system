@@ -61,9 +61,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center py-12">
             <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Policy Chatbot</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Science Gateways Chatbot</h3>
             <p className="text-gray-600 mb-4">
-              Ask questions about the policies for the University of Hawaii systemwide.
+              Ask questions about papers published in the Science Gateways conference.
             </p>
             {/* <div className="max-w-md mx-auto">
               <p className="text-sm text-gray-500 mb-3">Try asking:</p>
@@ -140,28 +140,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <div className="space-y-1">
                       {(() => {
                         // Debug: log the sources to see what's available
-                        
-                        const uniqueSources = message.sources
-                          .filter((source, index, self) => {
-                            const sourceId = source.source_identifier || source.metadata?.source_identifier;
-                            return sourceId && self.findIndex(s => 
-                              (s.source_identifier || s.metadata?.source_identifier) === sourceId
-                            ) === index;
-                          })
-                          .slice(0, 2);
-                        
-                        
-                        return uniqueSources.map((source, index) => {
-                          const sourceId = source.source_identifier || source.metadata?.source_identifier;
+                        return message.sources.map((source, index) => {
                           return (
                             <div key={`link-${index}`}>
                               <a 
-                                href={sourceId} 
+                                href={source.content} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 text-xs underline break-all"
                               >
-                                {sourceId}
+                                {source.content}
                               </a>
                             </div>
                           );
@@ -195,7 +183,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask a question about your documents..."
+              placeholder="Enter your question here..."
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />

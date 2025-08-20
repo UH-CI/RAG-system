@@ -194,7 +194,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, on
 
     try {
       const { collection_path } = await createCollection(groupData.name);
-      console.log(collection_path);
 
       updateCollectionProgress({
         ...initialProgress,

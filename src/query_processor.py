@@ -272,8 +272,10 @@ Respond in JSON format:
         # Prepare context from search results
         context_parts = []
         sources = []
+        print(json.dumps(search_results, indent=2, ensure_ascii=False))
+
         for i, result in enumerate(search_results):
-            context_parts.append(f"Document {i+1} (Source: {result['metadata'].get('collection', 'unknown')}, Relevance Score: {result.get('score', 0):.2f}):\n{result['content']}\n---")
+            context_parts.append(f"{result['metadata']['title']} (Source: {result['metadata'].get('collection', 'unknown')}, \n {result['metadata']}:\n Description: {result['content']}\n---")
             sources.append({
                 "content": result["content"],
                 "metadata": {k: v for k, v in result["metadata"].items() if k != 'search_method'},

@@ -174,13 +174,13 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {currentView === 'chat' && 'Policy Bot'}
+                  {currentView === 'chat' && 'Science Gateways ChatBot'}
                   {currentView === 'fiscal-note' && 'Fiscal Note Generation'}
                   {currentView === 'bill-fiscal-note' && 'Bill Fiscal Note'}
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? `Ask questions about the policies for the University of Hawaii systemwide`
+                    ? `Ask questions about the papers published in the Science Gateways conference`
                     : currentView === 'fiscal-note'
                     ? 'Upload documents and analyze using selected collections'
                     : 'Generate a fiscal note for a specific bill'
