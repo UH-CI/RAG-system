@@ -272,7 +272,6 @@ Respond in JSON format:
         # Prepare context from search results
         context_parts = []
         sources = []
-        print(json.dumps(search_results, indent=2, ensure_ascii=False))
 
         for i, result in enumerate(search_results):
             context_parts.append(f"{result['metadata']['title']} (Source: {result['metadata'].get('collection', 'unknown')}, \n {result['metadata']}:\n Description: {result['content']}\n---")
@@ -289,6 +288,8 @@ Respond in JSON format:
         conversation_context = ""
         if conversation_history and len(conversation_history) > 0:
             recent_history = conversation_history[-4:]  # Only use last 4 messages to keep context manageable
+
+            print(f"🔍 Conversation history: {json.dumps(recent_history, indent=2, ensure_ascii=False)}")
             conversation_context = f"""
 CONVERSATION HISTORY (for context):
 {chr(10).join(f"- {msg}" for msg in recent_history)}
@@ -305,6 +306,9 @@ RETRIEVED DOCUMENTS:
 ---
 {context}
 ---
+Note that these papers are published in the Science Gateways conference.
+You are provided with the titles and context. The user knows this. 
+You are basically a retriever of the papers and can answer questions about the papers
 
 INSTRUCTIONS:
 1.  Carefully read the user's question and the retrieved documents.
@@ -316,6 +320,8 @@ Answer the question as if you are talking to the user.
 They do not know you have access to the documents -- and they don't need to know.
 Treat it as a real conversation.
 At maximum, use 1 paragraph to answer the question.
+If the question is just asking for a list of documents, just describe the documents.
+Answer the question as best as you can. Do not say "I do not know" or "I do not have access to the data".
 """
         
         try:
@@ -341,7 +347,7 @@ At maximum, use 1 paragraph to answer the question.
         print(f"🚀 Processing query: '{user_query}' with threshold: {threshold}")
         
         try:
-
+            print(f"🚀 Conversation history: {json.dumps(conversation_history, indent=2, ensure_ascii=False)}")
             start_time = time.time()
             print(f"🚀 Starting query processing at {start_time}")
             # Step 1: Reasoning

@@ -79,9 +79,21 @@ function App() {
       const conversationHistory = messages
         .filter(msg => msg.id !== loadingMessage.id) // Exclude the loading message
         .slice(-6) // Get last 6 messages (3 user + 3 assistant pairs)
-        .map(msg => `${msg.type}: ${msg.content}`)
+        .map(msg => {
+          let messageText = `${msg.type}: ${msg.content}`;
+          
+          // Add sources information for assistant messages that have sources
+          if (msg.type === 'assistant' && msg.sources && msg.sources.length > 0) {
+            const sourcesInfo = msg.sources.map(source => 
+              `[Source: ${source.metadata?.title || source.metadata?.id || 'Unknown'}]`
+            ).join(', ');
+            messageText += ` (Sources: ${sourcesInfo})`;
+          }
+          
+          return messageText;
+        })
         .filter(msg => !msg.includes('undefined')); // Filter out any undefined content
-      
+      console.log(conversationHistory)
       const response = await askQuestion(messageText, conversationHistory);
       
       // Remove loading message and add real response
