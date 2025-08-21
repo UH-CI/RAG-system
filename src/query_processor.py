@@ -5,6 +5,7 @@ Implements reasoning -> searching -> answering pipeline
 
 import json
 import re
+import requests
 import google.generativeai as genai
 from typing import List, Dict, Any, Optional
 from pathlib import Path
@@ -20,20 +21,44 @@ import time
 
 def _extract_json_from_response(text: str) -> Optional[Dict[str, Any]]:
     """Extracts a JSON object from a string, even if it's embedded in markdown."""
-    # Find the JSON block using a regex
+    # Clean the text first - remove any leading/trailing whitespace
+    text = text.strip()
+    
+    # Handle case where response starts with ``` (markdown code block)
+    if text.startswith('```'):
+        # Remove the opening ``` and any language identifier
+        text = re.sub(r'^```\w*\s*', '', text)
+        # Remove the closing ``` if present
+        text = re.sub(r'\s*```$', '', text)
+    
+    # Find the JSON block using a regex (for ```json blocks)
     match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
     if match:
         json_str = match.group(1)
         try:
             return json.loads(json_str)
         except json.JSONDecodeError as e:
-            print(f"❌ Failed to parse extracted JSON: {e}")
+            print(f"❌ Failed to parse extracted JSON from markdown: {e}")
+            print(f"Raw JSON string: {json_str}")
             return None
     
-    # If no markdown block is found, try to parse the whole string
+    # Try to find JSON object in the text (for cases without markdown)
+    json_match = re.search(r'\{.*\}', text, re.DOTALL)
+    if json_match:
+        json_str = json_match.group(0)
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"❌ Failed to parse extracted JSON object: {e}")
+            print(f"Raw JSON string: {json_str}")
+            return None
+    
+    # If no JSON object found, try to parse the whole string
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"❌ Failed to parse text as JSON: {e}")
+        print(f"Raw text: {text[:200]}...")  # Show first 200 chars for debugging
         return None
 
 
@@ -45,8 +70,13 @@ class QueryProcessor:
         self.config = config
         self.collection_names = config["collections"]
         
-        # Initialize Gemini model
+        # Initialize Gemini model (fallback)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # LLaMA API configuration
+        self.llama_api_key = "bfa9578e-8707-4f32-a07c-4de1ffcd1a77"
+        self.llama_url = "https://tejas.tacc.utexas.edu/v1/c31853e6-0a58-4483-9e92-e7c32b021d44/chat/completions"
+        self.llama_model = "Meta-Llama-3.1-405B-Instruct"
     
     def get_collection_sample(self, collection_name: str) -> Dict[str, Any]:
         """Get a sample document from a collection for context"""
@@ -73,6 +103,55 @@ class QueryProcessor:
             print(f"Error getting sample from {collection_name}: {e}")
             
         return {}
+    
+    def call_llama_api(self, messages: List[Dict[str, str]]) -> str:
+        """
+        Calls the LLaMA chat API with given messages.
+        
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+            
+        Returns:
+            str: The response content from the API
+        """
+        headers = {
+            "Authorization": f"Bearer {self.llama_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "stream": False,
+            "model": self.llama_model,
+            "messages": messages
+        }
+        
+        try:
+            response = requests.post(
+                self.llama_url, 
+                headers=headers, 
+                data=json.dumps(payload),
+                timeout=60
+            )
+            response.raise_for_status()
+            
+            response_data = response.json()
+            
+            # Extract the content from the response
+            if (response_data.get("choices") and 
+                len(response_data["choices"]) > 0 and 
+                response_data["choices"][0].get("message")):
+                
+                return response_data["choices"][0]["message"]["content"]
+            else:
+                print(f"❌ Unexpected LLaMA API response format: {response_data}")
+                return "Error: Unexpected response format from LLaMA API"
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error calling LLaMA API: {e}")
+            return f"Error: Failed to call LLaMA API - {str(e)}"
+        except json.JSONDecodeError as e:
+            print(f"❌ Error parsing LLaMA API response: {e}")
+            return "Error: Failed to parse LLaMA API response"
     
     def get_collection_context(self) -> str:
         """Generate context about available collections and their structure"""
@@ -117,7 +196,67 @@ CONVERSATION HISTORY (for context):
 
 """
         
-        reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. Your task is to deconstruct a user's query into a structured search plan.
+        # Prepare messages for LLaMA API
+        messages = [
+            {
+                "role": "system",
+                "content": """You are an intelligent query analyzer for a document database system. Your task is to deconstruct a user's query into a structured search plan.
+
+Based on the user's query and the available data, provide a structured response with the following components:
+
+1. **INTENT**: Briefly describe what the user is trying to accomplish.
+2. **HYPOTHETICAL_ANSWER**: Generate a concise, hypothetical answer to the user's query. This answer should be a short paragraph that sounds like a plausible response, even if you don't know the exact details. This will be used to find semantically similar documents.
+3. **KEYWORDS**: Provide exactly TWO specific keywords or key phrases for a keyword-based search. These should be distinct and likely to appear in relevant documents.
+4. **TARGET_COLLECTIONS**: Identify the most relevant collections to search from the provided list.
+5. **CONFIDENCE**: Rate your confidence in this plan (high/medium/low).
+
+Respond in JSON format:
+{
+    "intent": "brief description of user intent",
+    "hypothetical_answer": "A short, plausible answer to the user's query.",
+    "keywords": ["keyword1", "keyword2"],
+    "target_collections": ["collection1", "collection2"],
+    "confidence": "high/medium/low"
+}"""
+            }
+        ]
+        
+        # Add conversation context if available
+        if conversation_context:
+            messages.append({
+                "role": "user",
+                "content": f"Previous conversation context:\n{conversation_context}"
+            })
+        
+        # Add the main query with context
+        user_message = f"""CONTEXT ON AVAILABLE DATA:
+{collection_context}
+
+USER QUERY: "{user_query}"
+
+Available collections: {', '.join(self.collection_names)}"""
+        
+        messages.append({
+            "role": "user",
+            "content": user_message
+        })
+        
+        try:
+            # Try LLaMA API first
+            response_text = self.call_llama_api(messages)
+            
+            # Debug: Print the raw response for troubleshooting
+            print(f"🔍 LLaMA API raw response: {response_text[:500]}...")
+            
+            # Try to parse JSON response
+            reasoning_result = _extract_json_from_response(response_text)
+            
+            # Check if LLaMA API returned an error or failed to parse
+            if not reasoning_result or response_text.startswith("Error:"):
+                print(f"⚠️ LLaMA API failed for reasoning, falling back to Gemini")
+                print(f"Response text: {response_text[:200]}...")
+                # Fallback to Gemini
+                reasoning_prompt = f"""You are an intelligent query analyzer for a document database system. Your task is to deconstruct a user's query into a structured search plan.
 
 CONTEXT ON AVAILABLE DATA:
 {collection_context}
@@ -141,12 +280,8 @@ Respond in JSON format:
     "confidence": "high/medium/low"
 }}
 """
-        
-        try:
-            response = self.model.generate_content(reasoning_prompt)
-            
-            # Try to parse JSON response
-            reasoning_result = _extract_json_from_response(response.text)
+                response = self.model.generate_content(reasoning_prompt)
+                reasoning_result = _extract_json_from_response(response.text)
 
             if reasoning_result:
                 # Validate collections exist
@@ -295,7 +430,61 @@ CONVERSATION HISTORY (for context):
 {chr(10).join(f"- {msg}" for msg in recent_history)}
 
 """
-        answer_prompt = f"""You are a helpful assistant. Your task is to answer the user's question based *only* on the provided documents.
+        # Prepare messages for LLaMA API
+        messages = [
+            {
+                "role": "system", 
+                "content": """You are a helpful assistant. Your task is to answer the user's question based *only* on the provided documents.
+
+Note that these papers are published in the Science Gateways conference.
+You are provided with the titles and context. The user knows this. 
+You are basically a retriever of the papers and can answer questions about the papers.
+
+INSTRUCTIONS:
+1. Carefully read the user's question and the retrieved documents.
+2. Formulate a clear and concise answer using only the information found in the documents.
+3. If the documents do not contain the information needed to answer the question, you MUST state that clearly. Do not use any outside knowledge.
+4. If you cannot answer the question, still try to be informative as best as you can.
+5. Be concise and to the point.
+Answer the question as if you are talking to the user.
+They do not know you have access to the documents -- and they don't need to know.
+Treat it as a real conversation.
+At maximum, use 1 paragraph to answer the question.
+If the question is just asking for a list of documents, just describe the documents.
+Answer the question as best as you can. Do not say "I do not know" or "I do not have access to the data"."""
+            }
+        ]
+        
+        # Add conversation history if available
+        if conversation_context:
+            messages.append({
+                "role": "user",
+                "content": f"Previous conversation context:\n{conversation_context}"
+            })
+        
+        # Add the main query with retrieved documents
+        user_message = f"""USER QUESTION:
+"{user_query}"
+
+RETRIEVED DOCUMENTS:
+---
+{context}
+---"""
+        
+        messages.append({
+            "role": "user",
+            "content": user_message
+        })
+        
+        try:
+            # Try LLaMA API first
+            response_text = self.call_llama_api(messages)
+            
+            # Check if LLaMA API returned an error
+            if response_text.startswith("Error:"):
+                print(f"⚠️ LLaMA API failed, falling back to Gemini: {response_text}")
+                # Fallback to Gemini
+                answer_prompt = f"""You are a helpful assistant. Your task is to answer the user's question based *only* on the provided documents.
 
 {conversation_context}
 
@@ -323,12 +512,11 @@ At maximum, use 1 paragraph to answer the question.
 If the question is just asking for a list of documents, just describe the documents.
 Answer the question as best as you can. Do not say "I do not know" or "I do not have access to the data".
 """
-        
-        try:
-            response = self.model.generate_content(answer_prompt)
+                response = self.model.generate_content(answer_prompt)
+                response_text = response.text
             
             return {
-                "response": response.text,
+                "response": response_text,
                 "sources": sources,
                 "reasoning": reasoning_result
             }
