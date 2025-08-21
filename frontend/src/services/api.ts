@@ -9,7 +9,7 @@ import type {
 } from '../types';
 
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8200';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://128.171.215.33:8200';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
