@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Copy, Loader2 } from 'lucide-react';
+import { SendHorizonal, User, Bot, Copy, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../types';
@@ -61,9 +61,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center py-12">
             <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Science Gateways Chatbot</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Science Gateways ChatBot</h3>
             <p className="text-gray-600 mb-4">
-              Ask questions about papers published in the Science Gateways conference.
+            Ask questions about available science gateways and resources.
             </p>
             {/* <div className="max-w-md mx-auto">
               <p className="text-sm text-gray-500 mb-3">Try asking:</p>
@@ -136,7 +136,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {/* Source Links */}
                 {message.type === 'assistant' && message.sources && message.sources.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-gray-200">
-                    <h4 className="text-xs font-medium text-gray-500 mb-2">Sources</h4>
+                    <h4 className="text-xs font-medium text-gray-500 mb-2">Results</h4>
                     <div className="space-y-1">
                       {(() => {
                         // Debug: log the sources to see what's available
@@ -149,7 +149,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 text-xs underline break-all"
                               >
-                                {source.content}
+                                {source.title}
                               </a>
                             </div>
                           );
@@ -191,12 +191,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <button
             type="submit"
             disabled={!inputValue.trim() || loading}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <SendHorizonal className="w-6 h-6" />
             )}
           </button>
         </form>

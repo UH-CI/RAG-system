@@ -109,9 +109,11 @@ export const askQuestion = async (
 
   // Transform the backend response to match our frontend types
   const backendData = response.data;
+  console.log(backendData.sources)
   return {
     answer: backendData.response || 'No answer available',
     sources: (backendData.sources || []).map((source: any) => ({
+      title: source.metadata?.title,
       id: source.metadata?.id || `source_${Math.random()}`,
       content: `https://sciencegateways.org/resources/${source.metadata?.original_id}`,
       metadata: source.metadata || {},
