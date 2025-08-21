@@ -192,7 +192,7 @@ function App() {
                 </h1>
                 <p className="text-sm text-gray-500">
                   {currentView === 'chat'
-                    ? `Ask questions about the papers published in the Science Gateways conference`
+                    ? `Ask questions about available science gateways and resources`
                     : currentView === 'fiscal-note'
                     ? 'Upload documents and analyze using selected collections'
                     : 'Generate a fiscal note for a specific bill'

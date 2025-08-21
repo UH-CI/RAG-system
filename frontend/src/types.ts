@@ -1,4 +1,5 @@
 export interface SearchResult {
+  title: string;
   id: string;
   content: string;
   metadata: Record<string, any>;
