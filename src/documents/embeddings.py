@@ -8,8 +8,10 @@ import time
 from typing import List, Dict, Any, Optional, Tuple
 import chromadb
 from chromadb.config import Settings
+from chromadb.api.types import EmbeddingFunction, Documents
 import google.generativeai as genai
 import json
+import requests
 
 # Handle both relative and absolute imports
 try:
@@ -36,6 +38,7 @@ class GoogleEmbeddingFunction:
         """
         self.api_key = api_key
         self.model_name = model_name
+        self._is_query_mode = False
         genai.configure(api_key=api_key)
         logger.info(f"Initialized Google embeddings with model: {model_name}")
     
@@ -54,13 +57,15 @@ class GoogleEmbeddingFunction:
         """
         embeddings = []
         
+        task_type = "retrieval_query" if self._is_query_mode else "retrieval_document"
+        
         for text in input:
             try:
                 # Generate embedding using Google AI
                 result = genai.embed_content(
                     model=f"models/{self.model_name}",
                     content=text,
-                    task_type="retrieval_document"
+                    task_type=task_type
                 )
                 embeddings.append(result['embedding'])
                 
@@ -73,6 +78,124 @@ class GoogleEmbeddingFunction:
                 embeddings.append([0.0] * 768)  # Default dimension for Google embeddings
         
         return embeddings
+
+class SambaNovaEmbeddingFunction:
+    """Custom embedding function for SambaNova AI embeddings."""
+    
+    def __init__(self, api_key: str, base_url: str, model_name: str = "E5-Mistral-7B-Instruct"):
+        """Initialize SambaNova embedding function.
+        
+        Args:
+            api_key: SambaNova API key
+            base_url: SambaNova base URL
+            model_name: Name of the embedding model to use
+        """
+        self.api_key = api_key
+        self.base_url = base_url.rstrip('/')
+        self.model_name = model_name
+        self._is_query_mode = False
+        logger.info(f"Initialized SambaNova embeddings with model: {model_name}")
+    
+    def name(self) -> str:
+        """Return the name of this embedding function."""
+        return f"sambanova_{self.model_name}"
+    
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        """Generate embeddings for input texts.
+        
+        Args:
+            input: List of texts to embed
+            
+        Returns:
+            List of embedding vectors
+        """
+        embeddings = []
+        
+        # SambaNova API endpoint for embeddings
+        url = f"{self.base_url}/v1/embeddings"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        for text in input:
+            try:
+                payload = {
+                    "model": self.model_name,
+                    "input": text
+                }
+                
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
+                response.raise_for_status()
+                
+                response_data = response.json()
+                
+                # Extract embedding from response
+                if (response_data.get("data") and 
+                    len(response_data["data"]) > 0 and 
+                    response_data["data"][0].get("embedding")):
+                    # Ensure embedding is a Python list, not numpy array
+                    embedding = response_data["data"][0]["embedding"]
+                    
+                    # Convert to list if it's a numpy array or similar
+                    if hasattr(embedding, 'tolist'):
+                        embedding = embedding.tolist()
+                    elif not isinstance(embedding, list):
+                        embedding = list(embedding)
+                        
+                    # Ensure all elements are standard floats
+                    embedding = [float(x) for x in embedding]
+                    
+                    embeddings.append(embedding)
+                else:
+                    logger.error(f"Unexpected SambaNova API response format: {response_data}")
+                    # Return zero vector as fallback (E5-Mistral-7B-Instruct has 4096 dimensions)
+                    embeddings.append([0.0] * 4096)
+                
+                # Add small delay to respect rate limits
+                time.sleep(0.05)
+                
+            except Exception as e:
+                logger.error(f"Error generating embedding for text: {str(e)}")
+                # Return zero vector as fallback
+                embeddings.append([0.0] * 4096)
+        
+        # Ensure all embeddings are Python lists, not numpy arrays (FORCE CONVERSION)
+        final_result = []
+        for i, emb in enumerate(embeddings):
+            if hasattr(emb, 'tolist'):
+                conv = emb.tolist()
+            elif isinstance(emb, list):
+                conv = emb
+            else:
+                conv = list(emb)
+            final_result.append(conv)
+            
+        return final_result
+    
+    def embed_query(self, input: str) -> List[float]:
+        """Embed a single query text for ChromaDB compatibility.
+        
+        Args:
+            input: Query text to embed
+            
+        Returns:
+            Embedding vector as Python list
+        """
+        # Call __call__ with a single-element list
+        result = self.__call__([input])
+        
+        # Return the first embedding if available
+        if result and len(result) > 0:
+            return result[0]
+            
+        # Fallback
+        return [0.0] * 4096
 
 class ChromaDBManager:
     """Manages ChromaDB operations with Google embeddings."""
@@ -107,13 +230,22 @@ class ChromaDBManager:
             raise
     
     def _initialize_embedding_function(self):
-        """Initialize Google embedding function."""
+        """Initialize embedding function based on provider."""
         try:
-            self.embedding_function = GoogleEmbeddingFunction(
-                api_key=settings.google_api_key,
-                model_name=settings.embedding_model
-            )
-            logger.info("Google embedding function initialized")
+            if settings.embedding_provider == "sambanova":
+                self.embedding_function = SambaNovaEmbeddingFunction(
+                    api_key=settings.sambanova_api_key,
+                    base_url=settings.sambanova_base_url,
+                    model_name=settings.embedding_model
+                )
+                logger.info("SambaNova embedding function initialized")
+            else:
+                # Fallback to Google
+                self.embedding_function = GoogleEmbeddingFunction(
+                    api_key=settings.google_api_key,
+                    model_name=settings.embedding_model
+                )
+                logger.info("Google embedding function initialized")
             
         except Exception as e:
             logger.error(f"Failed to initialize embedding function: {str(e)}")
@@ -581,10 +713,28 @@ class DynamicChromeManager(ChromaDBManager):
             else:
                 actual_num_results = num_results
             
-            results = self.collection.query(
-                query_texts=[query],
-                n_results=actual_num_results
-            )
+            # Set query mode for proper embedding task_type
+            self.embedding_function._is_query_mode = True
+            
+            # Manually embed the query to avoid ChromaDB interface issues
+            if hasattr(self.embedding_function, "embed_query"):
+                query_embedding = self.embedding_function.embed_query(query)
+                # Ensure it's a list
+                if not isinstance(query_embedding, list):
+                    query_embedding = list(query_embedding)
+                
+                results = self.collection.query(
+                    query_embeddings=[query_embedding],
+                    n_results=actual_num_results
+                )
+            else:
+                results = self.collection.query(
+                    query_texts=[query],
+                    n_results=actual_num_results
+                )
+            
+            # Reset to document mode
+            self.embedding_function._is_query_mode = False
             
             formatted_results = []
             print("🔍 Number of results before filtering:", len(results["documents"][0]))

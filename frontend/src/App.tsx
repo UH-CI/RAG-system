@@ -123,7 +123,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [messages]);
 
   // Handle collection selection
   // const handleCollectionSelect = useCallback((collectionId: string) => {

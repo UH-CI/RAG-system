@@ -4,6 +4,7 @@ Implements reasoning -> searching -> answering pipeline
 """
 
 import json
+import os
 import re
 import requests
 import google.generativeai as genai
@@ -73,10 +74,11 @@ class QueryProcessor:
         # Initialize Gemini model (fallback)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # LLaMA API configuration
-        self.llama_api_key = "bfa9578e-8707-4f32-a07c-4de1ffcd1a77"
-        self.llama_url = "https://tejas.tacc.utexas.edu/v1/c31853e6-0a58-4483-9e92-e7c32b021d44/chat/completions"
-        self.llama_model = "Meta-Llama-3.1-405B-Instruct"
+        # SambaNova API configuration
+        self.llama_api_key = os.environ.get("SAMBANOVA_API_KEY", "")
+        _sambanova_base_url = os.environ.get("SAMBANOVA_BASE_URL", "")
+        self.llama_url = f"{_sambanova_base_url}/v1/chat/completions"
+        self.llama_model = "Llama-4-Maverick-17B-128E-Instruct"
     
     def get_collection_sample(self, collection_name: str) -> Dict[str, Any]:
         """Get a sample document from a collection for context"""
