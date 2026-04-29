@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     
     # Only sensitive data from environment variables
     google_api_key: Optional[str] = Field(default=None, env="GOOGLE_API_KEY")
+    sambanova_api_key: Optional[str] = Field(default=None, env="SAMBANOVA_API_KEY")
     
     class Config:
         env_file = ".env"

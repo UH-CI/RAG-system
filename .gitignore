@@ -22,6 +22,7 @@ src/chroma_db/
 
 /improve_rag
 /src/.env
+/src/config.json
 
 /src/chroma_db_courses
 /src/chroma_db_financeV1

@@ -1,0 +1,45 @@
+{
+  "collections": ["gateways"],
+  "default_collection": "gateways",
+  "ingestion_configs": [
+    {
+      "collection_name": "gateways",
+      "original_document_dir": "./documents/storage_documents/gateways",
+      "source_file": "chunked_text/gateways/jos_resources_escape.json",
+      "contents_to_embed": ["fulltxt", "title"],
+      "description": "Papers published in the Science Gateways conference."
+    }
+  ],
+  "search": {
+    "default_results": 50,
+    "max_results": 300,
+    "supported_search_types": ["semantic", "metadata", "both"]
+  },
+  "api": {
+    "title": "Document RAG API",
+    "description": "API for managing and searching documents using ChromaDB and RAG",
+    "version": "1.0.0"
+  },
+  "system": {
+    "documents_path": "./documents",
+    "chroma_db_path": "./chroma_db/data",
+    "chroma_collection_name": "default_collection",
+    "chroma_distance_function": "cosine",
+    "embedding_model": "E5-Mistral-7B-Instruct",
+    "embedding_provider": "sambanova",
+    "embedding_dimensions": 4096,
+    "sambanova_api_key": "YOUR_SAMBANOVA_API_KEY_HERE",
+    "sambanova_base_url": "https://ai.tejas.tacc.utexas.edu",
+    "llm_model": "gemini-1.5-flash",
+    "llm_provider": "google",
+    "llm_temperature": 0.1,
+    "llm_max_tokens": 1000,
+    "chunk_size": 500,
+    "chunk_overlap": 200,
+    "default_k": 10,
+    "max_k": 10,
+    "batch_size": 10,
+    "max_workers": 4,
+    "supported_file_types": [".txt", ".pdf", ".json"]
+  }
+}
