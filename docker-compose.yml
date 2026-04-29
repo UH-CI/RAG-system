@@ -21,3 +21,43 @@ services:
     volumes:
       - ./src/.env:/src/.env:ro  # Mount environment file
       - ./src/chroma_db:/src/chroma_db
+      - ./src/documents:/src/documents
+    networks:
+      - rag-network
+
+  # Frontend builder — compiles React app and places dist files into the shared volume
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=/sciencegateways/api
+        - VITE_BASE_PATH=/sciencegateways/
+    container_name: rag-frontend-builder
+    volumes:
+      - frontend_dist:/dist
+
+  # nginx — serves the built React files and proxies /api/* to the API container
+  nginx:
+    image: nginx:alpine
+    container_name: rag-nginx
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - frontend_dist:/usr/share/nginx/html:ro
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+volumes:
+  frontend_dist:
+
+networks:
+  rag-network:
+    driver: bridge
