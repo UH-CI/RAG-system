@@ -12,6 +12,7 @@ from chromadb.api.types import EmbeddingFunction, Documents
 import google.generativeai as genai
 import json
 import requests
+from FlagEmbedding import BGEM3FlagModel
 
 # Handle both relative and absolute imports
 try:
@@ -232,7 +233,13 @@ class ChromaDBManager:
     def _initialize_embedding_function(self):
         """Initialize embedding function based on provider."""
         try:
-            if settings.embedding_provider == "sambanova":
+            if settings.embedding_provider == "bge-m3":
+                self.embedding_function = BGEM3EmbeddingFunction(
+                    model_name=settings.embedding_model,
+                    use_fp16=True
+                )
+                logger.info("BGE-M3 embedding function initialized")
+            elif settings.embedding_provider == "sambanova":
                 self.embedding_function = SambaNovaEmbeddingFunction(
                     api_key=settings.sambanova_api_key,
                     base_url=settings.sambanova_base_url,
@@ -527,6 +534,98 @@ class ChromaDBManager:
         except Exception as e:
             logger.error(f"Failed to reset collection: {str(e)}")
             return False
+
+class BGEM3EmbeddingFunction:
+    """Custom embedding function for BGE-M3 local embeddings."""
+    
+    def __init__(self, model_name: str = "BAAI/bge-m3", use_fp16: bool = True):
+        """Initialize BGE-M3 embedding function.
+        
+        Args:
+            model_name: Name/path of the BGE-M3 model
+            use_fp16: Use FP16 for faster computation with slight performance degradation
+        """
+        self.model_name = model_name
+        self.use_fp16 = use_fp16
+        self._is_query_mode = False
+        logger.info(f"Initializing BGE-M3 embeddings with model: {model_name}")
+        self.model = BGEM3FlagModel(model_name, use_fp16=use_fp16)
+        logger.info(f"BGE-M3 model loaded successfully")
+    
+    def name(self) -> str:
+        """Return the name of this embedding function."""
+        return f"bge_m3_{self.model_name.replace('/', '_')}"
+    
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        """Generate embeddings for input texts.
+        
+        Args:
+            input: List of texts to embed
+            
+        Returns:
+            List of embedding vectors
+        """
+        try:
+            # Ensure input is a list of strings
+            if isinstance(input, str):
+                input = [input]
+            elif not isinstance(input, list):
+                input = list(input)
+            
+            # Convert all items to strings
+            input = [str(text) for text in input]
+            
+            # BGE-M3 encode method returns dense embeddings
+            embeddings = self.model.encode(
+                input,
+                batch_size=12,
+                max_length=8192  # BGE-M3 supports up to 8192 tokens
+            )['dense_vecs']
+            
+            # Convert to list format
+            result = []
+            for emb in embeddings:
+                if hasattr(emb, 'tolist'):
+                    result.append(emb.tolist())
+                elif isinstance(emb, list):
+                    result.append(emb)
+                else:
+                    result.append(list(emb))
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error generating BGE-M3 embeddings: {str(e)}")
+            # Return zero vectors as fallback (BGE-M3 has 1024 dimensions)
+            num_inputs = len(input) if isinstance(input, list) else 1
+            return [[0.0] * 1024 for _ in range(num_inputs)]
+    
+    def embed_query(self, input: str) -> List[float]:
+        """Embed a single query text for ChromaDB compatibility.
+        
+        Args:
+            input: Query text to embed
+            
+        Returns:
+            Embedding vector as Python list of floats
+        """
+        # Call __call__ with a single-element list
+        result = self.__call__([input])
+        
+        # Return the first embedding if available
+        if result and len(result) > 0:
+            embedding = result[0]
+            # Ensure it's a flat list of Python floats
+            if isinstance(embedding, list):
+                return [float(x) for x in embedding]
+            elif hasattr(embedding, 'tolist'):
+                flat = embedding.tolist()
+                return [float(x) for x in flat]
+            else:
+                return [float(x) for x in list(embedding)]
+            
+        # Fallback
+        return [0.0] * 1024
 
 class DynamicChromeManager(ChromaDBManager):
     """Dynamic ChromaDB manager that works with any collection name"""

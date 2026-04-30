@@ -6,7 +6,7 @@ langchain-openai
 langchain-community
 langchain-google-genai
 langgraph
-google-generativeai==0.3.2
+google-generativeai>=0.8.0
 
 # Document Processing
 PyPDF2
@@ -24,19 +24,20 @@ opencv-python
 sentence-transformers
 numpy
 scikit-learn
+FlagEmbedding
 
 # Web Access
 requests
 
 # Configuration and Environment
 python-dotenv==1.0.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
 pyyaml
 
 # API and Web Framework (for future milestones)
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
 gunicorn==21.2.0
 
 # Testing

@@ -41,3 +41,5 @@ src/chroma_db/
 /src/documents/chunked_text/*
 !/src/documents/chunked_text/.gitkeep
 /src/documents/step0_document_upload/service_key.json
+
+/src/venv

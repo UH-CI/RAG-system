@@ -51,6 +51,7 @@ ALLOWED_ORIGINS = [
     "http://149.165.170.204",
     "http://149.165.170.204:3000",
     "https://hoku.its.hawaii.edu",
+    "http://localhost:3000",
     # "https://yourdomain.com",  # uncomment and update once domain is live
 ]
 
