@@ -312,35 +312,36 @@ async def root():
         ] if USE_LANGGRAPH else None
     }
 
-@app.get("/chunked_text")
-async def get_chunked_text():
-    """Get chunked text stored in documents/chunked_text folder"""
-    chunked_text = []
-    for filename in os.listdir("documents/chunked_text"):
-        chunked_text.append({
-            "filename": filename,
-            "path": os.path.join("documents/chunked_text", filename)
-        })
-    
-    return {
-        "chunked_text": chunked_text,
-        "total_chunked_text": len(chunked_text)
-    }
+# Unused routes - commented out for chat-only functionality
+# @app.get("/chunked_text")
+# async def get_chunked_text():
+#     """Get chunked text stored in documents/chunked_text folder"""
+#     chunked_text = []
+#     for filename in os.listdir("documents/chunked_text"):
+#         chunked_text.append({
+#             "filename": filename,
+#             "path": os.path.join("documents/chunked_text", filename)
+#         })
+#     
+#     return {
+#         "chunked_text": chunked_text,
+#         "total_chunked_text": len(chunked_text)
+#     }
 
-@app.get("/documents")
-async def get_documents():
-    """Get documents stored in documents/storage_documents folder"""
-    documents = []
-    for filename in os.listdir("documents/storage_documents"):
-        documents.append({
-            "filename": filename,
-            "path": os.path.join("documents/storage_documents", filename)
-        })
-    
-    return {
-        "documents": documents,
-        "total_documents": len(documents)
-    }
+# @app.get("/documents")
+# async def get_documents():
+#     """Get documents stored in documents/storage_documents folder"""
+#     documents = []
+#     for filename in os.listdir("documents/storage_documents"):
+#         documents.append({
+#             "filename": filename,
+#             "path": os.path.join("documents/storage_documents", filename)
+#         })
+#     
+#     return {
+#         "documents": documents,
+#         "total_documents": len(documents)
+#     }
 
 @app.get("/collections")
 async def get_collections():
@@ -403,63 +404,63 @@ async def get_collections():
     }
 
 
-@app.get("/collections/stats", response_model=CollectionsStatsResponse)
-async def get_collections_statistics():
-    """Get statistics about all collections in ChromaDB
-    
-    Returns:
-        CollectionsStatsResponse: Statistics for all collections including document counts
-    """
-    # Gather stats for all collections
-    collections_stats = []
-    total_documents = 0
-    for collection_name, manager in collection_managers.items():
-        stats = get_collection_stats(manager)
-        collections_stats.append(CollectionStatistics(**stats))
-        # Update total document count
-        total_documents += stats.get("document_count", 0)
-    
-    return CollectionsStatsResponse(
-        collections=collections_stats,
-        total_collections=len(collections_stats),
-        total_documents=total_documents
-    )
+# @app.get("/collections/stats", response_model=CollectionsStatsResponse)
+# async def get_collections_statistics():
+#     """Get statistics about all collections in ChromaDB
+#     
+#     Returns:
+#         CollectionsStatsResponse: Statistics for all collections including document counts
+#     """
+#     # Gather stats for all collections
+#     collections_stats = []
+#     total_documents = 0
+#     for collection_name, manager in collection_managers.items():
+#         stats = get_collection_stats(manager)
+#         collections_stats.append(CollectionStatistics(**stats))
+#         # Update total document count
+#         total_documents += stats.get("document_count", 0)
+#     
+#     return CollectionsStatsResponse(
+#         collections=collections_stats,
+#         total_collections=len(collections_stats),
+#         total_documents=total_documents
+#     )
 
-@app.post("/search", response_model=List[DocumentResponse])
-async def search_documents(request: SearchRequest):
-    """Search documents across specified collections"""
-    num_results = get_search_params(request.num_results)
-    search_collections = request.collections or collection_names
-    
-    # Validate collections
-    for collection_name in search_collections:
-        if collection_name not in collection_managers:
-            raise HTTPException(status_code=400, detail=f"Collection '{collection_name}' not found")
-    
-    all_results = []
-    
-    for collection_name in search_collections:
-        try:
-            manager = get_collection_manager(collection_name)
-            results = manager.search_similar_chunks(request.query, num_results)
-            
-            # Add collection info to metadata
-            for result in results:
-                result["metadata"]["collection"] = collection_name
-                all_results.append(DocumentResponse(
-                    content=result["content"],
-                    metadata=result["metadata"],
-                    score=result.get("score")
-                ))
-        except Exception as e:
-            print(f"Error searching collection {collection_name}: {e}")
-            continue
-            
-    # Sort by score if available and limit results
-    if all_results and all_results[0].score is not None:
-        all_results.sort(key=lambda x: x.score, reverse=True)
-    
-    return all_results[:num_results]
+# @app.post("/search", response_model=List[DocumentResponse])
+# async def search_documents(request: SearchRequest):
+#     """Search documents across specified collections"""
+#     num_results = get_search_params(request.num_results)
+#     search_collections = request.collections or collection_names
+#     
+#     # Validate collections
+#     for collection_name in search_collections:
+#         if collection_name not in collection_managers:
+#             raise HTTPException(status_code=400, detail=f"Collection '{collection_name}' not found")
+#     
+#     all_results = []
+#     
+#     for collection_name in search_collections:
+#         try:
+#             manager = get_collection_manager(collection_name)
+#             results = manager.search_similar_chunks(request.query, num_results)
+#             
+#             # Add collection info to metadata
+#             for result in results:
+#                 result["metadata"]["collection"] = collection_name
+#                 all_results.append(DocumentResponse(
+#                     content=result["content"],
+#                     metadata=result["metadata"],
+#                     score=result.get("score")
+#                 ))
+#         except Exception as e:
+#             print(f"Error searching collection {collection_name}: {e}")
+#             continue
+#             
+#     # Sort by score if available and limit results
+#     if all_results and all_results[0].score is not None:
+#         all_results.sort(key=lambda x: x.score, reverse=True)
+#     
+#     return all_results[:num_results]
 
 
 
@@ -497,187 +498,187 @@ async def query_documents(request: QueryRequest):
 
 
 
-@app.post("/chat-with-pdf")
-async def chat_with_pdf(payload: ChatWithPDFRequest):
-    """
-    Chat with a specific document (session collection) using additional collections as context.
-    
-    This is a generalized endpoint that allows users to:
-    1. Upload a document to a unique session collection
-    2. Ask questions about that document
-    3. Use other collections as additional context for better answers
-    
-    Args:
-        payload: ChatWithPDFRequest containing query, session_collection, context_collections, and threshold
-    """
-    try:
-        # Combine session collection with context collections
-        all_collections = [payload.session_collection] + payload.context_collections
-        
-        # Filter out any collections that don't exist
-        valid_collections = []
-        for collection_name in all_collections:
-            collection_path = os.path.join("documents", "chunked_text", collection_name)
-            if os.path.exists(collection_path) and os.listdir(collection_path):
-                valid_collections.append(collection_name)
-            else:
-                logging.warning(f"Collection '{collection_name}' not found or empty, skipping")
-        
-        if not valid_collections:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"No valid collections found. Session collection '{payload.session_collection}' and context collections {payload.context_collections} are either missing or empty."
-            )
-        
-        logging.info(f"Processing chat query with collections: {valid_collections}")
-        
-        # Use the specialized single PDF method with primary collection and context collections
-        response = langgraph_agent.process_query_with_single_pdf(
-            query=payload.query,
-            primary_collection=payload.session_collection,
-            context_collections=payload.context_collections,
-            threshold=payload.threshold
-        )
-        
-        return {
-            "response": response.get("response", "No response generated"),
-            "rest_of_response": response,
-            "sources": response.get("sources", []),
-            "session_collection": payload.session_collection,
-            "context_collections": payload.context_collections,
-            "valid_collections_used": valid_collections,
-            "query": payload.query
-        }
-        
-    except Exception as e:
-        logging.error(f"Error in chat-with-pdf: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing chat query: {str(e)}")
+# @app.post("/chat-with-pdf")
+# async def chat_with_pdf(payload: ChatWithPDFRequest):
+#     """
+#     Chat with a specific document (session collection) using additional collections as context.
+#     
+#     This is a generalized endpoint that allows users to:
+#     1. Upload a document to a unique session collection
+#     2. Ask questions about that document
+#     3. Use other collections as additional context for better answers
+#     
+#     Args:
+#         payload: ChatWithPDFRequest containing query, session_collection, context_collections, and threshold
+#     """
+#     try:
+#         # Combine session collection with context collections
+#         all_collections = [payload.session_collection] + payload.context_collections
+#         
+#         # Filter out any collections that don't exist
+#         valid_collections = []
+#         for collection_name in all_collections:
+#             collection_path = os.path.join("documents", "chunked_text", collection_name)
+#             if os.path.exists(collection_path) and os.listdir(collection_path):
+#                 valid_collections.append(collection_name)
+#             else:
+#                 logging.warning(f"Collection '{collection_name}' not found or empty, skipping")
+#         
+#         if not valid_collections:
+#             raise HTTPException(
+#                 status_code=404, 
+#                 detail=f"No valid collections found. Session collection '{payload.session_collection}' and context collections {payload.context_collections} are either missing or empty."
+#             )
+#         
+#         logging.info(f"Processing chat query with collections: {valid_collections}")
+#         
+#         # Use the specialized single PDF method with primary collection and context collections
+#         response = langgraph_agent.process_query_with_single_pdf(
+#             query=payload.query,
+#             primary_collection=payload.session_collection,
+#             context_collections=payload.context_collections,
+#             threshold=payload.threshold
+#         )
+#         
+#         return {
+#             "response": response.get("response", "No response generated"),
+#             "rest_of_response": response,
+#             "sources": response.get("sources", []),
+#             "session_collection": payload.session_collection,
+#             "context_collections": payload.context_collections,
+#             "valid_collections_used": valid_collections,
+#             "query": payload.query
+#         }
+#         
+#     except Exception as e:
+#         logging.error(f"Error in chat-with-pdf: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Error processing chat query: {str(e)}")
 
-def generate_stream(request: ChatWithPDFRequest) -> Generator[str, None, None]:
-    try:
-        print(f"📡 Starting stream generation...")
-        
-        # Validate collections by checking if they exist on disk
-        valid_collections = []
-        
-        def collection_exists_on_disk(collection_name: str) -> bool:
-            """Check if collection directory exists in storage_documents"""
-            collection_path = os.path.join("documents", "storage_documents", collection_name)
-            return os.path.exists(collection_path) and os.path.isdir(collection_path)
-        
-        # Check session collection
-        if request.session_collection:
-            if collection_exists_on_disk(request.session_collection):
-                valid_collections.append(request.session_collection)
-                print(f"✅ Valid session collection: {request.session_collection}")
-                # Load into memory if not already loaded
-                if request.session_collection not in collection_managers:
-                    collection_managers[request.session_collection] = DynamicChromeManager(request.session_collection)
-                    print(f"📥 Loaded session collection into memory: {request.session_collection}")
-            else:
-                print(f"❌ Invalid session collection (not found on disk): {request.session_collection}")
-        
-        # Check context collections
-        if request.context_collections:
-            for collection in request.context_collections:
-                if collection_exists_on_disk(collection):
-                    valid_collections.append(collection)
-                    print(f"✅ Valid context collection: {collection}")
-                    # Load into memory if not already loaded
-                    if collection not in collection_managers:
-                        collection_managers[collection] = DynamicChromeManager(collection)
-                        print(f"📥 Loaded context collection into memory: {collection}")
-                else:
-                    print(f"❌ Invalid context collection (not found on disk): {collection}")
-        
-        if not valid_collections:
-            error_msg = f"data: {json.dumps({'type': 'error', 'message': 'No valid collections found'})}\n\n"
-            print(f"❌ No valid collections, sending: {error_msg}")
-            yield error_msg
-            return
-        
-        # Send initial status
-        initial_status = f"data: {json.dumps({'type': 'status', 'message': 'Starting analysis...', 'timestamp': datetime.now().isoformat()})}\n\n"
-        print(f"📤 Sending initial status: {initial_status.strip()}")
-        yield initial_status
-        
-        # Send a test message to verify streaming is working
-        test_message = f"data: {json.dumps({'type': 'status', 'message': 'TEST: Streaming connection established!', 'timestamp': datetime.now().isoformat()})}\n\n"
-        print(f"📤 Sending test message: {test_message.strip()}")
-        yield test_message
-        
-        # Create a streaming version of the LangGraph agent
-        print(f"🔄 Starting streaming agent with collections: {valid_collections}")
-        for update in langgraph_agent.process_query_with_single_pdf_stream(
-            query=request.query,
-            primary_collection=request.session_collection,
-            context_collections=request.context_collections,
-            threshold=request.threshold
-        ):
-            stream_data = f"data: {json.dumps(update)}\n\n"
-            print(f"📤 Streaming update: {update.get('type', 'unknown')} - {update.get('message', '')[:100]}...")
-            yield stream_data
-            
-    except Exception as e:
-        logging.error(f"Error in streaming chat-with-pdf: {str(e)}")
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+# def generate_stream(request: ChatWithPDFRequest) -> Generator[str, None, None]:
+#     try:
+#         print(f"📡 Starting stream generation...")
+#         
+#         # Validate collections by checking if they exist on disk
+#         valid_collections = []
+#         
+#         def collection_exists_on_disk(collection_name: str) -> bool:
+#             """Check if collection directory exists in storage_documents"""
+#             collection_path = os.path.join("documents", "storage_documents", collection_name)
+#             return os.path.exists(collection_path) and os.path.isdir(collection_path)
+#         
+#         # Check session collection
+#         if request.session_collection:
+#             if collection_exists_on_disk(request.session_collection):
+#                 valid_collections.append(request.session_collection)
+#                 print(f"✅ Valid session collection: {request.session_collection}")
+#                 # Load into memory if not already loaded
+#                 if request.session_collection not in collection_managers:
+#                     collection_managers[request.session_collection] = DynamicChromeManager(request.session_collection)
+#                     print(f"📥 Loaded session collection into memory: {request.session_collection}")
+#             else:
+#                 print(f"❌ Invalid session collection (not found on disk): {request.session_collection}")
+#         
+#         # Check context collections
+#         if request.context_collections:
+#             for collection in request.context_collections:
+#                 if collection_exists_on_disk(collection):
+#                     valid_collections.append(collection)
+#                     print(f"✅ Valid context collection: {collection}")
+#                     # Load into memory if not already loaded
+#                     if collection not in collection_managers:
+#                         collection_managers[collection] = DynamicChromeManager(collection)
+#                         print(f"📥 Loaded context collection into memory: {collection}")
+#                 else:
+#                     print(f"❌ Invalid context collection (not found on disk): {collection}")
+#         
+#         if not valid_collections:
+#             error_msg = f"data: {json.dumps({'type': 'error', 'message': 'No valid collections found'})}\n\n"
+#             print(f"❌ No valid collections, sending: {error_msg}")
+#             yield error_msg
+#             return
+#         
+#         # Send initial status
+#         initial_status = f"data: {json.dumps({'type': 'status', 'message': 'Starting analysis...', 'timestamp': datetime.now().isoformat()})}\n\n"
+#         print(f"📤 Sending initial status: {initial_status.strip()}")
+#         yield initial_status
+#         
+#         # Send a test message to verify streaming is working
+#         test_message = f"data: {json.dumps({'type': 'status', 'message': 'TEST: Streaming connection established!', 'timestamp': datetime.now().isoformat()})}\n\n"
+#         print(f"📤 Sending test message: {test_message.strip()}")
+#         yield test_message
+#         
+#         # Create a streaming version of the LangGraph agent
+#         print(f"🔄 Starting streaming agent with collections: {valid_collections}")
+#         for update in langgraph_agent.process_query_with_single_pdf_stream(
+#             query=request.query,
+#             primary_collection=request.session_collection,
+#             context_collections=request.context_collections,
+#             threshold=request.threshold
+#         ):
+#             stream_data = f"data: {json.dumps(update)}\n\n"
+#             print(f"📤 Streaming update: {update.get('type', 'unknown')} - {update.get('message', '')[:100]}...")
+#             yield stream_data
+#             
+#     except Exception as e:
+#         logging.error(f"Error in streaming chat-with-pdf: {str(e)}")
+#         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
-@app.post("/chat-with-pdf-stream")
-async def chat_with_pdf_stream(request: ChatWithPDFRequest):
-    """Streaming version of chat-with-pdf that provides real-time updates"""
-    
-    print(f"🚀 STREAMING ENDPOINT CALLED: query='{request.query[:50]}...', session_collection='{request.session_collection}'")
-    
-    return StreamingResponse(
-        generate_stream(request),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "Content-Type": "text/event-stream"
-        }
-    )
+# @app.post("/chat-with-pdf-stream")
+# async def chat_with_pdf_stream(request: ChatWithPDFRequest):
+#     """Streaming version of chat-with-pdf that provides real-time updates"""
+#     
+#     print(f"🚀 STREAMING ENDPOINT CALLED: query='{request.query[:50]}...', session_collection='{request.session_collection}'")
+#     
+#     return StreamingResponse(
+#         generate_stream(request),
+#         media_type="text/event-stream",
+#         headers={
+#             "Cache-Control": "no-cache",
+#             "Connection": "keep-alive",
+#             "Content-Type": "text/event-stream"
+#         }
+#     )
 
-@app.post("/crawl-through-web")
-async def crawl_through_web(
-    payload: CrawlRequest
-):
-    try:
-        # Save to src/documents/storage_documents
-        stats = ai_crawler(
-            start_url= payload.start_url,
-            extraction_prompt=payload.extraction_prompt,
-            collection_name=payload.collection_name,
-            null_is_okay=payload.null_is_okay,
-            num_workers=payload.num_workers,
-            num_levels_deep=payload.num_levels_deep
-        )
-        return {"message": f"Crawling completed successfully for {payload.collection_name} with {len(stats)} items created"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
+# @app.post("/crawl-through-web")
+# async def crawl_through_web(
+#     payload: CrawlRequest
+# ):
+#     try:
+#         # Save to src/documents/storage_documents
+#         stats = ai_crawler(
+#             start_url= payload.start_url,
+#             extraction_prompt=payload.extraction_prompt,
+#             collection_name=payload.collection_name,
+#             null_is_okay=payload.null_is_okay,
+#             num_workers=payload.num_workers,
+#             num_levels_deep=payload.num_levels_deep
+#         )
+#         return {"message": f"Crawling completed successfully for {payload.collection_name} with {len(stats)} items created"}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
 
-@app.post("/upload-through-google-drive")
-async def upload_through_google_drive(payload: DriveUploadRequest):
-    try:
-        # Save to src/documents/storage_documents
-        download_path = os.path.join("documents", "storage_documents")
-        stats = download_pdfs_from_drive(
-            drive_url=payload.drive_url,
-            download_path=download_path,
-            recursive=payload.recursive
-        )
-        return {"downloaded": stats["downloaded"], "failed": stats["failed"], "folders_processed": stats["folders_processed"]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
+# @app.post("/upload-through-google-drive")
+# async def upload_through_google_drive(payload: DriveUploadRequest):
+#     try:
+#         # Save to src/documents/storage_documents
+#         download_path = os.path.join("documents", "storage_documents")
+#         stats = download_pdfs_from_drive(
+#             drive_url=payload.drive_url,
+#             download_path=download_path,
+#             recursive=payload.recursive
+#         )
+#         return {"downloaded": stats["downloaded"], "failed": stats["failed"], "folders_processed": stats["folders_processed"]}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error downloading PDFs: {str(e)}")
 
 
-@app.post("/extract-bill-links")
-async def extract_bill_links(bill_name: str = Form(...), year: str = Form(...)):
-    """
-    Extracts document links for a given bill and year from the Hawaii Capitol website.
-    """
-    try:
-        links = scrape_bill_page_links(bill_name, year)
-        return {"links": links}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+# @app.post("/extract-bill-links")
+# async def extract_bill_links(bill_name: str = Form(...), year: str = Form(...)):
+#     """
+#     Extracts document links for a given bill and year from the Hawaii Capitol website.
+#     """
+#     try:
+#         links = scrape_bill_page_links(bill_name, year)
+#         return {"links": links}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
