@@ -59,23 +59,42 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center py-12">
-            <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <div className="flex flex-col items-center py-10 px-4">
+            <Bot className="w-16 h-16 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to Science Gateways ChatBot</h3>
-            <p className="text-gray-600 mb-4">
-            Ask questions about available science gateways and resources.
+
+            {/* Catalog info */}
+            <p className="text-gray-600 text-sm text-center mb-1">
+              I can help you find research papers and gateways from the{' '}
+              <span className="font-medium">Science Gateways Catalog (2024–2025)</span>.
+              Describe your research interest and I'll surface the most relevant entries.
             </p>
-            {/* <div className="max-w-md mx-auto">
-              <p className="text-sm text-gray-500 mb-3">Try asking:</p>
-              <div className="space-y-2 text-sm">
-                <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
-                  <p className="text-blue-700">"What is the budget for [UH Manoa, education, etc..] and how will that impact the future state of Hawaii??"</p>
-                </div>
-                <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
-                  <p className="text-green-700">"Can you tell me about the appropriation bill for [highway, construction, etc..] and how much will it cost?"</p>
-                </div>
+            <p className="text-gray-500 text-xs text-center mb-6">
+              I retrieve up to <span className="font-semibold">10 documents</span> per query — answers reflect the closest matching catalog entries.
+            </p>
+
+            {/* Suggested prompts */}
+            <div className="w-full max-w-xl">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 text-center">Try asking</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  "Find papers on browser-based scientific simulation platforms.",
+                  "What research exists on AI-assisted collaboration tools for scientists?",
+                  "Are there gateways or papers related to wildlife disease surveillance?",
+                  "Show me research on citizen science data collection platforms.",
+                  "What gateways support atmospheric or oceanographic research?",
+                  "Find papers on science gateways that use Python or Jupyter.",
+                ].map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => setInputValue(prompt)}
+                    className="text-left text-sm bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-700 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 transition-colors shadow-sm"
+                  >
+                    {prompt}
+                  </button>
+                ))}
               </div>
-            </div> */}
+            </div>
           </div>
         )}
 

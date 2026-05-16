@@ -369,12 +369,10 @@ Respond in JSON format:
                     manager = self.collection_managers.get(collection_name)
                     if manager:
                         dense_results = manager.search_similar_chunks(hypothetical_answer, num_results=k_dense)
-                        # Filter by threshold
                         for res in dense_results:
-                            if res.get("score", 0.0) >= threshold:
-                                res["metadata"]["search_method"] = "dense"
-                                all_results.append(res)
-                        print(f"   Dense search in '{collection_name}' found {len(dense_results)} results above threshold.")
+                            res["metadata"]["search_method"] = "dense"
+                            all_results.append(res)
+                        print(f"   Dense search in '{collection_name}' found {len(dense_results)} results.")
                 except Exception as e:
                     print(f"   Error during dense search in {collection_name}: {e}")
 

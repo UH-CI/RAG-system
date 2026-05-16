@@ -233,7 +233,12 @@ class ChromaDBManager:
     def _initialize_embedding_function(self):
         """Initialize embedding function based on provider."""
         try:
-            if settings.embedding_provider == "bge-m3":
+            if settings.embedding_provider == "sentence-transformers":
+                self.embedding_function = SentenceTransformerEmbeddingFunction(
+                    model_name=settings.embedding_model
+                )
+                logger.info("SentenceTransformer embedding function initialized")
+            elif settings.embedding_provider == "bge-m3":
                 self.embedding_function = BGEM3EmbeddingFunction(
                     model_name=settings.embedding_model,
                     use_fp16=True
@@ -534,6 +539,92 @@ class ChromaDBManager:
         except Exception as e:
             logger.error(f"Failed to reset collection: {str(e)}")
             return False
+
+class SentenceTransformerEmbeddingFunction:
+    """Custom embedding function for SentenceTransformer models (lightweight, CPU-friendly)."""
+    
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        """Initialize SentenceTransformer embedding function.
+        
+        Args:
+            model_name: Name/path of the SentenceTransformer model
+                       Recommended: 'all-MiniLM-L6-v2' (384 dim, ~90MB, fast)
+                                   'all-MiniLM-L12-v2' (384 dim, ~120MB, better quality)
+                                   'all-mpnet-base-v2' (768 dim, ~420MB, best quality)
+        """
+        from sentence_transformers import SentenceTransformer
+        self.model_name = model_name
+        self._is_query_mode = False
+        logger.info(f"Initializing SentenceTransformer embeddings with model: {model_name}")
+        self.model = SentenceTransformer(model_name)
+        logger.info(f"SentenceTransformer model loaded successfully")
+    
+    def name(self) -> str:
+        """Return the name of this embedding function."""
+        return f"sentence_transformer_{self.model_name}"
+    
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        """Generate embeddings for input texts.
+        
+        Args:
+            input: List of texts to embed
+            
+        Returns:
+            List of embedding vectors as Python lists
+        """
+        try:
+            # Convert all items to strings
+            input = [str(text) for text in input]
+            
+            # SentenceTransformer encode method
+            embeddings = self.model.encode(
+                input,
+                batch_size=32,
+                show_progress_bar=False,
+                convert_to_numpy=True
+            )
+            
+            # Convert to list format
+            result = []
+            for emb in embeddings:
+                if hasattr(emb, 'tolist'):
+                    result.append(emb.tolist())
+                else:
+                    result.append(list(emb))
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error generating SentenceTransformer embeddings: {str(e)}")
+            # Return zero vectors as fallback (dimension depends on model)
+            num_inputs = len(input) if isinstance(input, list) else 1
+            # Default to 384 for MiniLM models
+            dim = 384
+            return [[0.0] * dim for _ in range(num_inputs)]
+    
+    def embed_query(self, input: str) -> List[float]:
+        """Embed a single query text for ChromaDB compatibility.
+        
+        Args:
+            input: Query text to embed
+            
+        Returns:
+            Embedding vector as Python list of floats
+        """
+        result = self.__call__([input])
+        
+        if result and len(result) > 0:
+            embedding = result[0]
+            if isinstance(embedding, list):
+                return [float(x) for x in embedding]
+            elif hasattr(embedding, 'tolist'):
+                flat = embedding.tolist()
+                return [float(x) for x in flat]
+            else:
+                return [float(x) for x in list(embedding)]
+        
+        # Fallback
+        return [0.0] * 384
 
 class BGEM3EmbeddingFunction:
     """Custom embedding function for BGE-M3 local embeddings."""
